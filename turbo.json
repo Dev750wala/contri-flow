@@ -4,8 +4,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "inputs": ["$TURBO_DEFAULT$", ".env*", ".env"],
+      "outputs": [".next/**", "!.next/cache/**", "artifacts/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]

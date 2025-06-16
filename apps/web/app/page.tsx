@@ -1,102 +1,126 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+'use client';
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Wallet, Code, CheckCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+import './globals.css';
+import TagButton from '@/components/tag-button';
+import { LampContainer } from '@/components/ui/lamp';
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
+    <div className="relative min-h-screen font-sans bg-gradient-to-br from-[#04091a] via-[#0d0d26] to-[#0b0d18] text-white overflow-x-hidden shadow-2xl">
+      <div className='h-[100vh]'>
+        {/* Animated Background Blobs */}
+        <motion.div
+          className="pointer-events-none fixed top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-700/30 blur-3xl z-0"
+          animate={{ x: [0, 60, 0], y: [0, 40, 0] }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
         />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+        <motion.div
+          className="pointer-events-none fixed bottom-[-15%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-900/40 blur-3xl z-0"
+          animate={{ x: [0, -80, 0], y: [0, -60, 0] }}
+          transition={{
+            duration: 16,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+        <motion.div
+          className="pointer-events-none fixed top-[30%] left-[60%] w-[350px] h-[350px] rounded-full bg-indigo-800/30 blur-2xl z-0"
+          animate={{ x: [0, 30, 0], y: [0, -30, 0] }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.com/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        {/* Navigation */}
+        <nav className="w-full fixed top-0 left-0 z-50 bg-transparent backdrop-blur-md border-b-cyan-400 bg-gradient-to-b from-black/60 via-black/30 to-transparent px-0">
+          <div className="container mx-auto flex flex-wrap items-center justify-between py-6 px-6 md:py-8 md:px-10">
+            <div className="flex items-center space-x-2">
+              <Code className="h-8 w-8 text-cyan-400" />
+              <span className="text-2xl font-bold text-white">Contri-Flow</span>
+            </div>
+            <div className="flex items-center space-x-4 mt-4 md:mt-0">
+              <Button
+                variant="ghost"
+                className="hover:bg-cyan-900/30 transition"
+              >
+                Login
+              </Button>
+              <motion.div
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Button className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300 transition">
+                  Get Started
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <motion.section className="container mt-28 mx-auto px-6 py-32 text-center relative z-10 my-10">
+          <div>
+            <TagButton />
+
+            <h1 className="text-5xl font-bold tracking-tight text-cyan-200 sm:text-8xl drop-shadow-lg">
+              Reward Open Source
+              <span className="block text-cyan-600">
+                Contributors with Crypto
+              </span>
+            </h1>
+          </div>
+          <p className="mt-6 max-w-2xl mx-auto text-lg text-cyan-100/80">
+            Automate crypto rewards for open source contributions. When PRs are
+            merged, contributors can instantly claim their bounties through our
+            secure platform.
+          </p>
+          <div className="mt-10 flex items-center gap-4 justify-center">
+            <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.97 }}>
+              <Button
+                size="lg"
+                className="gap-2 bg-cyan-400 text-black font-semibold hover:bg-cyan-300 transition"
+              >
+                Get Started <ArrowRight className="h-4 w-4" />
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.97 }}>
+              <Button
+                size="lg"
+                variant="outline"
+                className="gap-2 border-cyan-400 text-cyan-400 hover:bg-cyan-900/30 transition"
+              >
+                View on GitHub
+              </Button>
+            </motion.div>
+          </div>
+        </motion.section>
+      </div>
+
+      <LampContainer>
+        <motion.h1
+          initial={{ opacity: 0.5, y: 100 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: 0.3,
+            duration: 0.8,
+            ease: 'easeInOut',
+          }}
+          className="mt-8 bg-gradient-to-br from-slate-300 to-slate-500 py-4 bg-clip-text text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.com?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.com →
-        </a>
-      </footer>
+          Build lamps <br /> the right way
+        </motion.h1>
+      </LampContainer>
     </div>
   );
 }
