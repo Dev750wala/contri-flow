@@ -2,7 +2,7 @@
   "name": "contri-flow",
   "private": true,
   "workspaces": [
-    "app/*",
+    "apps/*",
     "packages/*"
   ],
   "scripts": {

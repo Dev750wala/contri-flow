@@ -11,7 +11,7 @@ import { LampContainer } from '@/components/ui/lamp';
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen font-sans bg-gradient-to-br from-[#04091a] via-[#0d0d26] to-[#0b0d18] text-white overflow-x-hidden shadow-2xl">
+    <div className="relative min-h-screen font-sans bg-gradient-to-br from-[#081336] via-[#14143a] to-[#1d2138] text-white overflow-x-hidden shadow-2xl">
       <div className='h-[100vh]'>
         {/* Animated Background Blobs */}
         <motion.div
@@ -69,11 +69,11 @@ export default function Home() {
         </nav>
 
         {/* Hero Section */}
-        <motion.section className="container mt-28 mx-auto px-6 py-32 text-center relative z-10 my-10">
+        <motion.section className="container mt-2 mx-auto px-6 py-32 text-center relative z-10 my-10">
           <div>
             <TagButton />
 
-            <h1 className="text-5xl font-bold tracking-tight text-cyan-200 sm:text-8xl drop-shadow-lg">
+            <h1 className="text-4xl font-bold tracking-tight text-cyan-200 sm:text-8xl drop-shadow-lg">
               Reward Open Source
               <span className="block text-cyan-600">
                 Contributors with Crypto

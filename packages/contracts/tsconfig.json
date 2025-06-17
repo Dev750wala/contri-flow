@@ -8,9 +8,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "types": ["node"],
-    "paths": {
-      "@env": ["../env/srac/index.ts"],
-    }
   },
-  "include": ["./", "../typescript-config/env.d.ts", "./env.d.ts"]
+  "include": ["./", "env.d.ts", "/env.d.ts"]
 }

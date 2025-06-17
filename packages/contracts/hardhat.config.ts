@@ -1,9 +1,8 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
-import { env } from "@repo/env";
 
-const { PRIVATE_KEY, ETHERSCAN_API_KEY, SEPOLIA_API_KEY } = env();
+const {PRIVATE_KEY,  ETHERSCAN_API_KEY, SEPOLIA_API_KEY } = process.env;
 console.log(PRIVATE_KEY, ETHERSCAN_API_KEY, SEPOLIA_API_KEY);
 
 const config: HardhatUserConfig = {
