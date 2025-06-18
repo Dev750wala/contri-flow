@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Providers } from './provider';
 
 // const geistSans = localFont({
 //   src: "./fonts/GeistVF.woff",
@@ -13,28 +14,30 @@ import { ThemeProvider } from '@/components/theme-provider';
 // });
 
 export const metadata: Metadata = {
-  title: "ContriFlow",
-  description: "Created by Dev Sadisatsowala",
+  title: 'ContriFlow',
+  description: 'Created by Dev Sadisatsowala',
 };
 
 export default function RootLayout({
-    children,
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    return (
-        <html lang="en" suppressHydrationWarning>
-            <head />
-            <body>
-                <ThemeProvider
-                    attribute="class"
-                    defaultTheme="dark"
-                    enableSystem
-                    disableTransitionOnChange
-                >
-                    {children}
-                </ThemeProvider>
-            </body>
-        </html>
-    );
+  return (
+    <Providers>
+      <html lang="en" suppressHydrationWarning>
+        <head />
+        <body>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </body>
+      </html>
+    </Providers>
+  );
 }
