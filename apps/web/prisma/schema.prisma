@@ -39,7 +39,6 @@ model Repository {
 model Contributor {
     id            String   @id @default(cuid())
     githubId      String   @unique
-    username      String?
     walletAddress String?
     rewards       Reward[]
     createdAt     DateTime @default(now())
@@ -47,34 +46,26 @@ model Contributor {
 }
 
 model Reward {
-    id            String      @id @default(cuid())
-    contributorId String
-    contributor   Contributor @relation(fields: [contributorId], references: [id])
-    repositoryId  String
-    repository    Repository  @relation(fields: [repositoryId], references: [id])
-    prNumber      Int
-    amountUsd     Float
-    amountEth     Float?
-    claimed       Boolean     @default(false)
-    claimedAt     DateTime?
-    voucher       Voucher?    @relation(fields: [voucherId], references: [id])
-    voucherId     String?     @unique
-    createdAt     DateTime    @default(now())
-    updatedAt     DateTime    @updatedAt
-}
+    id String @id @default(cuid())
 
-model Voucher {
-    id                  String   @id @default(cuid())
-    secretHash          String // keccak256 hash of secret + metadata
+    // Voucher data
     ownerGithubId       String
+    contributorGithubId String
     repoGithubId        String
     prNumber            Int
-    contributorGithubId String
-    dollarAmount8dec    String // Keep as string to avoid float rounding issues
-    claimed             Boolean  @default(false)
-    reward              Reward?
-    createdAt           DateTime @default(now())
-    updatedAt           DateTime @updatedAt
+    secret              String
+    amountUsd           Float
+
+    amountEth     Float?
+    contributorId String?
+    contributor   Contributor? @relation(fields: [contributorId], references: [id])
+    claimed       Boolean      @default(false)
+    claimedAt     DateTime?
+
+    createdAt    DateTime    @default(now())
+    updatedAt    DateTime    @updatedAt
+    Repository   Repository? @relation(fields: [repositoryId], references: [id])
+    repositoryId String?
 
     @@unique([ownerGithubId, repoGithubId, prNumber])
 }
