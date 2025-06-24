@@ -1,9 +1,13 @@
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-deploy';
+import dotenv from  "dotenv"
+
+dotenv.config({
+  path: `./.env`
+});
 
 const { PRIVATE_KEY, ETHERSCAN_API_KEY, SEPOLIA_API_KEY } = process.env;
-console.log(PRIVATE_KEY, ETHERSCAN_API_KEY, SEPOLIA_API_KEY);
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
@@ -16,7 +20,7 @@ const config: HardhatUserConfig = {
       chainId: 1337,
     },
     sepolia: {
-      url: `https://sepolia.infura.io/v3/${SEPOLIA_API_KEY}`,
+      url: `${SEPOLIA_API_KEY}`,
       accounts: [PRIVATE_KEY],
       chainId: 11155111,
     },
