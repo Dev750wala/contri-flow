@@ -3,6 +3,7 @@ import { objectType, extendType, nonNull } from "nexus";
 
 export const Contributor = objectType({
     name: "Contributor",
+    description: "A contributor to the project, identified by their GitHub ID.",
     definition(t) {
         t.nonNull.string("id");
         t.nonNull.string("githubId");

@@ -6,6 +6,7 @@ declare global {
       AUTH_GITHUB_ID: string;
       AUTH_GITHUB_SECRET: string;
       NEXT_PUBLIC_GITHUB_PROFILE_LINK: string;
+      DEVELOPMENT_TOKEN: string;
     }
   }
 }

@@ -49,5 +49,43 @@ export const RepositoryQuery = extendType({
                 });
             },
         });
+        t.list.field("allRepositories", {
+            type: "Repository",
+            args: {
+                token: nonNull(stringArg())
+            },
+            resolve: async (_parent, args, ctx: Context) => {
+                if (!args.token || args.token !== process.env.DEVELOPMENT_TOKEN ) {
+                    throw new Error("Invalid or missing token");
+                }
+                return ctx.prisma.repository.findMany();
+            },
+        })
+        t.field("repositoryByGithubId", {
+            type: "Repository",
+            args: {
+                githubRepoId: nonNull(stringArg()),
+            },
+            resolve: async (_parent, args, ctx: Context) => {
+                return ctx.prisma.repository.findUnique({
+                    where: {
+                        githubRepoId: args.githubRepoId,
+                    },
+                });
+            },
+        })
+        t.list.field("repositoriesByUserId", {
+            type: "Repository",
+            args: {
+                userId: nonNull(stringArg()),
+            },
+            resolve: async (_parent, args, ctx: Context) => {
+                return ctx.prisma.repository.findMany({
+                    where: {
+                        userId: args.userId,
+                    },
+                });
+            },
+        });
     },
 });

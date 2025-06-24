@@ -19,6 +19,16 @@ declare module 'next-auth' {
       email?: string | null;
     };
   }
+
+
+}
+declare module "next-auth/jwt" {
+  interface JWT {
+    userId?: string;
+    githubId?: string;
+    name?: string | null;
+    email?: string | null;
+  }
 }
 
 export const authOptions: NextAuthOptions = {
@@ -98,8 +108,6 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }: { session: Session; token: any }) {
-      // console.log("session: ", session);
-      // console.log("token: ", token);
 
       if (!session.user) session.user = {};
       session.user.githubId = token.githubId;

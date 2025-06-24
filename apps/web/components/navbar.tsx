@@ -20,8 +20,6 @@ const Navbar = () => {
   const { data: sessionData, status } = useSession();
   const isLoading = status === 'loading';
 
-  console.log(process.env.NEXT_PUBLIC_GITHUB_PROFILE_LINK);
-
   return (
     <nav className="w-full fixed top-0 left-0 z-50 bg-transparent backdrop-blur-md border-b-cyan-400 bg-gradient-to-b from-black/60 via-black/30 to-transparent px-0">
       <div className="container mx-auto flex flex-wrap items-center justify-between py-6 px-6 md:py-8 md:px-10">
