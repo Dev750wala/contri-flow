@@ -63,7 +63,7 @@ Here are some example inputs and the expected output format.
 ---
 
 Now parse the following comment:
-"Heyy @dev750wala, you've solved a critical bug, may your contribution improve the change in the space, here is your 50$ worth of ETH reward."
+"[COMMENT]"
 `
 
 export const PROMPT_FOR_JSON_IN_SINGLE_LINE_FORMAT = `
@@ -83,6 +83,5 @@ If no reward is mentioned, return:
 {"contributor": null, "reward": null}
 
 Now analyze this comment:
-"Awesome job @dev750wala! You crushed that indexing bug. Rewarding you with 50 tokens."
-
+"[COMMENT]"
 `

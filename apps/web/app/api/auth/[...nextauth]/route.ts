@@ -9,6 +9,7 @@ import type { AdapterUser } from 'next-auth/adapters';
 import GithubProvider from 'next-auth/providers/github';
 import prisma from '@/lib/prisma';
 import { type GithubProfile } from 'next-auth/providers/github';
+import { profile } from 'console';
 
 declare module 'next-auth' {
   interface Session {
@@ -36,6 +37,26 @@ const authOptions: NextAuthOptions = {
     GithubProvider({
       clientId: process.env.AUTH_GITHUB_ID!,
       clientSecret: process.env.AUTH_GITHUB_SECRET!,
+      authorization: { params: { scope: 'read:user user:email' } },
+      profile: async (profile, tokens) => {
+      const res = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          Authorization: `Bearer ${tokens.access_token}`,
+        },
+      });
+
+      const emails = await res.json();
+
+      const primaryEmail = emails.find((email: any) => email.primary && email.verified);
+
+      return {
+        id: profile.id,
+        name: profile.name || profile.login,
+        email: primaryEmail?.email || null,
+        image: profile.avatar_url,
+      };
+    },
+
     }),
   ],
 
