@@ -80,10 +80,6 @@ const authOptions: NextAuthOptions = {
       const githubId = githubProfile?.id;
       const email = profile?.email;
 
-      // console.log("--------------------------");
-      // console.log(githubId);
-      // console.log(typeof githubId);
-      // console.log("--------------------------");
 
       let dbUser = await prisma.user.findUnique({
         where: { githubId: githubId?.toString() },
