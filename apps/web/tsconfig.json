@@ -6,6 +6,8 @@
         "name": "next"
       }
     ],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": "./",
     "paths": {
       "@/*": ["./*"],

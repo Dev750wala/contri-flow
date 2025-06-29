@@ -165,8 +165,7 @@ contract ContriFlow is ReentrancyGuard {
                 repoGithubId,
                 prNumber,
                 contributorGithubId,
-                dollarAmount8dec,
-                contributor
+                dollarAmount8dec
             )
         );
 
