@@ -20,6 +20,8 @@ export const User = objectType({
                 });
             }
         })
+        t.string("signMessageHash");
+        t.string("installationId");
         t.nonNull.string("createdAt");
         t.nonNull.string("updatedAt");
     },
