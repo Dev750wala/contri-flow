@@ -3,8 +3,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Providers } from './provider';
-import { ApolloProvider } from '@apollo/client';
-import client from '@/lib/apolloClient';
+
 
 // const geistSans = localFont({
 //   src: "./fonts/GeistVF.woff",
@@ -26,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ApolloProvider client={client}>
+    
       <Providers>
         <html lang="en" suppressHydrationWarning>
           <head />
@@ -42,6 +41,5 @@ export default function RootLayout({
           </body>
         </html>
       </Providers>
-    </ApolloProvider>
   );
 }
