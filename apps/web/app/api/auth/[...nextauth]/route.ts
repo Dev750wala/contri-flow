@@ -21,7 +21,7 @@ declare module 'next-auth' {
     };
   }
 }
-declare module "next-auth/jwt" {
+declare module 'next-auth/jwt' {
   interface JWT {
     userId?: string;
     githubId?: string;
@@ -37,24 +37,25 @@ const authOptions: NextAuthOptions = {
       clientSecret: process.env.AUTH_GITHUB_SECRET!,
       authorization: { params: { scope: 'read:user user:email' } },
       profile: async (profile, tokens) => {
-      const res = await fetch('https://api.github.com/user/emails', {
-        headers: {
-          Authorization: `Bearer ${tokens.access_token}`,
-        },
-      });
+        const res = await fetch('https://api.github.com/user/emails', {
+          headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+          },
+        });
 
-      const emails = await res.json();
+        const emails = await res.json();
 
-      const primaryEmail = emails.find((email: any) => email.primary && email.verified);
+        const primaryEmail = emails.find(
+          (email: any) => email.primary && email.verified
+        );
 
-      return {
-        id: profile.id,
-        name: profile.name || profile.login,
-        email: primaryEmail?.email || null,
-        image: profile.avatar_url,
-      };
-    },
-
+        return {
+          id: profile.id,
+          name: profile.name || profile.login,
+          email: primaryEmail?.email || null,
+          image: profile.avatar_url,
+        };
+      },
     }),
   ],
 
@@ -77,7 +78,6 @@ const authOptions: NextAuthOptions = {
       const githubProfile = profile as GithubProfile | undefined;
       const githubId = githubProfile?.id;
       const email = profile?.email;
-
 
       let dbUser = await prisma.user.findUnique({
         where: { githubId: githubId?.toString() },
@@ -123,7 +123,6 @@ const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }: { session: Session; token: any }) {
-
       if (!session.user) session.user = {};
       session.user.githubId = token.githubId;
       session.user.userId = token.userId as string;

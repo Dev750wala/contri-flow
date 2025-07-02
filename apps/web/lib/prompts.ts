@@ -64,7 +64,7 @@ Here are some example inputs and the expected output format.
 
 Now parse the following comment:
 "[COMMENT]"
-`
+`;
 
 export const PROMPT_FOR_JSON_IN_SINGLE_LINE_FORMAT = `
 You are an assistant that analyzes GitHub comment messages from repository maintainers.
@@ -84,4 +84,4 @@ If no reward is mentioned, return:
 
 Now analyze this comment:
 "[COMMENT]"
-`
+`;

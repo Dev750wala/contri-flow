@@ -1,9 +1,7 @@
-"use client";
+'use client';
 
 const NewInstallationPage = () => {
-  return (
-    <div>NewInstallationPage</div>
-  )
-}
+  return <div>NewInstallationPage</div>;
+};
 
-export default NewInstallationPage
+export default NewInstallationPage;

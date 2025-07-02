@@ -1,10 +1,10 @@
 'use client';
 
-import { Code, LogOut, User, Settings, Github } from 'lucide-react';
-import React from 'react';
-import { motion } from 'framer-motion';
+import { Code, LogOut, User, Settings, Github, Menu } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { signIn, signOut, useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import {
   DropdownMenu,
@@ -19,17 +19,18 @@ import Image from 'next/image';
 const Navbar = () => {
   const { data: sessionData, status } = useSession();
   const isLoading = status === 'loading';
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="w-full fixed top-0 left-0 z-50 bg-transparent backdrop-blur-md border-b-cyan-400 bg-gradient-to-b from-black/60 via-black/30 to-transparent px-0">
-      <div className="container mx-auto flex flex-wrap items-center justify-between py-6 px-6 md:py-8 md:px-10">
+    <nav className="w-full sticky top-0 left-0 z-50 bg-gradient-to-b from-black/70 via-black/40 to-transparent backdrop-blur-xl border-b border-cyan-400/20 shadow-lg">
+      <div className="container mx-auto flex items-center justify-between py-4 px-4 md:py-6 md:px-10">
         <Link href="/" className="flex items-center space-x-2">
           <Code className="h-8 w-8 text-cyan-400" />
           <span className="text-2xl font-bold text-white">Contri-Flow</span>
         </Link>
-        <div className="flex items-center space-x-4 mt-4 md:mt-0">
+        {/* Desktop Actions */}
+        <div className="hidden md:flex items-center space-x-4">
           {isLoading ? (
-            // Show loading state with same dimensions to prevent layout shift
             <div className="h-10 w-[200px] animate-pulse bg-cyan-400/20 rounded-md" />
           ) : status === 'authenticated' ? (
             <>
@@ -45,18 +46,18 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="relative h-10 w-10 rounded-full hover:bg-cyan-900/30 transition-all duration-200 p-0"
+                    className="relative h-11 w-11 rounded-full hover:bg-cyan-900/30 transition-all duration-200 p-0 border-2 border-cyan-400/30 shadow-cyan-400/10 shadow-md"
                   >
                     {sessionData.user?.githubId ? (
                       <Image
                         src={`${process.env.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.githubId)}`}
                         alt="User avatar"
-                        height={40}
-                        width={40}
-                        className="rounded-full object-cover h-8 w-8"
+                        height={44}
+                        width={44}
+                        className="rounded-full object-cover h-11 w-11"
                       />
                     ) : (
-                      <Avatar className="h-10 w-10 border border-cyan-400/30">
+                      <Avatar className="h-11 w-11 border border-cyan-400/30">
                         <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-cyan-600 text-black font-semibold">
                           {sessionData.user?.name?.charAt(0) || 'U'}
                         </AvatarFallback>
@@ -65,20 +66,21 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  className="w-56 bg-black/90 backdrop-blur-md border border-cyan-400/30 rounded-lg shadow-lg shadow-cyan-400/10"
+                  className="w-60 bg-black/95 backdrop-blur-lg border border-cyan-400/30 rounded-xl shadow-lg shadow-cyan-400/10 mt-2 p-0"
                   align="end"
-                  sideOffset={8}
+                  sideOffset={12}
                 >
-                  <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium text-cyan-400">
+                  {/* Pointer/arrow */}
+                  <div className="absolute -top-2 right-6 w-4 h-4 bg-black/95 border-t border-l border-cyan-400/30 rotate-45 z-10" />
+                  <div className="px-4 py-3 border-b border-cyan-400/10">
+                    <p className="text-xs font-semibold text-cyan-400">
                       Signed in as
                     </p>
                     <p className="text-sm text-cyan-100 truncate">
                       {sessionData.user?.email}
                     </p>
                   </div>
-                  <DropdownMenuSeparator className="bg-cyan-400/20" />
-                  <DropdownMenuItem className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-pointer focus:bg-cyan-900/30 focus:text-cyan-100">
+                  <DropdownMenuItem className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-pointer focus:bg-cyan-900/30 focus:text-cyan-100 mt-1">
                     <User className="h-4 w-4 text-cyan-400" />
                     <span>Profile</span>
                   </DropdownMenuItem>
@@ -90,9 +92,9 @@ const Navbar = () => {
                     <Github className="h-4 w-4 text-cyan-400" />
                     <span>GitHub</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-cyan-400/20" />
+                  <DropdownMenuSeparator className="bg-cyan-400/20 my-1" />
                   <DropdownMenuItem
-                    className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-pointer focus:bg-cyan-900/30 focus:text-cyan-100"
+                    className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-pointer focus:bg-cyan-900/30 focus:text-cyan-100 mb-1"
                     onClick={() => signOut()}
                   >
                     <LogOut className="h-4 w-4 text-cyan-400" />
@@ -124,6 +126,96 @@ const Navbar = () => {
             </>
           )}
         </div>
+        {/* Mobile Hamburger */}
+        <div className="md:hidden flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-cyan-400 hover:bg-cyan-900/30"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            aria-label="Open menu"
+          >
+            <Menu className="h-7 w-7" />
+          </Button>
+        </div>
+        {/* Mobile Dropdown */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="fixed top-16 left-0 w-full bg-black/95 backdrop-blur-lg border-b border-cyan-400/20 z-50 md:hidden shadow-lg"
+            >
+              <div className="flex flex-col items-center py-4 space-y-2">
+                {isLoading ? (
+                  <div className="h-10 w-[200px] animate-pulse bg-cyan-400/20 rounded-md" />
+                ) : status === 'authenticated' ? (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Button variant="ghost" className="w-full justify-start">
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <div className="flex items-center gap-3 py-2">
+                      {sessionData.user?.githubId ? (
+                        <Image
+                          src={`${process.env.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.githubId)}`}
+                          alt="User avatar"
+                          height={36}
+                          width={36}
+                          className="rounded-full object-cover h-9 w-9 border border-cyan-400/30"
+                        />
+                      ) : (
+                        <Avatar className="h-9 w-9 border border-cyan-400/30">
+                          <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-cyan-600 text-black font-semibold">
+                            {sessionData.user?.name?.charAt(0) || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <span className="text-cyan-100 font-semibold">
+                        {sessionData.user?.name}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-cyan-100 hover:bg-cyan-900/30"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        signOut();
+                      }}
+                    >
+                      <LogOut className="h-4 w-4 text-cyan-400 mr-2" /> Sign out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/auth/sign-in"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Button variant="ghost" className="w-full justify-start">
+                        Login
+                      </Button>
+                    </Link>
+                    <Link
+                      href="/auth/sign-in"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Button className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300 transition">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   );

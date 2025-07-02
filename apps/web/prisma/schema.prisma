@@ -27,6 +27,15 @@ model User {
     updatedAt       DateTime     @updatedAt
 }
 
+// NOTE: This bug will be solved in later phase. this should solve the issue of installing the github app before even signing in.
+// model PendingInstallation {
+//     id             String   @id @default(cuid())
+//     githubUserId   String // from GitHub webhook
+//     installationId Int      @unique
+//     login          String
+//     createdAt      DateTime @default(now())
+// }
+
 model Repository {
     id           String   @id @default(cuid())
     name         String

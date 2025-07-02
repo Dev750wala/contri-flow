@@ -1,10 +1,10 @@
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-deploy';
-import dotenv from  "dotenv"
+import dotenv from 'dotenv';
 
 dotenv.config({
-  path: `./.env`
+  path: `./.env`,
 });
 
 const { PRIVATE_KEY, ETHERSCAN_API_KEY, SEPOLIA_API_KEY } = process.env;
