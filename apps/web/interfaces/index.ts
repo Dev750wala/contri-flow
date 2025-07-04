@@ -81,3 +81,22 @@ export interface Repository {
   full_name: string;
   private: boolean;
 }
+
+
+export interface InstallationRepositories {
+  action:               'added' | 'removed';
+  installation:         Installation;
+  repository_selection: 'all' | 'selected';
+  repositories_added:   Repository[];
+  repositories_removed: Repository[];
+  requester:            null;
+  sender:               Sender;
+}
+
+export interface Repository {
+  id:        number;
+  node_id:   string;
+  name:      string;
+  full_name: string;
+  private:   boolean;
+}

@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
-import type { AppInstallationInterface } from '@/interfaces';
+import type { AppInstallationInterface, InstallationRepositories } from '@/interfaces';
 import { handleInstallationEvent } from './handlers/installation';
 import { verifyGithubHookSignature } from '@/helpers';
+import { handleInstallationRespositoriesEvent } from './handlers/installation_repositories';
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -23,7 +24,9 @@ export async function POST(request: Request) {
       );
 
     case 'installation_repositories':
-      console.log('to be implemented.');
+      response = await handleInstallationRespositoriesEvent(
+        body as InstallationRepositories
+      )
 
     default:
       break;

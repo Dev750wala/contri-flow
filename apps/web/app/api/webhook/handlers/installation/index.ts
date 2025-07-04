@@ -19,8 +19,5 @@ export async function handleInstallationEvent(body: AppInstallationInterface) {
 
     case 'unsuspend':
       return await handleInstallationUnsuspendedEvent(body);
-
-    default:
-      break;
   }
 }
