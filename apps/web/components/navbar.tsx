@@ -48,9 +48,9 @@ const Navbar = () => {
                     variant="ghost"
                     className="relative h-11 w-11 rounded-full hover:bg-cyan-900/30 transition-all duration-200 p-0 border-2 border-cyan-400/30 shadow-cyan-400/10 shadow-md"
                   >
-                    {sessionData.user?.githubId ? (
+                    {sessionData.user?.github_id ? (
                       <Image
-                        src={`${process.env.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.githubId)}`}
+                        src={`${process.env.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.github_id)}`}
                         alt="User avatar"
                         height={44}
                         width={44}
@@ -162,9 +162,9 @@ const Navbar = () => {
                       </Button>
                     </Link>
                     <div className="flex items-center gap-3 py-2">
-                      {sessionData.user?.githubId ? (
+                      {sessionData.user?.github_id ? (
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.githubId)}`}
+                          src={`${process.env.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.github_id)}`}
                           alt="User avatar"
                           height={36}
                           width={36}
