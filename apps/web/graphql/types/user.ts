@@ -7,22 +7,22 @@ export const User = objectType({
     t.typeName;
     t.nonNull.string('name');
     t.nonNull.string('email');
-    t.nonNull.string('githubId');
-    t.string('walletAddress');
+    t.nonNull.string('github_id');
+    t.string('wallet_address');
     t.list.field('repositories', {
       type: 'Repository',
       resolve: async (parent, _args, ctx: Context) => {
         return ctx.prisma.repository.findMany({
           where: {
-            userId: parent.id,
+            user_id: parent.id,
           },
         });
       },
     });
     t.string('signMessageHash');
-    t.string('installationId');
-    t.nonNull.string('createdAt');
-    t.nonNull.string('updatedAt');
+    t.string('installation_id');
+    t.nonNull.string('created_at');
+    t.nonNull.string('updated_at');
   },
 });
 
@@ -32,12 +32,12 @@ export const UserQuery = extendType({
     t.field('user', {
       type: 'User',
       args: {
-        githubId: nonNull(stringArg()),
+        github_id: nonNull(stringArg()),
       },
-      resolve: async (_parent, args: { githubId: string }, ctx: Context) => {
+      resolve: async (_parent, args: { github_id: string }, ctx: Context) => {
         return ctx.prisma.user.findUnique({
           where: {
-            githubId: args.githubId,
+            github_id: args.github_id,
           },
         });
       },

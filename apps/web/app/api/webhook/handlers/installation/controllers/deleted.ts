@@ -10,7 +10,7 @@ export async function handleInstallationDeletedEvent(
 
     const user = await prisma.user.findFirst({
       where: {
-        installationId: installation.id.toString(),
+        installation_id: installation.id.toString(),
       },
     });
 
@@ -23,18 +23,14 @@ export async function handleInstallationDeletedEvent(
       };
     }
 
-    const deletedRepositories = await prisma.repository.deleteMany({
-      where: {
-        userId: user.id,
-      },
-    });
-
     await prisma.user.update({
       where: {
         id: user.id,
       },
       data: {
-        installationId: null,
+        installation_id: null,
+        app_uninstalled_at: new Date(),
+        app_installed: false,
       },
     });
 
@@ -44,7 +40,6 @@ export async function handleInstallationDeletedEvent(
       message: 'Installation deleted successfully',
       data: {
         installationId: installation.id,
-        deletedRepositoriesCount: deletedRepositories.count,
         userId: user.id,
       },
     };

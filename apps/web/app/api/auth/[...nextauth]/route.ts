@@ -15,7 +15,7 @@ declare module 'next-auth' {
   interface Session {
     user: {
       userId?: string;
-      githubId?: string;
+      github_id?: string;
       name?: string | null;
       email?: string | null;
     };
@@ -24,7 +24,7 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     userId?: string;
-    githubId?: string;
+    github_id?: string;
     name?: string | null;
     email?: string | null;
   }
@@ -80,14 +80,14 @@ const authOptions: NextAuthOptions = {
       const email = profile?.email;
 
       let dbUser = await prisma.user.findUnique({
-        where: { githubId: githubId?.toString() },
+        where: { github_id: githubId?.toString() },
       });
 
       if (!dbUser) {
         dbUser = await prisma.user.create({
           data: {
             name: profile?.name || (profile as any)?.login || 'NoName',
-            githubId: githubId?.toString()!,
+            github_id: githubId?.toString()!,
             email: email!,
           },
         });
@@ -109,12 +109,12 @@ const authOptions: NextAuthOptions = {
     }) {
       if (account && profile) {
         const dbUser = await prisma.user.findUnique({
-          where: { githubId: account.providerAccountId },
+          where: { github_id: account.providerAccountId },
         });
 
         if (dbUser) {
           token.userId = dbUser.id;
-          token.githubId = dbUser.githubId;
+          token.github_id = dbUser.github_id;
           token.name = dbUser.name;
           token.email = dbUser.email;
         }
@@ -124,7 +124,7 @@ const authOptions: NextAuthOptions = {
 
     async session({ session, token }: { session: Session; token: any }) {
       if (!session.user) session.user = {};
-      session.user.githubId = token.githubId;
+      session.user.github_id = token.github_id;
       session.user.userId = token.userId as string;
       session.user.name = token.name;
       session.user.email = token.email;

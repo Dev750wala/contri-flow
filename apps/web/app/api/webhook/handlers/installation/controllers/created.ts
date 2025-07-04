@@ -11,7 +11,7 @@ export async function handleInstallationCreatedEvent(
     // Check if user exists in database
     const user = await prisma.user.findUnique({
       where: {
-        githubId: sender.id.toString(),
+        github_id: sender.id.toString(),
       },
     });
 
@@ -30,18 +30,25 @@ export async function handleInstallationCreatedEvent(
         id: user.id,
       },
       data: {
-        installationId: installation.id.toString(),
+        installation_id: installation.id.toString(),
+        app_installed: true,
+        app_uninstalled_at: null,
       },
     });
 
     // Add repositories to the database
     const createdRepositories = await Promise.all(
       repositories.map(async (repo) => {
-        return await prisma.repository.create({
-          data: {
+        return await prisma.repository.upsert({
+          where: { github_repo_id: repo.id.toString() },
+          update: {
             name: repo.name,
-            githubRepoId: repo.id.toString(),
-            userId: user.id,
+            user_id: user.id,
+          },
+          create: {
+            name: repo.name,
+            github_repo_id: repo.id.toString(),
+            user_id: user.id,
           },
         });
       })
@@ -52,12 +59,12 @@ export async function handleInstallationCreatedEvent(
       success: true,
       message: 'Installation created successfully',
       data: {
-        installationId: installation.id,
-        repositoriesCount: createdRepositories.length,
+        installation_id: installation.id,
+        repositories_count: createdRepositories.length,
         repositories: createdRepositories.map((repo) => ({
           id: repo.id,
           name: repo.name,
-          githubRepoId: repo.githubRepoId,
+          github_repo_id: repo.github_repo_id,
         })),
       },
     };

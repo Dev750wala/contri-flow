@@ -5,7 +5,6 @@ import { handleInstallationEvent } from './handlers/installation';
 import { verifyGithubHookSignature } from '@/helpers';
 
 export async function POST(request: Request) {
-  const signature = request.headers.get('X-Hub-Signature-256');
   const body = await request.json();
 
   let signatureVerified = await verifyGithubHookSignature(body);
@@ -22,6 +21,9 @@ export async function POST(request: Request) {
       response = await handleInstallationEvent(
         body as AppInstallationInterface
       );
+
+    case 'installation_repositories':
+      console.log('to be implemented.');
 
     default:
       break;

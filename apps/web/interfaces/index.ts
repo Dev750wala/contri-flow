@@ -37,8 +37,8 @@ export interface Installation {
   single_file_name: null;
   has_multiple_single_files: boolean;
   single_file_paths: any[];
-  suspended_by: null;
-  suspended_at: null;
+  suspended_by: Sender | null;
+  suspended_at: Date;
 }
 
 export interface Sender {

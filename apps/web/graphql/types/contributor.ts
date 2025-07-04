@@ -5,16 +5,16 @@ export const Contributor = objectType({
   description: 'A contributor to the project, identified by their GitHub ID.',
   definition(t) {
     t.nonNull.string('id');
-    t.nonNull.string('githubId');
-    t.string('walletAddress');
-    t.nonNull.string('createdAt');
-    t.nonNull.string('updatedAt');
+    t.nonNull.string('github_id');
+    t.string('wallet_address');
+    t.nonNull.string('created_at');
+    t.nonNull.string('updated_at');
     t.list.field('rewards', {
       type: 'Reward',
       resolve: async (parent, _args, ctx) => {
         return ctx.prisma.reward.findMany({
           where: {
-            contributorGithubId: parent.githubId,
+            contributor_github_id: parent.github_id,
           },
         });
       },
@@ -28,12 +28,12 @@ export const ContributorQuery = extendType({
     t.field('contributor', {
       type: 'Contributor',
       args: {
-        githubId: nonNull('String'),
+        github_id: nonNull('String'),
       },
       resolve: async (_parent, args, ctx) => {
         return ctx.prisma.contributor.findUnique({
           where: {
-            githubId: args.githubId,
+            github_id: args.github_id,
           },
         });
       },

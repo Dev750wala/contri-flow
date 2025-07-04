@@ -15,16 +15,22 @@ datasource db {
 }
 
 model User {
-    id              String       @id @default(cuid())
-    name            String
-    email           String       @unique
-    githubId        String       @unique
-    walletAddress   String?
-    repositories    Repository[]
-    signMessageHash String?
-    installationId  String?      @unique
-    createdAt       DateTime     @default(now())
-    updatedAt       DateTime     @updatedAt
+    id                 String       @id @default(cuid())
+    name               String
+    email              String       @unique
+    github_id          String       @unique
+    wallet_address     String?
+    repositories       Repository[]
+    sign_message_hash  String?
+    installation_id    String?      @unique
+    app_installed      Boolean      @default(false)
+    app_uninstalled_at DateTime?
+    suspended          Boolean?     @default(false)
+    created_at         DateTime     @default(now())
+    updated_at         DateTime     @updatedAt
+
+    @@index([github_id])
+    @@index([installation_id])
 }
 
 // NOTE: This bug will be solved in later phase. this should solve the issue of installing the github app before even signing in.
@@ -37,47 +43,47 @@ model User {
 // }
 
 model Repository {
-    id           String   @id @default(cuid())
-    name         String
-    githubRepoId String   @unique
-    userId       String
-    user         User     @relation(fields: [userId], references: [id])
-    rewards      Reward[]
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
+    id             String   @id @default(cuid())
+    name           String
+    github_repo_id String   @unique
+    user_id         String
+    user           User     @relation(fields: [user_id], references: [id])
+    rewards        Reward[]
+    created_at     DateTime @default(now())
+    updated_at     DateTime @updatedAt
 }
 
 model Contributor {
-    id            String   @id @default(cuid())
-    githubId      String   @unique
-    walletAddress String?
-    email         String?  @unique
-    rewards       Reward[]
-    createdAt     DateTime @default(now())
-    updatedAt     DateTime @updatedAt
+    id             String   @id @default(cuid())
+    github_id       String   @unique
+    wallet_address String?
+    email          String?  @unique
+    rewards        Reward[]
+    created_at     DateTime @default(now())
+    updated_at     DateTime @updatedAt
 }
 
 model Reward {
     id String @id @default(cuid())
 
     // Voucher data
-    ownerGithubId       String
-    contributorGithubId String
-    repoGithubId        String
-    prNumber            Int
-    secret              String
-    amountUsd           Float
+    owner_github_id       String
+    contributor_github_id String
+    repo_github_id        String
+    pr_number             Int
+    secret                String
+    amount_usd            Float
 
-    amountEth     Float?
-    contributorId String
-    contributor   Contributor @relation(fields: [contributorId], references: [id])
-    claimed       Boolean     @default(false)
-    claimedAt     DateTime?
+    amount_eth     Float?
+    contributor_id String
+    contributor    Contributor @relation(fields: [contributor_id], references: [id])
+    claimed        Boolean     @default(false)
+    claimed_at     DateTime?
 
-    createdAt    DateTime    @default(now())
-    updatedAt    DateTime    @updatedAt
-    Repository   Repository? @relation(fields: [repositoryId], references: [id])
-    repositoryId String?
+    created_at    DateTime    @default(now())
+    updated_at    DateTime    @updatedAt
+    repository    Repository? @relation(fields: [repository_id], references: [id])
+    repository_id String?
 
-    @@unique([ownerGithubId, repoGithubId, prNumber])
+    @@unique([owner_github_id, repo_github_id, pr_number])
 }
