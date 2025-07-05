@@ -13,6 +13,7 @@ const server = new ApolloServer<Context>({
     error: (message) => console.error(message),
   },
   cache: 'bounded',
+  introspection: true
 });
 
 const handler = startServerAndCreateNextHandler(server, {

@@ -21,14 +21,14 @@ export async function handleRepositoriesRemovedEvent(
       };
     }
 
-    const repositories = await Promise.all(
-      body.repositories_removed.map((repo) => {
-        return prisma.repository.delete({
-          where: {
-            github_repo_id: repo.id.toString(),
-          },
-        });
-      })
+    // const repositories = await Promise.all(
+    //   body.repositories_removed.map((repo) => {
+    //     return prisma.repository.delete({   
+    //       where: {
+    //         github_repo_id: repo.id.toString(),
+    //       },
+    //     });
+    //   })
     );
 
     return {
