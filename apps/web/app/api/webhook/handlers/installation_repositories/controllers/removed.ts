@@ -29,14 +29,15 @@ export async function handleRepositoriesRemovedEvent(
     //       },
     //     });
     //   })
-    );
+    // );
 
     return {
       success: true,
       statusCode: 200,
       message: 'Repositories removed successfully',
       data: {
-        repositories: repositories.length,
+        // repositories: repositories.length,
+        done: true
       },
     };
   } catch (error) {
