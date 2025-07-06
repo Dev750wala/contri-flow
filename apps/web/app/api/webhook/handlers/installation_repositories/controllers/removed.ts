@@ -21,23 +21,28 @@ export async function handleRepositoriesRemovedEvent(
       };
     }
 
-    // const repositories = await Promise.all(
-    //   body.repositories_removed.map((repo) => {
-    //     return prisma.repository.delete({   
-    //       where: {
-    //         github_repo_id: repo.id.toString(),
-    //       },
-    //     });
-    //   })
-    // );
+    const removedRepositories = await prisma.$transaction(async (tx) => {
+      const updatePromises = body.repositories_removed.map((repo) =>
+        tx.repository.updateMany({
+          where: {
+            github_repo_id: repo.id.toString(),
+          },
+          data: {
+            is_removed: true,
+            removed_at: new Date(),
+          },
+        })
+      );
+
+      return Promise.all(updatePromises);
+    });
 
     return {
       success: true,
       statusCode: 200,
       message: 'Repositories removed successfully',
       data: {
-        // repositories: repositories.length,
-        done: true
+        updatedCount: removedRepositories.length,
       },
     };
   } catch (error) {

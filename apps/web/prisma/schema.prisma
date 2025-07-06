@@ -43,19 +43,21 @@ model User {
 // }
 
 model Repository {
-    id             String   @id @default(cuid())
+    id             String    @id @default(cuid())
     name           String
-    github_repo_id String   @unique
-    user_id         String
-    user           User     @relation(fields: [user_id], references: [id])
+    github_repo_id String    @unique
+    user_id        String
+    is_removed     Boolean   @default(false)
+    removed_at     DateTime?
+    user           User      @relation(fields: [user_id], references: [id])
     rewards        Reward[]
-    created_at     DateTime @default(now())
-    updated_at     DateTime @updatedAt
+    created_at     DateTime  @default(now())
+    updated_at     DateTime  @updatedAt
 }
 
 model Contributor {
     id             String   @id @default(cuid())
-    github_id       String   @unique
+    github_id      String   @unique
     wallet_address String?
     email          String?  @unique
     rewards        Reward[]
