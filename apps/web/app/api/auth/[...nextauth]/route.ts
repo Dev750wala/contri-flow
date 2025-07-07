@@ -79,8 +79,8 @@ const authOptions: NextAuthOptions = {
       const githubId = githubProfile?.id;
       const email = profile?.email;
 
-      profile && (
-        await prisma.user.upsert({
+      profile &&
+        (await prisma.user.upsert({
           where: { github_id: githubId?.toString() },
           create: {
             name: profile?.name || (profile as any)?.login || 'NoName',
@@ -90,9 +90,7 @@ const authOptions: NextAuthOptions = {
           update: {
             email: email!,
           },
-        })
-      )
-
+        }));
 
       return true;
     },
