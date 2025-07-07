@@ -79,19 +79,20 @@ const authOptions: NextAuthOptions = {
       const githubId = githubProfile?.id;
       const email = profile?.email;
 
-      let dbUser = await prisma.user.findUnique({
-        where: { github_id: githubId?.toString() },
-      });
-
-      if (!dbUser) {
-        dbUser = await prisma.user.create({
-          data: {
+      profile && (
+        await prisma.user.upsert({
+          where: { github_id: githubId?.toString() },
+          create: {
             name: profile?.name || (profile as any)?.login || 'NoName',
             github_id: githubId?.toString()!,
             email: email!,
           },
-        });
-      }
+          update: {
+            email: email!,
+          },
+        })
+      )
+
 
       return true;
     },

@@ -1,8 +1,7 @@
 import crypto from 'crypto';
 
-export async function verifyGithubHookSignature(request: Request) {
+export async function verifyGithubHookSignature(request: Request, body: any) {
   const signature = request.headers.get('X-Hub-Signature-256');
-  const body = await request.json();
 
   const hmac = crypto
     .createHmac('sha256', process.env.GITHUB_WEBHOOK_SECRET!)

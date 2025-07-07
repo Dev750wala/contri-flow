@@ -27,7 +27,7 @@ export async function handleInstallationUnsuspendedEvent(
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { installation_id: null, suspended: false },
+      data: { suspended: false },
     });
 
     return {

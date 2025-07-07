@@ -8,7 +8,7 @@ import { handleInstallationRespositoriesEvent } from './handlers/installation_re
 export async function POST(request: Request) {
   const body = await request.json();
 
-  let signatureVerified = await verifyGithubHookSignature(body);
+  let signatureVerified = await verifyGithubHookSignature(request, body);
 
   if (!signatureVerified) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });

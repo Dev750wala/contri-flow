@@ -23,6 +23,24 @@ export async function handleInstallationDeletedEvent(
       };
     }
 
+    if (!user.email) {
+      let dbUser = await prisma.user.delete({
+        where: {
+          github_id: installation.id.toString(),
+        },
+      });
+
+      return {
+        success: true,
+        statusCode: 200,
+        message: 'Installation deleted successfully',
+        data: {
+          installationId: installation.id,
+          userId: user.id,
+        },
+      };
+    }
+
     await prisma.user.update({
       where: {
         id: user.id,
