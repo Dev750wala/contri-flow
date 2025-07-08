@@ -50,6 +50,7 @@ contract ContriFlow is ReentrancyGuard {
         bytes32 hash;
         uint256 contributorGithubId;
         uint256 dollarAmount8dec; // USD amount scaled to 8 decimals (e.g. $50 => 50 * 1e8)
+        uint256 ethAmountInWei;
         bool claimed;
     }
 
@@ -123,12 +124,20 @@ contract ContriFlow is ReentrancyGuard {
 
         if (vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber].hash != bytes32(0)) revert VoucherExists();
 
+                // Compute ETH amount via Chainlink
+        uint256 ethAmt = PriceConverter.getEthAmountFromUsd(
+            dollarAmount8dec,
+            s_priceFeed
+        );
+        require(ethAmt > 0, "Invalid ETH amount");
+
         // Store voucher
         vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber] = Voucher({
             hash: hash,
             contributorGithubId: contributorGithubId,
             dollarAmount8dec: dollarAmount8dec,
-            claimed: false
+            claimed: false,
+            ethAmountInWei: ethAmt
         });
         emit VoucherStored(
             ownerAddress,
@@ -180,12 +189,7 @@ contract ContriFlow is ReentrancyGuard {
 
         // Mark claimed
         v.claimed = true;
-
-        // Compute ETH amount via Chainlink
-        uint256 ethAmt = PriceConverter.getEthAmountFromUsd(
-            dollarAmount8dec,
-            s_priceFeed
-        );
+        uint256 ethAmt = v.ethAmountInWei;
 
         // Deduct from owner's deposit for this repo
         uint256 bal = ownerDetails[ownerAddress].amount;
