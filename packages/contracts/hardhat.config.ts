@@ -31,6 +31,14 @@ const config: HardhatUserConfig = {
       { version: '0.8.28', settings: { evmVersion: 'istanbul' } },
     ],
   },
+  namedAccounts: {
+    deployer: {
+      default: 0
+    },
+    user: {
+      default: 1
+    }
+  },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
   },
