@@ -58,7 +58,7 @@ export interface Sender {
   repos_url: string;
   events_url: string;
   received_events_url: string;
-  type: string;
+  type: "Organization" | "User";
   user_view_type: string;
   site_admin: boolean;
 }
