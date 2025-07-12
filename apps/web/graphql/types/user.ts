@@ -14,7 +14,7 @@ export const User = objectType({
       resolve: async (parent, _args, ctx: Context) => {
         return ctx.prisma.repository.findMany({
           where: {
-            user_id: parent.id,
+            organization_id: parent.id,
           },
         });
       },

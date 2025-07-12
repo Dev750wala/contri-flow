@@ -81,7 +81,7 @@ export const RepositoryQuery = extendType({
       resolve: async (_parent, args, ctx: Context) => {
         return ctx.prisma.repository.findMany({
           where: {
-            user_id: args.userId,
+            organization_id: args.userId,
           },
         });
       },
