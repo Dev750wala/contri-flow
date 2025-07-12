@@ -9,7 +9,6 @@ import type { AdapterUser } from 'next-auth/adapters';
 import GithubProvider from 'next-auth/providers/github';
 import prisma from '@/lib/prisma';
 import { type GithubProfile } from 'next-auth/providers/github';
-import { profile } from 'console';
 
 declare module 'next-auth' {
   interface Session {
@@ -67,8 +66,6 @@ const authOptions: NextAuthOptions = {
 
   callbacks: {
     async signIn({
-      user,
-      account,
       profile,
     }: {
       user: User | AdapterUser;

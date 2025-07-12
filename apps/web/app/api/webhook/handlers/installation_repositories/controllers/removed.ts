@@ -6,18 +6,18 @@ export async function handleRepositoriesRemovedEvent(
   body: InstallationRepositories
 ): Promise<ControllerReturnType> {
   try {
-    const user = await prisma.user.findFirst({
+    const organization = await prisma.organization.findFirst({
       where: {
         installation_id: body.installation.id.toString(),
       },
     });
 
-    if (!user) {
+    if (!organization) {
       return {
         success: false,
         statusCode: 404,
-        message: 'User not found',
-        error: 'User not found',
+        message: 'Organization not found for this installation',
+        error: 'No organization associated with this installation ID',
       };
     }
 

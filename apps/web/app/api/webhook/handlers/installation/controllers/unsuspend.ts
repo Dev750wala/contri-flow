@@ -8,25 +8,23 @@ export async function handleInstallationUnsuspendedEvent(
   try {
     const { installation } = body;
 
-    const user = await prisma.user.findFirst({
+    const organization = await prisma.organization.findUnique({
       where: {
-        OR: [
-          { installation_id: installation.id.toString() },
-          { github_id: installation.suspended_by?.id.toString() },
-        ],
+        installation_id: installation.id.toString(),
       },
     });
 
-    if (!user) {
+    if (!organization) {
       return {
         success: false,
         statusCode: 404,
-        message: 'User not found',
+        message: 'Organization not found for this installation',
+        error: 'No organization associated with this installation ID',
       };
     }
 
-    await prisma.user.update({
-      where: { id: user.id },
+    await prisma.organization.update({
+      where: { id: organization.id },
       data: { suspended: false },
     });
 

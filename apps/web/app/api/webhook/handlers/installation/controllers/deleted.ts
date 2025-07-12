@@ -8,47 +8,28 @@ export async function handleInstallationDeletedEvent(
   try {
     const { installation } = body;
 
-    const user = await prisma.user.findFirst({
+    const organization = await prisma.organization.findUnique({
       where: {
         installation_id: installation.id.toString(),
       },
     });
 
-    if (!user) {
+    if (!organization) {
       return {
         success: false,
         statusCode: 404,
-        message: 'User not found for this installation',
-        error: 'No user associated with this installation ID',
+        message: 'Organization not found for this installation',
+        error: 'No organization associated with this installation ID',
       };
     }
 
-    if (!user.email) {
-      let dbUser = await prisma.user.delete({
-        where: {
-          github_id: installation.id.toString(),
-        },
-      });
-
-      return {
-        success: true,
-        statusCode: 200,
-        message: 'Installation deleted successfully',
-        data: {
-          installationId: installation.id,
-          userId: user.id,
-        },
-      };
-    }
-
-    await prisma.user.update({
+    await prisma.organization.update({
       where: {
-        id: user.id,
+        id: organization.id,
       },
       data: {
-        installation_id: null,
-        app_uninstalled_at: new Date(),
-        app_installed: false,
+          app_uninstalled_at: new Date(),
+          app_installed: false,
       },
     });
 
@@ -57,8 +38,8 @@ export async function handleInstallationDeletedEvent(
       statusCode: 200,
       message: 'Installation deleted successfully',
       data: {
-        installationId: installation.id,
-        userId: user.id,
+        installation_id: installation.id,
+        organization_id: organization.id,
       },
     };
   } catch (error) {

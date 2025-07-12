@@ -6,33 +6,45 @@ export async function handleRepositoriesAddedEvent(
   body: InstallationRepositories
 ): Promise<ControllerReturnType> {
   try {
-    const user = await prisma.user.findFirst({
+    const organization = await prisma.organization.findFirst({
       where: {
         installation_id: body.installation.id.toString(),
       },
     });
 
-    if (!user) {
+    if (!organization) {
       return {
         success: false,
         statusCode: 404,
-        message: 'User not found',
-        error: 'User not found',
+        message: 'Organization not found for this installation',
+        error: 'No organization associated with this installation ID',
       };
     }
 
-    const repositories = await Promise.all(
-        body.repositories_added.map((repo) => {
-            return prisma.repository.create({
-                data: {
-                    user_id: user.id,
-                    github_repo_id: repo.id.toString(),
-                    name: repo.full_name,
-                    
-                }
-            })
+    const repositories = await prisma.$transaction(async (tx) => {
+      const updatePromises = body.repositories_added.map((repo) =>
+        tx.repository.upsert({
+          where: {
+            github_repo_id: repo.id.toString(),
+          },
+          update: {
+            organization_id: organization.id,
+            name: repo.full_name,
+            is_removed: false,
+            removed_at: null,
+          },
+          create: {
+            organization_id: organization.id,
+            name: repo.full_name,
+            github_repo_id: repo.id.toString(),
+            is_removed: false,
+            removed_at: null,
+          },
         })
-    )
+      );
+
+      return Promise.all(updatePromises);
+    });
 
     return {
       success: true,

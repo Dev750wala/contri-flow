@@ -1,86 +1,133 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-    provider = "prisma-client-js"
-    // output   = "@/generated/prisma"
+  provider = "prisma-client-js"
 }
 
-generator nexusPrisma  {
-    provider = "nexus-prisma"
+generator nexusPrisma {
+  provider = "nexus-prisma"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-    id                 String       @id @default(cuid())
-    name               String
-    email              String?      @unique
-    github_id          String       @unique
-    wallet_address     String?
-    repositories       Repository[]
-    sign_message_hash  String?
-    installation_id    String?      @unique
-    app_installed      Boolean      @default(false)
-    app_uninstalled_at DateTime?
-    suspended          Boolean?     @default(false)
-    created_at         DateTime     @default(now())
-    updated_at         DateTime     @updatedAt
+  id             String                 @id @default(cuid())
+  name           String
+  email          String?                @unique
+  github_id      String                 @unique
+  wallet_address String?
+  // Organizational memberships
+  memberships    OrganizationMember[]
+  // Maintainer roles
+  maintenances   RepositoryMaintainer[]
+  // Contributor rewards
+  contributor    Contributor?
+  created_at     DateTime               @default(now())
+  updated_at     DateTime               @updatedAt
 
-    @@index([github_id])
-    @@index([installation_id])
+  @@index([github_id])
+}
+
+model Organization {
+  id                 String               @id @default(cuid())
+  name               String
+  github_org_id      String               @unique
+  installation_id    String               @unique
+  app_installed      Boolean              @default(false)
+  app_uninstalled_at DateTime?
+  suspended          Boolean              @default(false)
+  repositories       Repository[]
+  members            OrganizationMember[]
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+
+  @@index([github_org_id])
+  @@index([installation_id])
+}
+
+model OrganizationMember {
+  id              String           @id @default(cuid())
+  user            User             @relation(fields: [user_id], references: [id])
+  user_id         String
+  organization    Organization     @relation(fields: [organization_id], references: [id])
+  organization_id String
+  role            OrganizationRole @default(MEMBER) // or OWNER
+  created_at      DateTime         @default(now())
+
+  @@unique([user_id, organization_id])
 }
 
 model Repository {
-    id             String    @id @default(cuid())
-    name           String
-    github_repo_id String    @unique
-    user_id        String
-    is_removed     Boolean   @default(false)
-    removed_at     DateTime?
-    user           User      @relation(fields: [user_id], references: [id])
-    rewards        Reward[]
-    created_at     DateTime  @default(now())
-    updated_at     DateTime  @updatedAt
+  id              String                 @id @default(cuid())
+  name            String
+  github_repo_id  String                 @unique
+  organization_id String
+  organization    Organization           @relation(fields: [organization_id], references: [id])
+  maintainers     RepositoryMaintainer[]
+  rewards         Reward[]
+  is_removed      Boolean                @default(false)
+  removed_at      DateTime?
+  created_at      DateTime               @default(now())
+  updated_at      DateTime               @updatedAt
+
+  @@index([github_repo_id])
+}
+
+model RepositoryMaintainer {
+  id            String         @id @default(cuid())
+  repository    Repository     @relation(fields: [repository_id], references: [id])
+  repository_id String
+  user          User           @relation(fields: [user_id], references: [id])
+  user_id       String
+  role          RepositoryRole @default(MAINTAINER) // ADMIN, MAINTAINER, TRIAGE
+  created_at    DateTime       @default(now())
+
+  @@unique([repository_id, user_id])
 }
 
 model Contributor {
-    id             String   @id @default(cuid())
-    github_id      String   @unique
-    wallet_address String?
-    email          String?  @unique
-    rewards        Reward[]
-    created_at     DateTime @default(now())
-    updated_at     DateTime @updatedAt
+  id             String   @id @default(cuid())
+  github_id      String   @unique
+  wallet_address String?
+  email          String?  @unique
+  user_id        String?  @unique // if contributor later becomes a user
+  user           User?    @relation(fields: [user_id], references: [id])
+  rewards        Reward[]
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
 }
 
 model Reward {
-    id String @id @default(cuid())
+  id                    String    @id @default(cuid())
+  owner_github_id       String // GitHub org ID that initiated reward
+  contributor_github_id String
+  repo_github_id        String
+  pr_number             Int
+  secret                String
+  amount_usd            Float
+  amount_eth            Float?
+  claimed               Boolean   @default(false)
+  claimed_at            DateTime?
 
-    // Voucher data
-    owner_github_id       String
-    contributor_github_id String
-    repo_github_id        String
-    pr_number             Int
-    secret                String
-    amount_usd            Float
+  contributor_id String
+  contributor    Contributor @relation(fields: [contributor_id], references: [id])
+  repository_id  String
+  repository     Repository  @relation(fields: [repository_id], references: [id])
 
-    amount_eth     Float?
-    contributor_id String
-    contributor    Contributor @relation(fields: [contributor_id], references: [id])
-    claimed        Boolean     @default(false)
-    claimed_at     DateTime?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-    created_at    DateTime    @default(now())
-    updated_at    DateTime    @updatedAt
-    repository    Repository? @relation(fields: [repository_id], references: [id])
-    repository_id String?
+  @@unique([owner_github_id, repo_github_id, pr_number])
+}
 
-    @@unique([owner_github_id, repo_github_id, pr_number])
+enum RepositoryRole {
+  ADMIN
+  MAINTAINER
+  TRIAGE
+}
+
+enum OrganizationRole {
+  OWNER
+  MEMBER
 }
