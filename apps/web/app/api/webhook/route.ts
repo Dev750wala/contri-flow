@@ -1,9 +1,7 @@
-import crypto from 'crypto';
 import { NextResponse } from 'next/server';
-import type { AppInstallationInterface, InstallationRepositories } from '@/interfaces';
-import { handleInstallationEvent } from './handlers/installation';
+import type { AppInstallationInterface, InstallationRepositories, RepositoryRenamedWebhookPayload } from '@/interfaces';
+import { handleInstallationEvent, handleInstallationRespositoriesEvent, handleRepositoriesEvent } from './handlers';
 import { verifyGithubHookSignature } from '@/helpers';
-import { handleInstallationRespositoriesEvent } from './handlers/installation_repositories';
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -26,6 +24,11 @@ export async function POST(request: Request) {
     case 'installation_repositories':
       response = await handleInstallationRespositoriesEvent(
         body as InstallationRepositories
+      )
+
+    case 'repository':
+      response = await handleRepositoriesEvent(
+        body as RepositoryRenamedWebhookPayload
       )
 
     default:

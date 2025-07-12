@@ -9,12 +9,12 @@ export const Repository = objectType({
     t.nonNull.string('github_repo_id');
     t.nonNull.string('created_at');
     t.nonNull.string('updated_at');
-    t.field('user', {
-      type: 'User',
+    t.field('organization', {
+      type: 'Organization',
       resolve: async (parent, _args, ctx: Context) => {
-        return ctx.prisma.user.findUnique({
+        return ctx.prisma.organization.findUnique({
           where: {
-            id: parent.user_id,
+            id: parent.organization_id,
           },
         });
       },
@@ -73,15 +73,15 @@ export const RepositoryQuery = extendType({
         });
       },
     });
-    t.list.field('repositoriesByUserId', {
+    t.list.field('repositoriesByOrganizationId', {
       type: 'Repository',
       args: {
-        userId: nonNull(stringArg()),
+        organizationId: nonNull(stringArg()),
       },
       resolve: async (_parent, args, ctx: Context) => {
         return ctx.prisma.repository.findMany({
           where: {
-            organization_id: args.userId,
+            organization_id: args.organizationId,
           },
         });
       },
