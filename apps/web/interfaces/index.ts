@@ -223,3 +223,33 @@ interface RepositoryRenamedWebhookPayloadRepository {
   default_branch: string;
   custom_properties: any;
 }
+
+// --------------------------------------------------------------------------------
+
+export interface MemberEventInterface {
+  action: "added" | "removed" | "edited";
+  member: Sender;
+  changes: unknown;
+  repository: RepositoryRenamedWebhookPayloadRepository;
+  organization: Organization;
+  sender: Sender;
+  installation: InstallationInterface;
+}
+
+export interface MemberAddedChanges {
+  permission: {
+    to: string
+  };
+  role_name: {
+    to: RoleType;
+  };
+}
+
+export interface MemberEditedChanges {
+  permission: {
+    from: RoleType;
+    to: RoleType;
+  };
+}
+
+type RoleType = "admin" | "maintain" | "read" | "triage" | "write";

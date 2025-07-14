@@ -1,6 +1,6 @@
 import "hardhat-deploy"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
-import { developmentChain, DECIMALS, INITIAL_ANSWER } from "../helpers"
+import { developmentChains, DECIMALS, INITIAL_ANSWER } from "../helpers"
 import { network } from "hardhat";
 
 module.exports = async (hre: HardhatRuntimeEnvironment) => {
@@ -9,7 +9,7 @@ module.exports = async (hre: HardhatRuntimeEnvironment) => {
 
     const { deployer } = await getNamedAccounts()
     
-    if (developmentChain.includes(network.name)) {
+    if (developmentChains.includes(network.name)) {
         log("Deploying mocks...")
         const mockV3Aggregator = await deploy("MockV3Aggregator", {
             from: deployer,

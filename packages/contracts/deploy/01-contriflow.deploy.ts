@@ -1,6 +1,6 @@
 import "hardhat-deploy";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { developmentChain, networkConfig } from "../helpers";
+import { developmentChains, networkConfig } from "../helpers";
 import { network } from "hardhat";
 import { verify } from "../utils/verify";
 
@@ -11,7 +11,7 @@ module.exports = async (hre: HardhatRuntimeEnvironment) => {
     const { deployer } = await getNamedAccounts();
 
     let ethUsdPriceFeedAddress: string;
-    if (developmentChain.includes(network.name)) {
+    if (developmentChains.includes(network.name)) {
         log("Local network detected!...");
         ethUsdPriceFeedAddress = (await deployments.get("MockV3Aggregator")).address;
         console.log(`Using mock price feed at address: ${ethUsdPriceFeedAddress}`);
@@ -19,7 +19,7 @@ module.exports = async (hre: HardhatRuntimeEnvironment) => {
         ethUsdPriceFeedAddress = networkConfig[network.config.chainId!].ethUsdPriceFeed!;
         console.log(`Using real price feed at address: ${ethUsdPriceFeedAddress}`);
     }
-
+        
     const args = [ethUsdPriceFeedAddress];
     const contriflow = await deploy("ContriFlow", {
         from: deployer,
@@ -29,7 +29,7 @@ module.exports = async (hre: HardhatRuntimeEnvironment) => {
         contract: "ContriFlow",
     })
 
-    if (!developmentChain.includes(network.name)) {
+    if (!developmentChains.includes(network.name)) {
         console.log("Trying to verify the contract on Etherscan...");
 
         await verify(contriflow.address, args)
