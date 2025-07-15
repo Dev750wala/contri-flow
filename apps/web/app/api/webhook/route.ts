@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
-import type { AppInstallationInterface, InstallationRepositories, RepositoryRenamedWebhookPayload } from '@/interfaces';
-import { handleInstallationEvent, handleInstallationRespositoriesEvent, handleRepositoriesEvent } from './handlers';
+import type {
+  AppInstallationInterface,
+  InstallationRepositories,
+  RepositoryRenamedWebhookPayload,
+} from '@/interfaces';
+import {
+  handleInstallationEvent,
+  handleInstallationRespositoriesEvent,
+  handleRepositoriesEvent,
+} from './handlers';
 import { verifyGithubHookSignature } from '@/helpers';
 
 export async function POST(request: Request) {
@@ -24,14 +32,15 @@ export async function POST(request: Request) {
     case 'installation_repositories':
       response = await handleInstallationRespositoriesEvent(
         body as InstallationRepositories
-      )
+      );
 
     case 'repository':
       response = await handleRepositoriesEvent(
         body as RepositoryRenamedWebhookPayload
-      )
+      );
 
-    // case ''
+    case 'member':
+    // Handle member event if needed
 
     default:
       break;

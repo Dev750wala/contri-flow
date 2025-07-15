@@ -31,7 +31,7 @@ export async function handleInstallationSuspendedEvent(
     return {
       success: true,
       statusCode: 200,
-      message: 'Installation suspended'
+      message: 'Installation suspended',
     };
   } catch (error) {
     console.error(error);

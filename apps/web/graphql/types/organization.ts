@@ -12,7 +12,7 @@ export const Organization = objectType({
     t.nonNull.boolean('suspended');
     t.nonNull.string('created_at');
     t.nonNull.string('updated_at');
-    
+
     // Relations
     t.list.field('repositories', {
       type: 'Repository',
@@ -25,18 +25,20 @@ export const Organization = objectType({
         });
       },
     });
-    
+
     t.list.field('members', {
       type: 'User',
       resolve(parent, _args, ctx) {
-        return ctx.prisma.organizationMember.findMany({
-          where: {
-            organization_id: parent.id,
-          },
-          include: {
-            user: true,
-          },
-        }).then((members: any[]) => members.map((member: any) => member.user));
+        return ctx.prisma.organizationMember
+          .findMany({
+            where: {
+              organization_id: parent.id,
+            },
+            include: {
+              user: true,
+            },
+          })
+          .then((members: any[]) => members.map((member: any) => member.user));
       },
     });
   },
@@ -58,7 +60,7 @@ export const OrganizationQuery = extendType({
         });
       },
     });
-    
+
     t.field('organizationByGithubId', {
       type: 'Organization',
       args: {
@@ -72,7 +74,7 @@ export const OrganizationQuery = extendType({
         });
       },
     });
-    
+
     t.list.field('organizations', {
       type: 'Organization',
       resolve(_root, _args, ctx) {

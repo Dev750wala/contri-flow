@@ -33,11 +33,11 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: {
-      default: 0
+      default: 0,
     },
     user: {
-      default: 1
-    }
+      default: 1,
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,

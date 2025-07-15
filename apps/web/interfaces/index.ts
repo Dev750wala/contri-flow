@@ -58,7 +58,7 @@ export interface Sender {
   repos_url: string;
   events_url: string;
   received_events_url: string;
-  type: "Organization" | "User";
+  type: 'Organization' | 'User';
   user_view_type: string;
   site_admin: boolean;
 }
@@ -82,7 +82,6 @@ export interface Repository {
   private: boolean;
 }
 
-
 export interface InstallationRepositories {
   action: 'added' | 'removed';
   installation: Installation;
@@ -104,7 +103,7 @@ export interface Repository {
 //  ------------------------------------------------------------------------------------------
 
 export interface RepositoryRenamedWebhookPayload {
-  action: "renamed";
+  action: 'renamed';
   changes: Changes;
   repository: RepositoryRenamedWebhookPayloadRepository;
   organization: Organization;
@@ -119,7 +118,6 @@ interface Changes {
     };
   };
 }
-
 
 interface InstallationInterface {
   id: number;
@@ -227,9 +225,9 @@ interface RepositoryRenamedWebhookPayloadRepository {
 // --------------------------------------------------------------------------------
 
 export interface MemberEventInterface {
-  action: "added" | "removed" | "edited";
+  action: 'added' | 'removed' | 'edited';
   member: Sender;
-  changes: unknown;
+  changes: unknown; // will be defined based on action type. either MemberAddedChanges or MemberEditedChanges and null for 'removed'
   repository: RepositoryRenamedWebhookPayloadRepository;
   organization: Organization;
   sender: Sender;
@@ -238,7 +236,7 @@ export interface MemberEventInterface {
 
 export interface MemberAddedChanges {
   permission: {
-    to: string
+    to: string;
   };
   role_name: {
     to: RoleType;
@@ -252,4 +250,4 @@ export interface MemberEditedChanges {
   };
 }
 
-type RoleType = "admin" | "maintain" | "read" | "triage" | "write";
+type RoleType = 'admin' | 'maintain' | 'read' | 'triage' | 'write';

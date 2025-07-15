@@ -15,7 +15,7 @@ const server = new ApolloServer<Context>({
   },
   cache: 'bounded',
   introspection: true,
-  plugins: [ApolloServerPluginLandingPageLocalDefault()]
+  plugins: [ApolloServerPluginLandingPageLocalDefault()],
 });
 
 const handler = startServerAndCreateNextHandler(server, {

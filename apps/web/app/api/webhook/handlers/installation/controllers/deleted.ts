@@ -28,8 +28,8 @@ export async function handleInstallationDeletedEvent(
         id: organization.id,
       },
       data: {
-          app_uninstalled_at: new Date(),
-          app_installed: false,
+        app_uninstalled_at: new Date(),
+        app_installed: false,
       },
     });
 
