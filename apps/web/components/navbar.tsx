@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Image from 'next/image';
+import config from '@/config';
 
 const Navbar = () => {
   const { data: sessionData, status } = useSession();
@@ -50,7 +51,7 @@ const Navbar = () => {
                   >
                     {sessionData.user?.github_id ? (
                       <Image
-                        src={`${process.env.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.github_id)}`}
+                        src={`${config.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.github_id)}`}
                         alt="User avatar"
                         height={44}
                         width={44}
@@ -164,7 +165,7 @@ const Navbar = () => {
                     <div className="flex items-center gap-3 py-2">
                       {sessionData.user?.github_id ? (
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.github_id)}`}
+                          src={`${config.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.github_id)}`}
                           alt="User avatar"
                           height={36}
                           width={36}

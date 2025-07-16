@@ -9,6 +9,7 @@ import type { AdapterUser } from 'next-auth/adapters';
 import GithubProvider from 'next-auth/providers/github';
 import prisma from '@/lib/prisma';
 import { type GithubProfile } from 'next-auth/providers/github';
+import config from '@/config'
 
 declare module 'next-auth' {
   interface Session {
@@ -32,8 +33,8 @@ declare module 'next-auth/jwt' {
 const authOptions: NextAuthOptions = {
   providers: [
     GithubProvider({
-      clientId: process.env.AUTH_GITHUB_ID!,
-      clientSecret: process.env.AUTH_GITHUB_SECRET!,
+      clientId: config.AUTH_GITHUB_ID,
+      clientSecret: config.AUTH_GITHUB_SECRET,
       authorization: { params: { scope: 'read:user user:email' } },
       profile: async (profile, tokens) => {
         const res = await fetch('https://api.github.com/user/emails', {
@@ -62,7 +63,7 @@ const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: config.AUTH_SECRET,
 
   callbacks: {
     async signIn({
@@ -126,8 +127,6 @@ const authOptions: NextAuthOptions = {
       session.user.email = token.email;
 
       console.log('HEre is the secret');
-
-      console.log(process.env.AUTH_SECRET);
 
       console.log(session.user);
 

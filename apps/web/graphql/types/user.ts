@@ -1,5 +1,6 @@
 import { objectType, extendType, nonNull, stringArg } from 'nexus';
 import { Context } from '../context';
+import config from '@/config';
 
 export const User = objectType({
   name: 'User',
@@ -61,7 +62,7 @@ export const UserQuery = extendType({
         token: nonNull(stringArg()),
       },
       resolve: async (_parent, args, ctx: Context) => {
-        if (!args.token || args.token !== process.env.DEVELOPMENT_TOKEN) {
+        if (!args.token || args.token !== config.DEVELOPMENT_TOKEN) {
           throw new Error('Invalid or missing token');
         }
         return ctx.prisma.user.findMany();

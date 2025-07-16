@@ -1,5 +1,6 @@
 import { objectType, extendType, nonNull, stringArg } from 'nexus';
 import { Context } from '../context';
+import config from '@/config';
 
 export const Repository = objectType({
   name: 'Repository',
@@ -54,7 +55,7 @@ export const RepositoryQuery = extendType({
         token: nonNull(stringArg()),
       },
       resolve: async (_parent, args, ctx: Context) => {
-        if (!args.token || args.token !== process.env.DEVELOPMENT_TOKEN) {
+        if (!args.token || args.token !== config.DEVELOPMENT_TOKEN) {
           throw new Error('Invalid or missing token');
         }
         return ctx.prisma.repository.findMany();

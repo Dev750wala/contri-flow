@@ -1,9 +1,10 @@
 import prisma from '@/lib/prisma';
 import { getToken } from 'next-auth/jwt';
 import { getSession } from 'next-auth/react';
+import config from '@/config';
 
 export async function createContext({ req, res }: { req: any; res: any }) {
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  const token = await getToken({ req, secret: config.AUTH_SECRET });
   console.log('Token in context:', token);
 
   const session = await getSession({ req });
