@@ -28,7 +28,6 @@
     "@tailwindcss/postcss": "^4.1.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "envalid": "^8.1.0",
     "framer-motion": "^12.18.1",
     "gql-query-builder": "^3.8.0",
     "graphql": "^16.11.0",

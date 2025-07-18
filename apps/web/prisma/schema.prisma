@@ -17,11 +17,7 @@ model User {
   email          String?                @unique
   github_id      String                 @unique
   wallet_address String?
-  // Organizational memberships
-  // memberships    OrganizationMember[]
-  // Maintainer roles
   maintenances   RepositoryMaintainer[]
-  // Contributor rewards
   contributor    Contributor?
   created_at     DateTime               @default(now())
   updated_at     DateTime               @updatedAt
@@ -45,18 +41,6 @@ model Organization {
   @@index([github_org_id])
   @@index([installation_id])
 }
-
-// model OrganizationMember {
-//   id              String           @id @default(cuid())
-//   user            User             @relation(fields: [user_id], references: [id])
-//   user_id         String
-//   organization    Organization     @relation(fields: [organization_id], references: [id])
-//   organization_id String
-//   role            OrganizationRole @default(MEMBER) // or OWNER
-//   created_at      DateTime         @default(now())
-
-//   @@unique([user_id, organization_id])
-// }
 
 model Repository {
   id              String                 @id @default(cuid())
@@ -82,8 +66,6 @@ model RepositoryMaintainer {
   user_id       String
   role          RepositoryRole @default(MAINTAINER) // ADMIN, MAINTAINER, TRIAGE
   created_at    DateTime       @default(now())
-
-  @@unique([repository_id, user_id])
 }
 
 model Contributor {
@@ -91,7 +73,7 @@ model Contributor {
   github_id      String   @unique
   wallet_address String?
   email          String?  @unique
-  user_id        String?  @unique // if contributor later becomes a user
+  user_id        String?  @unique
   user           User?    @relation(fields: [user_id], references: [id])
   rewards        Reward[]
   created_at     DateTime @default(now())
@@ -100,7 +82,7 @@ model Contributor {
 
 model Reward {
   id                    String    @id @default(cuid())
-  owner_github_id       String // GitHub org ID that initiated reward
+  owner_github_id       String
   contributor_github_id String
   repo_github_id        String
   pr_number             Int

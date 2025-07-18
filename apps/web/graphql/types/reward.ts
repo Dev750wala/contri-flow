@@ -1,40 +1,31 @@
-import { objectType, extendType, nonNull, stringArg } from 'nexus';
+import { objectType, extendType, nonNull, stringArg, list } from 'nexus';
 import { Context } from '../context';
+import { Contributor, Repository, Reward } from 'nexus-prisma';
+import { RepositoryType } from './repository';
+import { ContributorType } from './contributor';
 
-export const Reward = objectType({
-  name: 'Reward',
+export const RewardType = objectType({
+  name: Reward.$name,
+  description: Reward.$description,
   definition(t) {
-    t.nonNull.string('id');
-    t.nonNull.string('owner_github_id');
-    t.nonNull.string('contributor_github_id');
-    t.nonNull.string('repo_github_id');
-    t.nonNull.int('pr_number');
-    t.nonNull.string('secret');
-    t.nonNull.float('amount_usd');
-    t.nonNull.float('amount_eth');
-    t.nonNull.string('created_at');
-    t.nonNull.boolean('claimed');
-    t.nonNull.string('claimed_at');
-    t.nonNull.string('updated_at');
+    t.nonNull.field(Reward.id);
+    t.nonNull.field(Reward.owner_github_id);
+    t.nonNull.field(Reward.contributor_github_id);
+    t.nonNull.field(Reward.repo_github_id);
+    t.nonNull.field(Reward.pr_number);
+    t.nonNull.field(Reward.secret);
+    t.nonNull.field(Reward.amount_usd);
+    t.nonNull.field(Reward.amount_eth);
+    t.nonNull.field(Reward.created_at);
+    t.nonNull.field(Reward.claimed);
+    t.nonNull.field(Reward.claimed_at);
+    t.nonNull.field(Reward.updated_at);
+    
     t.field('repository', {
-      type: 'Repository',
-      resolve: async (parent, _args, ctx: Context) => {
-        return ctx.prisma.repository.findUnique({
-          where: {
-            id: parent.repository_id,
-          },
-        });
-      },
+      type: RepositoryType,
     });
     t.field('contributor', {
-      type: 'Contributor',
-      resolve: async (parent, args, ctx: Context) => {
-        return ctx.prisma.contributor.findUnique({
-          where: {
-            github_id: parent.contributor_github_id,
-          },
-        });
-      },
+      type: ContributorType,
     });
   },
 });
@@ -51,6 +42,66 @@ export const RewardQuery = extendType({
         return ctx.prisma.reward.findUnique({
           where: {
             id: args.id,
+          },
+        });
+      },
+    });
+
+    t.field('rewardsByContributor', {
+      type: nonNull(list(nonNull(RewardType))),
+      args: {     
+        contributorGithubId: nonNull(stringArg()),
+      },
+      resolve: async (_parent, args, ctx: Context) => {
+        return ctx.prisma.reward.findMany({
+          where: {
+            contributor_github_id: args.contributorGithubId,
+          },
+          include: {
+            repository: true,
+            contributor: true,
+          },
+        });
+      }
+    });
+
+    t.field('rewardsByRepository', {
+      type: nonNull(list(nonNull(RewardType))),
+      args: {
+        repoGithubId: nonNull(stringArg()),
+      },
+      resolve: async (_parent, args, ctx: Context) => {
+        return ctx.prisma.reward.findMany({
+          where: {
+            repo_github_id: args.repoGithubId,
+          },
+          include: {
+            repository: true,
+            contributor: true,
+          },
+        });
+      },
+    });
+  },
+});
+
+
+export const RewardMutation = extendType({
+  type: 'Mutation',
+  definition(t) {
+    t.field('claimReward', {
+      type: RewardType,
+      args: {
+        id: nonNull(stringArg()),
+      },
+      resolve: async (_parent, args, ctx: Context) => {
+        return ctx.prisma.reward.update({
+          where: {
+            id: args.id,
+          },
+          data: {
+            claimed: true,
+            claimed_at: new Date(),
           },
         });
       },

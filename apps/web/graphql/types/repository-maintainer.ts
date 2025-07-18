@@ -44,7 +44,7 @@ export const RepositoryMaintainerMutation = extendType({
   type: "Mutation",
   definition(t) {
     t.field("addRepositoryMaintainer", {
-      type: nonNull('RepositoryMaintainer'),
+      type: nonNull(RepositoryMaintainerType),
       args: {
         repositoryId: nonNull(stringArg()),
         userId: nonNull(stringArg()),

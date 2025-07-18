@@ -2,6 +2,8 @@ import { objectType, extendType, nonNull, stringArg } from 'nexus';
 import { Context } from '../context';
 import config from '@/config';
 import { User } from 'nexus-prisma';
+import { ContributorType } from './contributor';
+import { RepositoryMaintainerType } from './repository-maintainer';
 
 export const UserType = objectType({
   name: User.$name,

@@ -3,6 +3,7 @@ import { Context } from '../context';
 import config from '@/config';
 import { Repository } from 'nexus-prisma';
 import { OrganizationType } from './organization';
+import { RewardType } from './reward';
 
 export const RepositoryType = objectType({
   name: Repository.$name,

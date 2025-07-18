@@ -22,9 +22,6 @@ export const OrganizationType = objectType({
       type: RepositoryType,
     });
 
-    // t.list.field('members', {
-    //   type: OrganizationMemberType,
-    // });
   },
 });
 
