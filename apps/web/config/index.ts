@@ -13,7 +13,10 @@ const rawEnv = cleanEnv(process.env, {
 });
 
 const config = Object.fromEntries(
-  Object.entries(rawEnv).map(([key, value]) =>  [key, typeof value === 'string' ? value.trim() : value])
+  Object.entries(rawEnv).map(([key, value]) => [
+    key,
+    typeof value === 'string' ? value.trim() : value,
+  ])
 ) as typeof rawEnv;
 
 export default config;

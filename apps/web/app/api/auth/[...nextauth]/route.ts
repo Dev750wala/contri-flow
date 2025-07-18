@@ -9,7 +9,7 @@ import type { AdapterUser } from 'next-auth/adapters';
 import GithubProvider from 'next-auth/providers/github';
 import prisma from '@/lib/prisma';
 import { type GithubProfile } from 'next-auth/providers/github';
-import config from '@/config'
+import config from '@/config';
 
 declare module 'next-auth' {
   interface Session {

@@ -4,7 +4,7 @@ import type {
   InstallationRepositories,
   RepositoryRenamedWebhookPayload,
 } from '@/interfaces';
-import WebHooks from "@octokit/webhooks-examples/api.github.com/index.json"
+import WebHooks from '@octokit/webhooks-examples/api.github.com/index.json';
 import {
   handleInstallationEvent,
   handleInstallationRespositoriesEvent,

@@ -1,34 +1,29 @@
 import { objectType, extendType, nonNull, stringArg } from 'nexus';
 import { Context } from '../context';
 import config from '@/config';
+import { Repository } from 'nexus-prisma';
+import { OrganizationType } from './organization';
 
-export const Repository = objectType({
-  name: 'Repository',
+export const RepositoryType = objectType({
+  name: Repository.$name,
+  description: Repository.$description,
   definition(t) {
-    t.nonNull.string('id');
-    t.nonNull.string('name');
-    t.nonNull.string('github_repo_id');
-    t.nonNull.string('created_at');
-    t.nonNull.string('updated_at');
+    t.nonNull.field(Repository.id);
+    t.nonNull.field(Repository.name);
+    t.nonNull.field(Repository.github_repo_id);
+
+    t.nonNull.field(Repository.is_removed);
+    t.field(Repository.removed_at);
+
+    t.nonNull.field(Repository.created_at);
+    t.nonNull.field(Repository.updated_at);
+
     t.field('organization', {
-      type: 'Organization',
-      resolve: async (parent, _args, ctx: Context) => {
-        return ctx.prisma.organization.findUnique({
-          where: {
-            id: parent.organization_id,
-          },
-        });
-      },
+      type: OrganizationType,
     });
+
     t.list.field('rewards', {
-      type: 'Reward',
-      resolve: async (parent, args, ctx: Context) => {
-        return ctx.prisma.reward.findMany({
-          where: {
-            repository_id: parent.id,
-          },
-        });
-      },
+      type: RewardType,
     });
   },
 });
@@ -49,19 +44,8 @@ export const RepositoryQuery = extendType({
         });
       },
     });
-    t.list.field('allRepositories', {
-      type: 'Repository',
-      args: {
-        token: nonNull(stringArg()),
-      },
-      resolve: async (_parent, args, ctx: Context) => {
-        if (!args.token || args.token !== config.DEVELOPMENT_TOKEN) {
-          throw new Error('Invalid or missing token');
-        }
-        return ctx.prisma.repository.findMany();
-      },
-    });
-    t.field('repositoryByGithubId', {
+
+    t.field('repositoryByGithubRepoId', {
       type: 'Repository',
       args: {
         githubRepoId: nonNull(stringArg()),
@@ -74,7 +58,8 @@ export const RepositoryQuery = extendType({
         });
       },
     });
-    t.list.field('repositoriesByOrganizationId', {
+
+    t.field('repositoriesByOrganizationId', {
       type: 'Repository',
       args: {
         organizationId: nonNull(stringArg()),
@@ -85,6 +70,19 @@ export const RepositoryQuery = extendType({
             organization_id: args.organizationId,
           },
         });
+      },
+    });
+
+    t.list.field('allRepositories', {
+      type: 'Repository',
+      args: {
+        token: nonNull(stringArg()),
+      },
+      resolve: async (_parent, args, ctx: Context) => {
+        if (!args.token || args.token !== config.DEVELOPMENT_TOKEN) {
+          throw new Error('Invalid or missing token');
+        }
+        return ctx.prisma.repository.findMany();
       },
     });
   },

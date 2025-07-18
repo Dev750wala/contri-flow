@@ -18,7 +18,7 @@ model User {
   github_id      String                 @unique
   wallet_address String?
   // Organizational memberships
-  memberships    OrganizationMember[]
+  // memberships    OrganizationMember[]
   // Maintainer roles
   maintenances   RepositoryMaintainer[]
   // Contributor rewards
@@ -30,33 +30,33 @@ model User {
 }
 
 model Organization {
-  id                 String               @id @default(cuid())
+  id                 String       @id @default(cuid())
   name               String
-  github_org_id      String               @unique
-  installation_id    String               @unique
-  app_installed      Boolean              @default(false)
+  github_org_id      String       @unique
+  installation_id    String       @unique
+  app_installed      Boolean      @default(false)
   app_uninstalled_at DateTime?
-  suspended          Boolean              @default(false)
+  suspended          Boolean      @default(false)
   repositories       Repository[]
-  members            OrganizationMember[]
-  created_at         DateTime             @default(now())
-  updated_at         DateTime             @updatedAt
+  // members            OrganizationMember[]
+  created_at         DateTime     @default(now())
+  updated_at         DateTime     @updatedAt
 
   @@index([github_org_id])
   @@index([installation_id])
 }
 
-model OrganizationMember {
-  id              String           @id @default(cuid())
-  user            User             @relation(fields: [user_id], references: [id])
-  user_id         String
-  organization    Organization     @relation(fields: [organization_id], references: [id])
-  organization_id String
-  role            OrganizationRole @default(MEMBER) // or OWNER
-  created_at      DateTime         @default(now())
+// model OrganizationMember {
+//   id              String           @id @default(cuid())
+//   user            User             @relation(fields: [user_id], references: [id])
+//   user_id         String
+//   organization    Organization     @relation(fields: [organization_id], references: [id])
+//   organization_id String
+//   role            OrganizationRole @default(MEMBER) // or OWNER
+//   created_at      DateTime         @default(now())
 
-  @@unique([user_id, organization_id])
-}
+//   @@unique([user_id, organization_id])
+// }
 
 model Repository {
   id              String                 @id @default(cuid())

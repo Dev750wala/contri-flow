@@ -1,46 +1,30 @@
 import { objectType, extendType, nonNull, stringArg, booleanArg } from 'nexus';
+import { Organization } from 'nexus-prisma';
+import { RepositoryType } from './repository';
 
-export const Organization = objectType({
-  name: 'Organization',
+export const OrganizationType = objectType({
+  name: Organization.$name,
+  description: Organization.$description,
   definition(t) {
-    t.nonNull.string('id');
-    t.nonNull.string('name');
-    t.nonNull.string('github_org_id');
-    t.nonNull.string('installation_id');
-    t.nonNull.boolean('app_installed');
-    t.string('app_uninstalled_at');
-    t.nonNull.boolean('suspended');
-    t.nonNull.string('created_at');
-    t.nonNull.string('updated_at');
+    t.nonNull.field(Organization.id);
+    t.nonNull.field(Organization.name);
+    t.nonNull.field(Organization.github_org_id);
+    t.nonNull.field(Organization.installation_id);
+    t.nonNull.field(Organization.app_installed);
+    t.field(Organization.app_uninstalled_at);
+    t.nonNull.field(Organization.suspended);
+
+    t.nonNull.field(Organization.created_at);
+    t.nonNull.field(Organization.updated_at);
 
     // Relations
     t.list.field('repositories', {
-      type: 'Repository',
-      resolve(parent, _args, ctx) {
-        return ctx.prisma.repository.findMany({
-          where: {
-            organization_id: parent.id,
-            is_removed: false,
-          },
-        });
-      },
+      type: RepositoryType,
     });
 
-    t.list.field('members', {
-      type: 'User',
-      resolve(parent, _args, ctx) {
-        return ctx.prisma.organizationMember
-          .findMany({
-            where: {
-              organization_id: parent.id,
-            },
-            include: {
-              user: true,
-            },
-          })
-          .then((members: any[]) => members.map((member: any) => member.user));
-      },
-    });
+    // t.list.field('members', {
+    //   type: OrganizationMemberType,
+    // });
   },
 });
 
