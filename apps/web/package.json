@@ -11,7 +11,8 @@
     "check-types": "tsc --noEmit",
     "postinstall": "prisma generate --schema=./prisma/schema.prisma",
     "dev:tunnel": "concurrently \"next dev --port 3000\" \"cloudflared tunnel --url http://localhost:3000\"",
-    "tunnel": "cloudflared tunnel --url http://localhost:3000"
+    "tunnel": "cloudflared tunnel --url http://localhost:3000",
+    "seed": "tsx helpers/seed.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
@@ -48,6 +49,7 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.9.0",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/graphql": "^14.5.0",
