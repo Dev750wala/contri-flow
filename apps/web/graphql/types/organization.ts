@@ -1,6 +1,12 @@
-import { objectType, extendType, nonNull, stringArg, booleanArg } from 'nexus';
+import { objectType, extendType, nonNull, stringArg, enumType } from 'nexus';
 import { Organization } from 'nexus-prisma';
 import { RepositoryType } from './repository';
+import { Context } from '../context';
+
+export const OrganizationRole = enumType({
+  name: "OrganizationRole",
+  members: ["OWNER", "MEMBER"],
+});
 
 export const OrganizationType = objectType({
   name: Organization.$name,
@@ -20,8 +26,14 @@ export const OrganizationType = objectType({
     // Relations
     t.list.field('repositories', {
       type: RepositoryType,
+      resolve(parent, _args, ctx: Context) {
+        return ctx.prisma.repository.findMany({
+          where: {
+            organization_id: parent.id,
+          },
+        });
+      },
     });
-
   },
 });
 
@@ -33,7 +45,7 @@ export const OrganizationQuery = extendType({
       args: {
         id: nonNull(stringArg()),
       },
-      resolve(_root, args, ctx) {
+      resolve(_root, args, ctx: Context) {
         return ctx.prisma.organization.findUnique({
           where: {
             id: args.id,
@@ -47,7 +59,7 @@ export const OrganizationQuery = extendType({
       args: {
         githubOrgId: nonNull(stringArg()),
       },
-      resolve(_root, args, ctx) {
+      resolve(_root, args, ctx: Context) {
         return ctx.prisma.organization.findUnique({
           where: {
             github_org_id: args.githubOrgId,
@@ -58,7 +70,7 @@ export const OrganizationQuery = extendType({
 
     t.list.field('organizations', {
       type: 'Organization',
-      resolve(_root, _args, ctx) {
+      resolve(_root, _args, ctx: Context) {
         return ctx.prisma.organization.findMany({
           where: {
             app_installed: true,

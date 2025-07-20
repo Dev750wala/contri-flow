@@ -49,7 +49,7 @@ importers:
         specifier: ^7.6.1
         version: 7.6.1
       '@prisma/client':
-        specifier: ^6.9.0
+        specifier: ^6.12.0
         version: 6.12.0(prisma@6.12.0(typescript@5.8.2))(typescript@5.8.2)
       '@prisma/extension-accelerate':
         specifier: ^2.0.1
@@ -81,6 +81,9 @@ importers:
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
+      graphql-scalars:
+        specifier: ^1.24.2
+        version: 1.24.2(graphql@16.11.0)
       lucide-react:
         specifier: ^0.515.0
         version: 0.515.0(react@19.1.0)

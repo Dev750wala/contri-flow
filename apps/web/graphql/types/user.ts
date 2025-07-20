@@ -2,11 +2,11 @@ import { objectType, extendType, nonNull, stringArg } from 'nexus';
 import { Context } from '../context';
 import config from '@/config';
 import { User } from 'nexus-prisma';
-import { ContributorType } from './contributor';
 import { RepositoryMaintainerType } from './repository-maintainer';
+import { ContributorType } from './contributor';
 
 export const UserType = objectType({
-  name: User.$name,
+  name: 'User',
   description: User.$description,
   definition(t) {
     t.nonNull.field(User.id);
@@ -18,16 +18,26 @@ export const UserType = objectType({
     t.nonNull.field(User.created_at);
     t.nonNull.field(User.updated_at);
 
-    // t.list.field('memberships', {
-    //   type: OrganizationMemberType,
-    // });
-
     t.list.field('maintenances', {
       type: RepositoryMaintainerType,
+      resolve(parent, _args, ctx: Context) {
+        return ctx.prisma.repositoryMaintainer.findMany({
+          where: {
+            user_id: parent.id,
+          },
+        });
+      },
     });
 
     t.list.field('contributor', {
       type: ContributorType,
+      resolve(parent, _args, ctx: Context) {
+        return ctx.prisma.contributor.findMany({
+          where: {
+            user_id: parent.id,
+          },
+        });
+      },
     });
   },
 });

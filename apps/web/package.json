@@ -4,13 +4,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3000",
+    "dev": "next dev --port 3000",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
     "check-types": "tsc --noEmit",
     "postinstall": "prisma generate",
-    "dev:tunnel": "concurrently \"next dev --turbopack --port 3000\" \"cloudflared tunnel --url http://localhost:3000\"",
+    "dev:tunnel": "concurrently \"next dev --port 3000\" \"cloudflared tunnel --url http://localhost:3000\"",
     "tunnel": "cloudflared tunnel --url http://localhost:3000"
   },
   "dependencies": {
@@ -20,7 +20,7 @@
     "@auth/prisma-adapter": "^2.9.1",
     "@headlessui/react": "^2.2.4",
     "@octokit/webhooks-examples": "^7.6.1",
-    "@prisma/client": "^6.9.0",
+    "@prisma/client": "^6.12.0",
     "@prisma/extension-accelerate": "^2.0.1",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
@@ -31,6 +31,7 @@
     "framer-motion": "^12.18.1",
     "gql-query-builder": "^3.8.0",
     "graphql": "^16.11.0",
+    "graphql-scalars": "^1.24.2",
     "lucide-react": "^0.515.0",
     "motion": "^12.18.1",
     "next": "^15.3.0",

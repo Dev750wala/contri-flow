@@ -21,10 +21,24 @@ export const RepositoryType = objectType({
 
     t.field('organization', {
       type: OrganizationType,
+      resolve(parent, _args, ctx: Context) {
+        return ctx.prisma.organization.findUnique({
+          where: {
+            id: parent.organization_id,
+          },
+        });
+      },
     });
 
     t.list.field('rewards', {
       type: RewardType,
+      resolve(parent, _args, ctx: Context) {
+        return ctx.prisma.reward.findMany({
+          where: {
+            repository_id: parent.id,
+          },
+        });
+      },
     });
   },
 });
