@@ -63,20 +63,20 @@ export async function handleInstallationCreatedEvent(
     });
 
     // Add sender as admin member of the org
-    await prisma.organizationMember.upsert({
-      where: {
-        user_id_organization_id: {
-          user_id: user.id,
-          organization_id: organization.id,
-        },
-      },
-      update: { role: 'OWNER' },
-      create: {
-        user_id: user.id,
-        organization_id: organization.id,
-        role: 'OWNER',
-      },
-    });
+    // await prisma.organizationMember.upsert({
+    //   where: {
+    //     user_id_organization_id: {
+    //       user_id: user.id,
+    //       organization_id: organization.id,
+    //     },
+    //   },
+    //   update: { role: 'OWNER' },
+    //   create: {
+    //     user_id: user.id,
+    //     organization_id: organization.id,
+    //     role: 'OWNER',
+    //   },
+    // });
 
     // Add repositories
     const createdRepositories = await Promise.all(
@@ -100,22 +100,29 @@ export async function handleInstallationCreatedEvent(
 
     // Assign the sender as maintainer to all installed repositories
     await Promise.all(
-      createdRepositories.map((repo) =>
-        prisma.repositoryMaintainer.upsert({
+      createdRepositories.map(async (repo) => {
+        const existingMaintainer = await prisma.repositoryMaintainer.findFirst({
           where: {
-            repository_id_user_id: {
-              repository_id: repo.id,
-              user_id: user.id,
-            },
-          },
-          update: { role: 'ADMIN' },
-          create: {
             repository_id: repo.id,
             user_id: user.id,
-            role: 'ADMIN',
           },
-        })
-      )
+        });
+
+        if (existingMaintainer) {
+          return await prisma.repositoryMaintainer.update({
+            where: { id: existingMaintainer.id },
+            data: { role: 'ADMIN' },
+          });
+        } else {
+          return await prisma.repositoryMaintainer.create({
+            data: {
+              repository_id: repo.id,
+              user_id: user.id,
+              role: 'ADMIN',
+            },
+          });
+        }
+      })
     );
 
     return {

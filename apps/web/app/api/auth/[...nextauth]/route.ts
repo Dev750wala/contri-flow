@@ -119,19 +119,18 @@ const authOptions: NextAuthOptions = {
       return token;
     },
 
-    async session({ session, token }: { session: Session; token: any }) {
-      if (!session.user) session.user = {};
-      session.user.github_id = token.github_id;
-      session.user.userId = token.userId as string;
-      session.user.name = token.name;
-      session.user.email = token.email;
-
-      console.log('HEre is the secret');
-
-      console.log(session.user);
-
-      return session;
-    },
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          userId: token.userId,
+          github_id: token.github_id,
+          name: token.name || session.user.name,
+          email: token.email || session.user.email,
+        },
+      };
+    }
   },
   pages: {
     error: '/error',
