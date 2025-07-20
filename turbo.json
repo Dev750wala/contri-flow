@@ -3,15 +3,45 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*", ".env"],
-      "outputs": [".next/**", "!.next/cache/**", "artifacts/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*",
+        ".env"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "artifacts/**"
+      ],
+      "env": [
+        "DATABASE_URL",
+        "NEXTAUTH_URL",
+        "NEXT_PUBLIC_GITHUB_PROFILE_LINK",
+        "NO_PEER_DEPENDENCY_CHECK",
+        "NEXTAUTH_URL",
+        "GITHUB_WEBHOOK_SECRET",
+        "DEVELOPMENT_TOKEN",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "AUTH_GITHUB_SECRET",
+        "AUTH_GITHUB_ID",
+        "AUTH_SECRET",
+        "SEPOLIA_API_KEY",
+        "ETHERSCAN_API_KEY",
+        "PRIVATE_KEY"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": [
+        "^lint"
+      ]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": [
+        "^check-types"
+      ]
     },
     "dev": {
       "cache": false,
