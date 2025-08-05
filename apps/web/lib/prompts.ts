@@ -13,7 +13,7 @@ Rules:
 - The contributor must be clearly named in the comment.
 - The reward amount should be a number, typically representing points, tokens, or dollars.
 - give only json format, so that it can be easily parsed
-- If the comment doesn’t contain enough information, return:
+- If the comment doesn't contain enough information, return:
 {
   "contributor": null,
   "reward": null
@@ -24,7 +24,7 @@ Here are some example inputs and the expected output format.
 ---
 
 **Example 1 (Input):**
-"Great work @dev123 on fixing the gas optimization in the smart contract! You’ve earned 50 tokens."
+"Great work @dev123 on fixing the gas optimization in the smart contract! You've earned 50 tokens."
 
 **Output:**
 {
@@ -52,7 +52,7 @@ Here are some example inputs and the expected output format.
 ---
 
 **Example 3 (Input):**
-"Thanks everyone! We’ll do rewards later."
+"Thanks everyone! We'll do rewards later."
 
 **Output:**
 {

@@ -1,6 +1,5 @@
-import { objectType, extendType, nonNull, stringArg } from 'nexus';
+import { objectType } from 'nexus';
 import { Context } from '../context';
-import config from '@/config';
 import { User } from 'nexus-prisma';
 import { RepositoryMaintainerType } from './repository-maintainer';
 import { ContributorType } from './contributor';

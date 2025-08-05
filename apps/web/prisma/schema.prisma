@@ -34,6 +34,7 @@ model Organization {
   app_uninstalled_at DateTime?
   suspended          Boolean      @default(false)
   repositories       Repository[]
+  sync_maintainers   Boolean      @default(false)
   // members            OrganizationMember[]
   created_at         DateTime     @default(now())
   updated_at         DateTime     @updatedAt

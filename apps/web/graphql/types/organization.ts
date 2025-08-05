@@ -1,4 +1,4 @@
-import { objectType, extendType, nonNull, stringArg, enumType } from 'nexus';
+import { objectType, enumType } from 'nexus';
 import { Organization } from 'nexus-prisma';
 import { RepositoryType } from './repository';
 import { Context } from '../context';
@@ -17,6 +17,7 @@ export const OrganizationType = objectType({
     t.nonNull.field(Organization.github_org_id);
     t.nonNull.field(Organization.installation_id);
     t.nonNull.field(Organization.app_installed);
+    t.nonNull.field(Organization.sync_maintainers);
     t.field(Organization.app_uninstalled_at);
     t.nonNull.field(Organization.suspended);
 
@@ -37,47 +38,4 @@ export const OrganizationType = objectType({
   },
 });
 
-export const OrganizationQuery = extendType({
-  type: 'Query',
-  definition(t) {
-    t.field('organization', {
-      type: 'Organization',
-      args: {
-        id: nonNull(stringArg()),
-      },
-      resolve(_root, args, ctx: Context) {
-        return ctx.prisma.organization.findUnique({
-          where: {
-            id: args.id,
-          },
-        });
-      },
-    });
 
-    t.field('organizationByGithubId', {
-      type: 'Organization',
-      args: {
-        githubOrgId: nonNull(stringArg()),
-      },
-      resolve(_root, args, ctx: Context) {
-        return ctx.prisma.organization.findUnique({
-          where: {
-            github_org_id: args.githubOrgId,
-          },
-        });
-      },
-    });
-
-    t.list.field('organizations', {
-      type: 'Organization',
-      resolve(_root, _args, ctx: Context) {
-        return ctx.prisma.organization.findMany({
-          where: {
-            app_installed: true,
-            suspended: false,
-          },
-        });
-      },
-    });
-  },
-});

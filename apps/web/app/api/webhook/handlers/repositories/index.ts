@@ -1,5 +1,4 @@
 import {
-  InstallationRepositories,
   RepositoryRenamedWebhookPayload,
 } from '@/interfaces';
 import { ControllerReturnType } from '../../interface';

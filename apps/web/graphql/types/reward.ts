@@ -1,4 +1,4 @@
-import { objectType, extendType, nonNull, stringArg, list } from 'nexus';
+import { objectType } from 'nexus';
 import { Context } from '../context';
 import { Reward } from 'nexus-prisma';
 import { RepositoryType } from './repository';
