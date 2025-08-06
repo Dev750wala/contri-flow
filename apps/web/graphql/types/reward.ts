@@ -20,7 +20,7 @@ export const RewardType = objectType({
     t.nonNull.field(Reward.claimed);
     t.nonNull.field(Reward.claimed_at);
     t.nonNull.field(Reward.updated_at);
-    
+
     t.field('repository', {
       type: RepositoryType,
       resolve(parent, _args, ctx: Context) {

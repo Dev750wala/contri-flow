@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from './ui/card';
 import { Progress } from './ui/progress';
 import { Github, Wallet, CheckCircle, Loader2 } from 'lucide-react';
 
@@ -12,7 +24,12 @@ interface AuthModalProps {
   userType: 'owner' | 'contributor' | null;
 }
 
-export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalProps) {
+export function AuthModal({
+  isOpen,
+  onClose,
+  onComplete,
+  userType,
+}: AuthModalProps) {
   const [step, setStep] = useState<'github' | 'wallet' | 'complete'>('github');
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -27,7 +44,7 @@ export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalPr
   const handleGitHubAuth = async () => {
     setIsLoading(true);
     setProgress(30);
-    
+
     // Simulate GitHub OAuth
     setTimeout(() => {
       setProgress(60);
@@ -42,7 +59,7 @@ export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalPr
   const handleWalletConnect = async () => {
     setIsLoading(true);
     setProgress(30);
-    
+
     // Simulate wallet connection
     setTimeout(() => {
       setProgress(60);
@@ -50,7 +67,7 @@ export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalPr
         setStep('complete');
         setProgress(100);
         setIsLoading(false);
-        
+
         // Auto-complete after showing success
         setTimeout(() => {
           onComplete();
@@ -70,14 +87,13 @@ export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalPr
               </div>
               <CardTitle>Connect with GitHub</CardTitle>
               <CardDescription>
-                {userType === 'owner' 
+                {userType === 'owner'
                   ? 'Connect your GitHub account to manage repositories and set up reward pools.'
-                  : 'Connect your GitHub account to view your contributions and claim rewards.'
-                }
+                  : 'Connect your GitHub account to view your contributions and claim rewards.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
+              <Button
                 onClick={handleGitHubAuth}
                 disabled={isLoading}
                 className="w-full flex items-center gap-2"
@@ -90,7 +106,7 @@ export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalPr
                 )}
                 Continue with GitHub
               </Button>
-              
+
               {isLoading && (
                 <div className="mt-4">
                   <div className="flex justify-between text-sm text-muted-foreground mb-2">
@@ -113,15 +129,14 @@ export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalPr
               </div>
               <CardTitle>Connect Your Wallet</CardTitle>
               <CardDescription>
-                {userType === 'owner' 
+                {userType === 'owner'
                   ? 'Connect your wallet to deposit ETH and manage reward distributions.'
-                  : 'Connect your wallet to receive ETH rewards for your contributions.'
-                }
+                  : 'Connect your wallet to receive ETH rewards for your contributions.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button 
+                <Button
                   onClick={handleWalletConnect}
                   disabled={isLoading}
                   className="w-full flex items-center gap-2"
@@ -134,8 +149,8 @@ export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalPr
                   )}
                   Connect MetaMask
                 </Button>
-                
-                <Button 
+
+                <Button
                   variant="outline"
                   className="w-full flex items-center gap-2"
                   size="lg"
@@ -145,7 +160,7 @@ export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalPr
                   WalletConnect (Soon)
                 </Button>
               </div>
-              
+
               {isLoading && (
                 <div className="mt-4">
                   <div className="flex justify-between text-sm text-muted-foreground mb-2">
@@ -168,11 +183,10 @@ export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalPr
               </div>
               <CardTitle>Welcome to ContriFlow!</CardTitle>
               <CardDescription>
-                Your account has been successfully set up. 
-                {userType === 'owner' 
+                Your account has been successfully set up.
+                {userType === 'owner'
                   ? ' You can now start managing repositories and setting up reward pools.'
-                  : ' You can now view your contributions and claim available rewards.'
-                }
+                  : ' You can now view your contributions and claim available rewards.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -200,13 +214,15 @@ export function AuthModal({ isOpen, onClose, onComplete, userType }: AuthModalPr
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {userType === 'owner' ? 'Repository Owner Setup' : 'Contributor Setup'}
+            {userType === 'owner'
+              ? 'Repository Owner Setup'
+              : 'Contributor Setup'}
           </DialogTitle>
           <DialogDescription>
             Let's get you set up in just a few steps.
           </DialogDescription>
         </DialogHeader>
-        
+
         {getStepContent()}
       </DialogContent>
     </Dialog>

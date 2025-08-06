@@ -1,6 +1,6 @@
-import { extendType, nonNull, stringArg } from "nexus";
-import { Context } from "../context";
-import config from "@/config";
+import { extendType, nonNull, stringArg } from 'nexus';
+import { Context } from '../context';
+import config from '@/config';
 
 export const UserQuery = extendType({
   type: 'Query',

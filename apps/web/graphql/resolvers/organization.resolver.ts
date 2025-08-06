@@ -1,6 +1,6 @@
-import { extendType, nonNull, stringArg } from "nexus";
-import { Context } from "../context";
-import { OrganizationType } from "../types";
+import { extendType, nonNull, stringArg } from 'nexus';
+import { Context } from '../context';
+import { OrganizationType } from '../types';
 
 export const OrganizationQuery = extendType({
   type: 'Query',
@@ -47,7 +47,6 @@ export const OrganizationQuery = extendType({
   },
 });
 
-
 export const OrganizationMutation = extendType({
   type: 'Mutation',
   definition(t) {
@@ -59,15 +58,14 @@ export const OrganizationMutation = extendType({
       async resolve(_root, args, ctx: Context) {
         if (!ctx.session) {
           throw new Error('Not authenticated');
-        } 
+        }
         const currentUser = await ctx.prisma.user.findUnique({
           where: { id: ctx.session.user.userId },
         });
         if (!currentUser) {
           throw new Error('User not found');
         }
-
-      }
-    })
+      },
+    });
   },
-})
+});

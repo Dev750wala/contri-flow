@@ -66,7 +66,7 @@ model RepositoryMaintainer {
   user          User?          @relation(fields: [user_id], references: [id])
   user_id       String?
   github_id     String
-  role          RepositoryRole @default(MAINTAINER) // ADMIN, MAINTAINER, TRIAGE
+  role          RepositoryRole @default(MAINTAIN)
   created_at    DateTime       @default(now())
 }
 
@@ -107,8 +107,10 @@ model Reward {
 
 enum RepositoryRole {
   ADMIN
-  MAINTAINER
+  MAINTAIN
+  READ
   TRIAGE
+  WRITE
 }
 
 enum OrganizationRole {

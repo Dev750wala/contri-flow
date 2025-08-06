@@ -1,6 +1,6 @@
 import { objectType, extendType, nonNull, stringArg } from 'nexus';
 import { Contributor } from 'nexus-prisma';
-import { Context } from "../context"
+import { Context } from '../context';
 import { RewardType } from './reward';
 import { UserType } from './user';
 
@@ -39,4 +39,3 @@ export const ContributorType = objectType({
     });
   },
 });
-

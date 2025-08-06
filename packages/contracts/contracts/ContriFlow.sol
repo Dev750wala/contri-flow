@@ -40,6 +40,7 @@ contract ContriFlow is ReentrancyGuard {
     error TransferFailed();
     error NotBotSigner();
     error GithubIdNotSet();
+    error GithubIdMismatch();
 
     struct RepoOwnerDetails {
         uint256 githubId;
@@ -91,9 +92,7 @@ contract ContriFlow is ReentrancyGuard {
 
         if (details.githubId == 0) {
             details.githubId = githubId;
-        } else {
-            require(details.githubId == githubId, "GitHub ID mismatch");
-        }
+        } else if (details.githubId != githubId) revert GithubIdMismatch();
 
         details.amount += msg.value;
         emit DepositAdded(msg.sender, msg.value);

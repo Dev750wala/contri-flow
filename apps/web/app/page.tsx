@@ -2,7 +2,13 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LandingPage } from '@/components/LandingPage';
@@ -22,7 +28,9 @@ interface User {
 }
 
 export default function Home() {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard'>('landing');
+  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard'>(
+    'landing'
+  );
   const [user, setUser] = useState<User | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState<UserType>(null);
@@ -36,12 +44,13 @@ export default function Home() {
     // Mock user login
     const mockUser: User = {
       id: selectedUserType === 'owner' ? 'owner123' : 'contributor456',
-      username: selectedUserType === 'owner' ? 'repo-owner' : 'awesome-contributor',
+      username:
+        selectedUserType === 'owner' ? 'repo-owner' : 'awesome-contributor',
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedUserType}`,
       type: selectedUserType,
-      walletConnected: false
+      walletConnected: false,
     };
-    
+
     setUser(mockUser);
     setCurrentPage('dashboard');
     setShowAuthModal(false);
@@ -62,7 +71,7 @@ export default function Home() {
     return (
       <>
         <LandingPage onLogin={handleLogin} />
-        <AuthModal 
+        <AuthModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           onComplete={handleAuthComplete}
@@ -79,7 +88,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 
+              <h1
                 className="text-xl font-semibold cursor-pointer hover:text-primary/80"
                 onClick={() => setCurrentPage('landing')}
               >
@@ -89,11 +98,11 @@ export default function Home() {
                 {user?.type === 'owner' ? 'Repository Owner' : 'Contributor'}
               </Badge>
             </div>
-            
+
             <div className="flex items-center gap-4">
               {!user?.walletConnected ? (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={connectWallet}
                   className="flex items-center gap-2"
@@ -104,21 +113,23 @@ export default function Home() {
               ) : (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">Wallet Connected</span>
+                  <span className="text-sm text-muted-foreground">
+                    Wallet Connected
+                  </span>
                 </div>
               )}
-              
+
               <div className="flex items-center gap-2">
-                <img 
-                  src={user?.avatar} 
+                <img
+                  src={user?.avatar}
                   alt={user?.username}
                   className="w-8 h-8 rounded-full"
                 />
                 <span className="text-sm font-medium">{user?.username}</span>
               </div>
-              
-              <Button 
-                variant="ghost" 
+
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={handleLogout}
                 className="flex items-center gap-2"

@@ -1,6 +1,6 @@
-import { extendType, nonNull, stringArg } from "nexus";
-import { Context } from "../context";
-import { ContributorType } from "../types";
+import { extendType, nonNull, stringArg } from 'nexus';
+import { Context } from '../context';
+import { ContributorType } from '../types';
 
 export const ContributorQuery = extendType({
   type: 'Query',
@@ -34,7 +34,6 @@ export const ContributorQuery = extendType({
     });
   },
 });
-
 
 export const ContributorMutation = extendType({
   type: 'Mutation',

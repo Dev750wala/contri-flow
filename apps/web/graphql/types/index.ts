@@ -3,4 +3,4 @@ export * from './reward';
 export * from './user';
 export * from './contributor';
 export * from './organization';
-export * from "./repository-maintainer";
+export * from './repository-maintainer';

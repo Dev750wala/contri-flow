@@ -1,13 +1,13 @@
 interface Env {
-  DATABASE_URL: string
-  AUTH_SECRET: string
-  AUTH_GITHUB_ID: string
-  AUTH_GITHUB_SECRET: string
-  NEXT_PUBLIC_GITHUB_PROFILE_LINK: string
-  DEVELOPMENT_TOKEN: string
-  GITHUB_WEBHOOK_SECRET: string
-  GITHUB_PERSONAL_ACCESS_TOKEN: string
-  NEXTAUTH_URL: string
+  DATABASE_URL: string;
+  AUTH_SECRET: string;
+  AUTH_GITHUB_ID: string;
+  AUTH_GITHUB_SECRET: string;
+  NEXT_PUBLIC_GITHUB_PROFILE_LINK: string;
+  DEVELOPMENT_TOKEN: string;
+  GITHUB_WEBHOOK_SECRET: string;
+  GITHUB_PERSONAL_ACCESS_TOKEN: string;
+  NEXTAUTH_URL: string;
 }
 
 const config: Env = {
@@ -19,7 +19,7 @@ const config: Env = {
   DEVELOPMENT_TOKEN: process.env.DEVELOPMENT_TOKEN!,
   GITHUB_WEBHOOK_SECRET: process.env.GITHUB_WEBHOOK_SECRET!,
   GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_PERSONAL_ACCESS_TOKEN!,
-  NEXTAUTH_URL: process.env.NEXTAUTH_URL!
-}
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL!,
+};
 
 export default config;

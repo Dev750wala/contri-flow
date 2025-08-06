@@ -4,8 +4,8 @@ import { RepositoryType } from './repository';
 import { Context } from '../context';
 
 export const OrganizationRole = enumType({
-  name: "OrganizationRole",
-  members: ["OWNER", "MEMBER"],
+  name: 'OrganizationRole',
+  members: ['OWNER', 'MEMBER'],
 });
 
 export const OrganizationType = objectType({
@@ -37,5 +37,3 @@ export const OrganizationType = objectType({
     });
   },
 });
-
-

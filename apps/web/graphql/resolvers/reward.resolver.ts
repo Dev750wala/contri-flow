@@ -1,6 +1,6 @@
-import { extendType, list, nonNull, stringArg } from "nexus";
-import { Context } from "../context";
-import { RewardType } from "../types";
+import { extendType, list, nonNull, stringArg } from 'nexus';
+import { Context } from '../context';
+import { RewardType } from '../types';
 
 export const RewardQuery = extendType({
   type: 'Query',
@@ -21,7 +21,7 @@ export const RewardQuery = extendType({
 
     t.field('rewardsByContributor', {
       type: nonNull(list(nonNull(RewardType))),
-      args: {     
+      args: {
         contributorGithubId: nonNull(stringArg()),
       },
       resolve: async (_parent, args, ctx: Context) => {
@@ -34,7 +34,7 @@ export const RewardQuery = extendType({
             contributor: true,
           },
         });
-      }
+      },
     });
 
     t.field('rewardsByRepository', {
@@ -56,7 +56,6 @@ export const RewardQuery = extendType({
     });
   },
 });
-
 
 export const RewardMutation = extendType({
   type: 'Mutation',

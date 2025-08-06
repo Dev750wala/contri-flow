@@ -1,6 +1,4 @@
-import {
-  RepositoryRenamedWebhookPayload,
-} from '@/interfaces';
+import { RepositoryRenamedWebhookPayload } from '@/interfaces';
 import { ControllerReturnType } from '../../interface';
 import { handleRepositoriesRenamedEvent } from './controllers';
 

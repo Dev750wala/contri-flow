@@ -1,30 +1,29 @@
-import { extendType, list, nonNull, stringArg } from "nexus"
-import { Context } from "../context"
-import { RepositoryMaintainerType } from "../types"
+import { extendType, list, nonNull, stringArg } from 'nexus';
+import { Context } from '../context';
+import { RepositoryMaintainerType } from '../types';
 
 export const RepositoryMaintainerQuery = extendType({
-  type: "Query",
+  type: 'Query',
   definition(t) {
-    t.field("repositoryMaintainers", {
+    t.field('repositoryMaintainers', {
       type: nonNull(list(nonNull('RepositoryMaintainer'))),
       args: {
         repositoryId: nonNull(stringArg()),
       },
       resolve: async (_root, args, ctx: Context) => {
-        const { repositoryId } = args
+        const { repositoryId } = args;
         return ctx.prisma.repositoryMaintainer.findMany({
           where: { repository_id: repositoryId },
-        })
+        });
       },
-    })
+    });
   },
-})
-
+});
 
 export const RepositoryMaintainerMutation = extendType({
-  type: "Mutation",
+  type: 'Mutation',
   definition(t) {
-    t.field("addRepositoryMaintainer", {
+    t.field('addRepositoryMaintainer', {
       type: nonNull(RepositoryMaintainerType),
       args: {
         repositoryId: nonNull(stringArg()),
@@ -32,29 +31,29 @@ export const RepositoryMaintainerMutation = extendType({
         role: nonNull('RepositoryRole'),
       },
       resolve: async (_root, args, ctx: Context) => {
-        const { repositoryId, userId, role } = args
+        const { repositoryId, userId, role } = args;
         return ctx.prisma.repositoryMaintainer.create({
           data: {
             repository_id: repositoryId,
             user_id: userId,
             role,
           },
-        })
+        });
       },
-    })
+    });
 
-    t.field("removeRepositoryMaintainer", {
+    t.field('removeRepositoryMaintainer', {
       type: 'Boolean',
       args: {
         id: nonNull(stringArg()),
       },
       resolve: async (_root, args, ctx: Context) => {
-        const { id } = args
+        const { id } = args;
         await ctx.prisma.repositoryMaintainer.delete({
           where: { id },
-        })
-        return true
+        });
+        return true;
       },
-    })
+    });
   },
-})
+});

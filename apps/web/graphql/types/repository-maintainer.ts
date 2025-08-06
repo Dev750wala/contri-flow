@@ -1,23 +1,23 @@
-import { objectType, enumType } from "nexus"
-import { RepositoryMaintainer } from "nexus-prisma"
-import { Context } from "../context"
-import { UserType } from "./user"
-import { RepositoryType } from "./repository"
-import { RepositoryRole as Roles } from "@prisma/client"
+import { objectType, enumType } from 'nexus';
+import { RepositoryMaintainer } from 'nexus-prisma';
+import { Context } from '../context';
+import { UserType } from './user';
+import { RepositoryType } from './repository';
+import { RepositoryRole as Roles } from '@prisma/client';
 
 export const RepositoryRole = enumType({
-  name: "RepositoryRole",
+  name: 'RepositoryRole',
   members: Roles,
-})
+});
 
 export const RepositoryMaintainerType = objectType({
   name: RepositoryMaintainer.$name,
   description: RepositoryMaintainer.$description,
   definition(t) {
-    t.nonNull.field(RepositoryMaintainer.id)
-    t.nonNull.field(RepositoryMaintainer.role)
-    t.nonNull.field(RepositoryMaintainer.created_at)
-    t.nonNull.field(RepositoryMaintainer.github_id)
+    t.nonNull.field(RepositoryMaintainer.id);
+    t.nonNull.field(RepositoryMaintainer.role);
+    t.nonNull.field(RepositoryMaintainer.created_at);
+    t.nonNull.field(RepositoryMaintainer.github_id);
 
     t.field('user', {
       type: UserType,
@@ -28,7 +28,7 @@ export const RepositoryMaintainerType = objectType({
           },
         });
       },
-    })
+    });
     t.nonNull.field('repository', {
       type: RepositoryType,
       resolve(parent, _args, ctx: Context) {
@@ -38,7 +38,6 @@ export const RepositoryMaintainerType = objectType({
           },
         });
       },
-    })
+    });
   },
-})
-
+});
