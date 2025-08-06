@@ -1,12 +1,13 @@
-import { extendType, objectType, nonNull, stringArg, list, enumType } from "nexus"
+import { objectType, enumType } from "nexus"
 import { RepositoryMaintainer } from "nexus-prisma"
 import { Context } from "../context"
 import { UserType } from "./user"
 import { RepositoryType } from "./repository"
+import { RepositoryRole as Roles } from "@prisma/client"
 
 export const RepositoryRole = enumType({
   name: "RepositoryRole",
-  members: ["MAINTAINER", "CONTRIBUTOR", "VIEWER"],
+  members: Roles,
 })
 
 export const RepositoryMaintainerType = objectType({
@@ -16,8 +17,9 @@ export const RepositoryMaintainerType = objectType({
     t.nonNull.field(RepositoryMaintainer.id)
     t.nonNull.field(RepositoryMaintainer.role)
     t.nonNull.field(RepositoryMaintainer.created_at)
+    t.nonNull.field(RepositoryMaintainer.github_id)
 
-    t.nonNull.field('user', {
+    t.field('user', {
       type: UserType,
       resolve(parent, _args, ctx: Context) {
         return ctx.prisma.user.findUnique({

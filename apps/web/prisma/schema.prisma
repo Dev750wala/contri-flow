@@ -63,8 +63,9 @@ model RepositoryMaintainer {
   id            String         @id @default(cuid())
   repository    Repository     @relation(fields: [repository_id], references: [id])
   repository_id String
-  user          User           @relation(fields: [user_id], references: [id])
-  user_id       String
+  user          User?          @relation(fields: [user_id], references: [id])
+  user_id       String?
+  github_id     String
   role          RepositoryRole @default(MAINTAINER) // ADMIN, MAINTAINER, TRIAGE
   created_at    DateTime       @default(now())
 }
