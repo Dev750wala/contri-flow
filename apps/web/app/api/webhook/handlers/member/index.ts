@@ -16,3 +16,8 @@ export async function handleMemberEvent(
       return await handleMemberRemovedEvent(body);
   }
 }
+
+
+
+
+// MISTAKE. MAYBE FORGOT THAT SENDER AND REQUESTER ARE DIFFERNET. SEE CREATED , EDITED ADN DELETED HANDKERS AGAIN.

@@ -24,7 +24,7 @@ export async function handleMemberAddedEvent(
           },
         }),
         github_id: member.id.toString(),
-        role: 'MAINTAINER',
+        role: "MAINTAIN",
       },
     });
     return {

@@ -58,7 +58,8 @@ async function main() {
         data: {
           repository_id: repo.id,
           user_id: user.id,
-          role: RepositoryRole.MAINTAINER,
+          role: RepositoryRole.MAINTAIN,
+          github_id: user.github_id,
         },
       });
     })

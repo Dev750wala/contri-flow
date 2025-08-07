@@ -29,6 +29,7 @@ export const RepositoryMaintainerMutation = extendType({
         repositoryId: nonNull(stringArg()),
         userId: nonNull(stringArg()),
         role: nonNull('RepositoryRole'),
+        github_id: nonNull(stringArg()),
       },
       resolve: async (_root, args, ctx: Context) => {
         const { repositoryId, userId, role } = args;
@@ -37,6 +38,7 @@ export const RepositoryMaintainerMutation = extendType({
             repository_id: repositoryId,
             user_id: userId,
             role,
+            github_id: args.github_id,
           },
         });
       },

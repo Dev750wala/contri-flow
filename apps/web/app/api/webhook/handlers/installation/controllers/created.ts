@@ -150,6 +150,3 @@ export async function handleInstallationCreatedEvent(
     };
   }
 }
-
-
-// MISTAKE. MAYBE FORGOT THAT SENDER AND REQUESTER ARE DIFFERNET. SEE CREATED , EDITED ADN DELETED HANDKERS AGAIN.
