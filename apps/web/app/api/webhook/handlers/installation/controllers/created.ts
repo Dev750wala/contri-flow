@@ -119,6 +119,7 @@ export async function handleInstallationCreatedEvent(
               repository_id: repo.id,
               user_id: user.id,
               role: 'ADMIN',
+              github_id: sender.id.toString(),
             },
           });
         }
@@ -149,3 +150,6 @@ export async function handleInstallationCreatedEvent(
     };
   }
 }
+
+
+// MISTAKE. MAYBE FORGOT THAT SENDER AND REQUESTER ARE DIFFERNET. SEE CREATED , EDITED ADN DELETED HANDKERS AGAIN.
