@@ -251,3 +251,64 @@ export interface MemberEditedChanges {
 }
 
 type RoleType = 'admin' | 'maintain' | 'read' | 'triage' | 'write';
+
+
+
+// ----------------------------------------ISSUE COMMENT-------------------------------------
+export interface IssueCommentEventInterface {
+  action:       string;
+  issue:        Issue;
+  comment:      Comment;
+  repository:   Repository;
+  organization: Organization;
+  sender:       Sender;
+  installation: Installation;
+}
+
+export interface Comment {
+  url:                      string;
+  html_url:                 string;
+  issue_url:                string;
+  id:                       number;
+  node_id:                  string;
+  user:                     Sender;
+  created_at:               Date;
+  updated_at:               Date;
+  author_association:       string;
+  body:                     string;
+  performed_via_github_app: null;
+}
+
+export interface Issue {
+  url:                      string;
+  id:                       number;
+  node_id:                  string;
+  number:                   number;
+  title:                    string;
+  user:                     Sender;
+  labels:                   any[];
+  state:                    string;
+  locked:                   boolean;
+  assignee:                 null;
+  assignees:                any[];
+  milestone:                null;
+  comments:                 number;
+  created_at:               Date;
+  updated_at:               Date;
+  closed_at:                Date;
+  author_association:       string;
+  type:                     null;
+  active_lock_reason:       null;
+  draft:                    boolean;
+  pull_request:             PullRequest;
+  body:                     string;
+}
+
+export interface PullRequest {
+  url:       string;
+  html_url:  string;
+  diff_url:  string;
+  patch_url: string;
+  merged_at: Date;
+}
+

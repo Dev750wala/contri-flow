@@ -9,10 +9,8 @@ export const RewardType = objectType({
   description: Reward.$description,
   definition(t) {
     t.nonNull.field(Reward.id);
-    t.nonNull.field(Reward.owner_github_id);
-    t.nonNull.field(Reward.contributor_github_id);
-    t.nonNull.field(Reward.repo_github_id);
     t.nonNull.field(Reward.pr_number);
+    t.nonNull.field(Reward.reward_issuer_github_id);
     t.nonNull.field(Reward.secret);
     t.nonNull.field(Reward.amount_usd);
     t.nonNull.field(Reward.amount_eth);

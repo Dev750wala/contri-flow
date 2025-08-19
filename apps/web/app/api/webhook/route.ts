@@ -2,13 +2,17 @@ import { NextResponse } from 'next/server';
 import type {
   AppInstallationInterface,
   InstallationRepositories,
+  IssueCommentEventInterface,
+  MemberEventInterface,
   RepositoryRenamedWebhookPayload,
 } from '@/interfaces';
 import WebHooks from '@octokit/webhooks-examples/api.github.com/index.json';
 import {
   handleInstallationEvent,
   handleInstallationRespositoriesEvent,
+  handleMemberEvent,
   handleRepositoriesEvent,
+  handleIssueCommentEvent
 } from './handlers';
 import { verifyGithubHookSignature } from '@/helpers';
 
@@ -41,7 +45,14 @@ export async function POST(request: Request) {
       );
 
     case 'member':
-    // Handle member event if needed
+      response = await handleMemberEvent(
+        body as MemberEventInterface
+      );
+
+    case 'issue_comment':
+      response = await handleIssueCommentEvent(
+        body as IssueCommentEventInterface
+      );
 
     default:
       break;

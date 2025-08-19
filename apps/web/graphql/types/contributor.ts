@@ -2,6 +2,7 @@ import { objectType, extendType, nonNull, stringArg } from 'nexus';
 import { Contributor } from 'nexus-prisma';
 import { Context } from '../context';
 import { RewardType } from './reward';
+import { Contributor as ContributorPrisma} from '@prisma/client';
 import { UserType } from './user';
 
 export const ContributorType = objectType({
@@ -18,10 +19,10 @@ export const ContributorType = objectType({
 
     t.list.field('rewards', {
       type: RewardType,
-      resolve(parent, _args, ctx: Context) {
+      resolve(parent: ContributorPrisma, _args, ctx: Context) {
         return ctx.prisma.reward.findMany({
           where: {
-            contributor_github_id: parent.github_id,
+            contributor_id: parent.id,
           },
         });
       },

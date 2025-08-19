@@ -1,0 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS citext;
+
+
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "github_id" SET DATA TYPE CITEXT;
