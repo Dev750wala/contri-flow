@@ -68,6 +68,8 @@ model RepositoryMaintainer {
   github_id     String
   role          RepositoryRole @default(MAINTAIN)
   created_at    DateTime       @default(now())
+
+  @@unique([repository_id, github_id])
 }
 
 model Contributor {
@@ -99,6 +101,8 @@ model Reward {
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@unique([repository_id, pr_number])
 }
 
 enum RepositoryRole {

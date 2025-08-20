@@ -312,3 +312,22 @@ export interface PullRequest {
   merged_at: Date;
 }
 
+// --------------------------------------------------------------------------------
+export interface GeminiResponse {
+  candidates:    Candidate[];
+  modelVersion:  string;
+  responseId:    string;
+}
+
+export interface Candidate {
+  content:      Content;
+}
+
+export interface Content {
+  parts: Part[];
+  role:  string;
+}
+
+export interface Part {
+  text: string;
+}
