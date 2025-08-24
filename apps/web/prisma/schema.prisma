@@ -60,14 +60,15 @@ model Repository {
 }
 
 model RepositoryMaintainer {
-  id            String         @id @default(cuid())
-  repository    Repository     @relation(fields: [repository_id], references: [id])
-  repository_id String
-  user          User?          @relation(fields: [user_id], references: [id])
-  user_id       String?
-  github_id     String
-  role          RepositoryRole @default(MAINTAIN)
-  created_at    DateTime       @default(now())
+  id             String         @id @default(cuid())
+  repository     Repository     @relation(fields: [repository_id], references: [id])
+  repository_id  String
+  user           User?          @relation(fields: [user_id], references: [id])
+  user_id        String?
+  github_id      String
+  role           RepositoryRole @default(MAINTAIN)
+  issued_rewards Reward[]
+  created_at     DateTime       @default(now())
 
   @@unique([repository_id, github_id])
 }
@@ -85,19 +86,20 @@ model Contributor {
 }
 
 model Reward {
-  id                      String    @id @default(cuid())
-  pr_number               Int
-  reward_issuer_github_id String
-  secret                  String
-  amount_usd              Float
-  amount_eth              Float?
-  claimed                 Boolean   @default(false)
-  claimed_at              DateTime?
+  id         String    @id @default(cuid())
+  pr_number  Int
+  secret     String
+  amount_usd Float
+  amount_eth Float?
+  claimed    Boolean   @default(false)
+  claimed_at DateTime?
 
-  contributor_id String
-  contributor    Contributor @relation(fields: [contributor_id], references: [id])
-  repository_id  String
-  repository     Repository  @relation(fields: [repository_id], references: [id])
+  contributor_id           String
+  contributor              Contributor          @relation(fields: [contributor_id], references: [id])
+  repository_id            String
+  repository               Repository           @relation(fields: [repository_id], references: [id])
+  issuar_id String
+  issuar    RepositoryMaintainer @relation(fields: [issuar_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

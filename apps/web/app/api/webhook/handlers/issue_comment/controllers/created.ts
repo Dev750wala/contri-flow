@@ -76,13 +76,7 @@ export async function handleIssueCommentCreated(
         }
     })
 
-    
 
-    // const newReward = await prisma.reward.create({
-    //     data: {
-
-    //     }
-    // })
-
+    // add the jobs to queue
 
 }

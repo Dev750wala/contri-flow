@@ -3,6 +3,8 @@ import { Context } from '../context';
 import { Reward } from 'nexus-prisma';
 import { RepositoryType } from './repository';
 import { ContributorType } from './contributor';
+import { RepositoryMaintainerType } from './repository-maintainer';
+import { Reward as RewardPrisma } from '@prisma/client';
 
 export const RewardType = objectType({
   name: Reward.$name,
@@ -10,7 +12,6 @@ export const RewardType = objectType({
   definition(t) {
     t.nonNull.field(Reward.id);
     t.nonNull.field(Reward.pr_number);
-    t.nonNull.field(Reward.reward_issuer_github_id);
     t.nonNull.field(Reward.secret);
     t.nonNull.field(Reward.amount_usd);
     t.nonNull.field(Reward.amount_eth);
@@ -18,6 +19,17 @@ export const RewardType = objectType({
     t.nonNull.field(Reward.claimed);
     t.nonNull.field(Reward.claimed_at);
     t.nonNull.field(Reward.updated_at);
+
+    t.nonNull.field(Reward.issuar.name, {
+      type: RepositoryMaintainerType,
+      async resolve(parent: RewardPrisma, _args, ctx: Context) {
+        return await ctx.prisma.repositoryMaintainer.findUnique({
+          where: {
+            id: parent.issuar_id
+          }
+        })
+      }
+    })
 
     t.field('repository', {
       type: RepositoryType,

@@ -331,3 +331,11 @@ export interface Content {
 export interface Part {
   text: string;
 }
+
+
+
+// -------------------------------------------------------------------------------------------
+export interface CommentParsingResponse {
+  contributor: string;      // contributor github username
+  reward: number;           // in USD
+}

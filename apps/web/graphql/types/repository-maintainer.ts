@@ -1,9 +1,10 @@
 import { objectType, enumType } from 'nexus';
-import { RepositoryMaintainer } from 'nexus-prisma';
+import { RepositoryMaintainer, Reward } from 'nexus-prisma';
 import { Context } from '../context';
 import { UserType } from './user';
 import { RepositoryType } from './repository';
-import { RepositoryRole as Roles } from '@prisma/client';
+import { RepositoryRole as Roles, RepositoryMaintainer as RepositoryMaintainerPrisma } from '@prisma/client';
+import { RewardType } from './reward';
 
 export const RepositoryRole = enumType({
   name: 'RepositoryRole',
@@ -29,6 +30,18 @@ export const RepositoryMaintainerType = objectType({
         });
       },
     });
+
+    t.nonNull.field(Reward.$name, {
+      type: RewardType,
+      resolve(parent: RepositoryMaintainerPrisma, _args, ctx: Context) {
+        return ctx.prisma.reward.findMany({
+          where: {
+            issuar_id: parent.id
+          },
+        });
+      },
+    });
+
     t.nonNull.field('repository', {
       type: RepositoryType,
       resolve(parent, _args, ctx: Context) {
