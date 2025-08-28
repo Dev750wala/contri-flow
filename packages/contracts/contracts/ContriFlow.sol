@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./PriceConverter.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ContriFlow is ReentrancyGuard {
-    using PriceConverter for AggregatorV3Interface;
+contract ContriFlow is ReentrancyGuard, Ownable {
+    IERC20 public token;
 
     event DepositAdded(address indexed ownerAddress, uint256 amountWei);
     event DepositRemoved(address indexed ownerAddress, uint256 amountWei);
@@ -42,6 +43,12 @@ contract ContriFlow is ReentrancyGuard {
     error GithubIdNotSet();
     error GithubIdMismatch();
 
+    enum ClaimStatus {
+        CLAIMED,
+        UNCLAIMED,
+        IN_PROGRESS
+    }
+
     struct RepoOwnerDetails {
         uint256 githubId;
         uint256 amount;
@@ -50,16 +57,13 @@ contract ContriFlow is ReentrancyGuard {
     struct Voucher {
         bytes32 hash;
         uint256 contributorGithubId;
-        uint256 dollarAmount8dec; // USD amount scaled to 8 decimals (e.g. $50 => 50 * 1e8)
-        uint256 ethAmountInWei;
-        bool claimed;
+        uint256 tokenAmountIn18dec; // Token amount scaled to 18 decimals (e.g. 1 DEV => 1 * 1e18)
+        ClaimStatus claimed;
     }
 
     mapping(address => RepoOwnerDetails) public ownerDetails;
 
     address private bot;
-    address immutable i_owner;
-    AggregatorV3Interface public s_priceFeed;
 
     modifier onlyBot() {
         require(msg.sender == bot, "Not owner");
@@ -72,10 +76,8 @@ contract ContriFlow is ReentrancyGuard {
 
     // repoOwnerGithubId -> repoId -> prNumber -> Voucher
 
-    constructor(address priceFeedAddress) {
-        i_owner = msg.sender;
-        if (priceFeedAddress == address(0)) revert InvalidPriceFeed();
-        s_priceFeed = AggregatorV3Interface(priceFeedAddress);
+    constructor(address tokenAddress) Ownable(msg.sender) {
+        token = IERC20(tokenAddress);
         bot = msg.sender;
     }
 
@@ -83,9 +85,9 @@ contract ContriFlow is ReentrancyGuard {
         bot = newBot;
     }
 
-    /// @notice Owner deposits ETH to the contract
-    function addAmount(uint256 githubId) external payable {
-        require(msg.value > 0, "Must send ETH");
+    /// @notice Owner deposits tokens to the contract
+    function addAmount(uint256 githubId, uint256 amount) external {
+        token.transferFrom(msg.sender, address(this), amount);
         if (githubId == 0) revert GithubIdNotSet();
 
         RepoOwnerDetails storage details = ownerDetails[msg.sender];
@@ -94,19 +96,19 @@ contract ContriFlow is ReentrancyGuard {
             details.githubId = githubId;
         } else if (details.githubId != githubId) revert GithubIdMismatch();
 
-        details.amount += msg.value;
-        emit DepositAdded(msg.sender, msg.value);
+        details.amount += amount;
+        emit DepositAdded(msg.sender, amount);
     }
 
-    /// @notice Owner withdraws unused ETH from a deposit
-    function removeAmount(uint256 amountWei) external {
-        uint256 bal = ownerDetails[msg.sender].amount;
-        if (bal < amountWei) revert InsufficientBalance();
-        ownerDetails[msg.sender].amount -= amountWei;
-        (bool success, ) = payable(msg.sender).call{value: amountWei}("");
-        if (!success) revert TransferFailed();
-        emit DepositRemoved(msg.sender, amountWei);
-    }
+    /// @notice Owner withdraws unused tokens from a deposit
+    // function removeAmount(uint256 amountWei) external {
+    //     uint256 bal = ownerDetails[msg.sender].amount;
+    //     if (bal < amountWei) revert InsufficientBalance();
+    //     ownerDetails[msg.sender].amount -= amountWei;
+    //     (bool success, ) = payable(msg.sender).call{value: amountWei}("");
+    //     if (!success) revert TransferFailed();
+    //     emit DepositRemoved(msg.sender, amountWei);
+    // }
 
     function storeVoucher(
         address ownerAddress,
@@ -114,7 +116,7 @@ contract ContriFlow is ReentrancyGuard {
         uint256 repoGithubId,
         uint256 contributorGithubId,
         uint256 prNumber,
-        uint256 dollarAmount8dec,
+        uint256 tokenAmountIn18dec,
         bytes32 hash
     ) external onlyBot {
         // Check GitHub ID was set on-chain for ownerAddress
@@ -123,20 +125,14 @@ contract ContriFlow is ReentrancyGuard {
 
         if (vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber].hash != bytes32(0)) revert VoucherExists();
 
-                // Compute ETH amount via Chainlink
-        uint256 ethAmt = PriceConverter.getEthAmountFromUsd(
-            dollarAmount8dec,
-            s_priceFeed
-        );
-        require(ethAmt > 0, "Invalid ETH amount");
+        require(tokenAmountIn18dec > 0, "Invalid token amount");
 
         // Store voucher
         vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber] = Voucher({
             hash: hash,
             contributorGithubId: contributorGithubId,
-            dollarAmount8dec: dollarAmount8dec,
-            claimed: false,
-            ethAmountInWei: ethAmt
+            tokenAmountIn18dec: tokenAmountIn18dec,
+            claimed: false
         });
         emit VoucherStored(
             ownerAddress,
@@ -144,19 +140,20 @@ contract ContriFlow is ReentrancyGuard {
             contributorGithubId,
             ownerGithubId,
             prNumber,
-            dollarAmount8dec,
+            tokenAmountIn18dec,
             hash
         );
     }
 
-    function claimReward(
+    function requestClaim(
         string calldata secret,
         address ownerAddress,
         uint256 ownerGithubId,
         uint256 repoGithubId,
         uint256 prNumber,
         uint256 contributorGithubId,
-        uint256 dollarAmount8dec
+        uint256 tokenAmountIn18dec,
+        string calldata destinationChain
     ) external nonReentrant {
         address contributor = msg.sender;
 
@@ -173,14 +170,14 @@ contract ContriFlow is ReentrancyGuard {
                 repoGithubId,
                 prNumber,
                 contributorGithubId,
-                dollarAmount8dec
+                tokenAmountIn18dec
             )
         );
 
         if (
             v.hash != calculatedHash ||
             v.contributorGithubId != contributorGithubId ||
-            v.dollarAmount8dec != dollarAmount8dec
+            v.tokenAmountIn18dec != tokenAmountIn18dec
         ) {
             revert InvalidVoucher();
         }
