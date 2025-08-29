@@ -21,13 +21,13 @@ contract DevToken is ERC20, Ownable {
     }
 
 
-    function burn(uint256 amount) external {
-        require(amount > 0, "amount zero");
-        uint256 fee = (amount * 2) / 100;
-        require(amount > fee, "amount <= fee");
-        _transfer(msg.sender, owner(), fee);
-        _burn(msg.sender, amount - fee);
-    }
+    // function burn(uint256 amount) external {
+    //     require(amount > 0, "amount zero");
+    //     uint256 fee = (amount * 2) / 100;
+    //     require(amount > fee, "amount <= fee");
+    //     _transfer(msg.sender, owner(), fee);
+    //     _burn(msg.sender, amount - fee);
+    // }
 
     function getBalance(address account) external view returns (uint256) {
         return balanceOf(account);

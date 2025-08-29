@@ -31,6 +31,14 @@ contract ContriFlow is ReentrancyGuard, Ownable {
         uint256 dollarAmount8dec
     );
 
+    event ClaimRequested(
+        uint256 indexed repoGithubId,
+        uint256 indexed prNumber,
+        address claimer,
+        uint256 tokenAmount,
+        string destinationChain
+    );
+
     error NotOwner();
     error InvalidBotSigner();
     error InvalidPriceFeed();
@@ -42,11 +50,12 @@ contract ContriFlow is ReentrancyGuard, Ownable {
     error NotBotSigner();
     error GithubIdNotSet();
     error GithubIdMismatch();
+    error ClaimInProcess();
 
     enum ClaimStatus {
         CLAIMED,
         UNCLAIMED,
-        IN_PROGRESS
+        PROCESSING
     }
 
     struct RepoOwnerDetails {
@@ -87,14 +96,14 @@ contract ContriFlow is ReentrancyGuard, Ownable {
 
     /// @notice Owner deposits tokens to the contract
     function addAmount(uint256 githubId, uint256 amount) external {
-        token.transferFrom(msg.sender, address(this), amount);
-        if (githubId == 0) revert GithubIdNotSet();
-
         RepoOwnerDetails storage details = ownerDetails[msg.sender];
 
         if (details.githubId == 0) {
             details.githubId = githubId;
         } else if (details.githubId != githubId) revert GithubIdMismatch();
+
+        token.transferFrom(msg.sender, address(this), amount);
+        if (githubId == 0) revert GithubIdNotSet();
 
         details.amount += amount;
         emit DepositAdded(msg.sender, amount);
@@ -132,7 +141,7 @@ contract ContriFlow is ReentrancyGuard, Ownable {
             hash: hash,
             contributorGithubId: contributorGithubId,
             tokenAmountIn18dec: tokenAmountIn18dec,
-            claimed: false
+            claimed: ClaimStatus.UNCLAIMED
         });
         emit VoucherStored(
             ownerAddress,
@@ -155,8 +164,6 @@ contract ContriFlow is ReentrancyGuard, Ownable {
         uint256 tokenAmountIn18dec,
         string calldata destinationChain
     ) external nonReentrant {
-        address contributor = msg.sender;
-
         Voucher storage v = vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber];
 
         if(v.hash == bytes32(0)) { revert InvalidVoucher(); }
@@ -181,31 +188,39 @@ contract ContriFlow is ReentrancyGuard, Ownable {
         ) {
             revert InvalidVoucher();
         }
-        if (v.claimed) revert AlreadyClaimed();
+        if (v.claimed == ClaimStatus.PROCESSING) revert ClaimInProcess();
+        if (v.claimed == ClaimStatus.CLAIMED) revert AlreadyClaimed();
 
         // Mark claimed
-        v.claimed = true;
-        uint256 ethAmt = v.ethAmountInWei;
+        v.claimed = ClaimStatus.PROCESSING;
+        uint256 tokenAmount = v.tokenAmountIn18dec;
 
         // Deduct from owner's deposit for this repo
         uint256 bal = ownerDetails[ownerAddress].amount;
-        if (bal < ethAmt) revert InsufficientBalance();
-        ownerDetails[ownerAddress].amount = bal - ethAmt;
 
-        // Transfer ETH to contributor
-        (bool sent, ) = payable(contributor).call{value: ethAmt}("");
-        if (!sent) revert TransferFailed();
+        if (bal < tokenAmount) revert InsufficientBalance();
 
-        emit RewardClaimed(
-            ownerAddress,
+        
+        ownerDetails[ownerAddress].amount = bal - tokenAmount;
+
+        emit ClaimRequested(
             repoGithubId,
-            contributorGithubId,
-            ownerGithubId,
             prNumber,
-            contributor,
-            ethAmt,
-            dollarAmount8dec
+            msg.sender,
+            tokenAmountIn18dec,
+            destinationChain
         );
+
+        // emit RewardClaimed(
+        //     ownerAddress,
+        //     repoGithubId,
+        //     contributorGithubId,
+        //     ownerGithubId,
+        //     prNumber,
+        //     contributor,
+        //     ethAmt,
+        //     dollarAmount8dec
+        // );
     }
 
     function getOwnerDetails(address ownerAddress) view external returns (RepoOwnerDetails memory) {
