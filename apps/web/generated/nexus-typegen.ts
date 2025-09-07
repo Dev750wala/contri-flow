@@ -155,7 +155,7 @@ export interface NexusGenFieldTypes {
     organization: NexusGenRootTypes['Organization'] | null; // Organization
     organizationByGithubId: NexusGenRootTypes['Organization'] | null; // Organization
     organizations: Array<NexusGenRootTypes['Organization'] | null> | null; // [Organization]
-    repositoriesByOrganizationId: NexusGenRootTypes['Repository'] | null; // Repository
+    repositoriesByOrganizationId: Array<NexusGenRootTypes['Repository'] | null> | null; // [Repository]
     repository: NexusGenRootTypes['Repository'] | null; // Repository
     repositoryByGithubRepoId: NexusGenRootTypes['Repository'] | null; // Repository
     repositoryMaintainers: NexusGenRootTypes['RepositoryMaintainer'][]; // [RepositoryMaintainer!]!

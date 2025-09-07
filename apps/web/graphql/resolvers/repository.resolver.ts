@@ -1,12 +1,13 @@
-import { extendType, nonNull, stringArg } from 'nexus';
+import { extendType, list, nonNull, stringArg } from 'nexus';
 import { Context } from '../context';
 import config from '@/config';
+import { RepositoryType } from '../types/repository';
 
 export const RepositoryQuery = extendType({
   type: 'Query',
   definition(t) {
     t.field('repository', {
-      type: 'Repository',
+      type: RepositoryType,
       args: {
         id: nonNull(stringArg()),
       },
@@ -20,7 +21,7 @@ export const RepositoryQuery = extendType({
     });
 
     t.field('repositoryByGithubRepoId', {
-      type: 'Repository',
+      type: RepositoryType,
       args: {
         githubRepoId: nonNull(stringArg()),
       },
@@ -33,8 +34,8 @@ export const RepositoryQuery = extendType({
       },
     });
 
-    t.field('repositoriesByOrganizationId', {
-      type: 'Repository',
+    t.list.field('repositoriesByOrganizationId', {
+      type: RepositoryType,
       args: {
         organizationId: nonNull(stringArg()),
       },
@@ -48,7 +49,7 @@ export const RepositoryQuery = extendType({
     });
 
     t.list.field('allRepositories', {
-      type: 'Repository',
+      type: RepositoryType,
       args: {
         token: nonNull(stringArg()),
       },

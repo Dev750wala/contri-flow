@@ -54,7 +54,7 @@ type Query {
   organization(id: String!): Organization
   organizationByGithubId(githubOrgId: String!): Organization
   organizations: [Organization]
-  repositoriesByOrganizationId(organizationId: String!): Repository
+  repositoriesByOrganizationId(organizationId: String!): [Repository]
   repository(id: String!): Repository
   repositoryByGithubRepoId(githubRepoId: String!): Repository
   repositoryMaintainers(repositoryId: String!): [RepositoryMaintainer!]!
