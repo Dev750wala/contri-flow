@@ -17,11 +17,11 @@
 for i in {1..1000}
 do
   echo "Request #$i"
-curl 'https://cloud-api.coinbase.com/platform/projects/d2725108-271b-4ff3-b002-de4fd8bd37cd/v2/evm/faucet' \
+curl 'https://cloud-api.coinbase.com/platform/projects/08644bfe-778b-48ad-91f4-62d8bb0251da/v2/evm/faucet' \
   -H 'accept: application/json' \
   -H 'accept-language: en-GB,en-US;q=0.9,en;q=0.8' \
   -H 'content-type: application/json' \
-  -b 'cb_dm=1321281c-5912-40a8-8681-21ffc7f73de3; coinbase_device_id=cc1b6fee-7b6d-4c1f-a643-157e1a802826; advertising_sharing_allowed={%22value%22:true}; __cf_bm=o_11SN9y1mqa2ADcMhgoRp77VeYThezSneKc2Ma4pPM-1756395379-1.0.1.1-2u0B7k7_tq7vLFnY.fcD4_jj2reG9D2jIlASEgau1juQPdX6acH745h2oeIM.wyLkWTBUQI1wvfbQn4hiUOO1OMjyLG7rHGVVfjGMZK7Fu0; _cfuvid=vEvAQq5o7hseX.FgUGzwZx6U1ODrZvmo8osOL3xPwKA-1756395379650-0.0.1.1-604800000; _iidt=x3/Xd+IdI6TOXgf2ZF2Vvfq4tELKLvvWqWfwI99k1fmb0WHXwbbtwerbQx7lqqzPDUNJENxAIU6kDIyo2qa8kXM1UUtrmFWzT6xSdTk=; unified-oauth-state-cookie=C4UBHYLAFKXJJECRJAWNHG77SBJ346HXI5YKMHYIJ7DV3PAEJUNQ====; identity_device_id=0377d43e-1217-51c4-aaa1-08ef29f5c815; cb-gssc=eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdXRoX3RpbWUiOjE3NTYzOTU1NTYsImlzcyI6Imh0dHBzOi8vbG9naW4uY29pbmJhc2UuY29tIiwic3ViIjoiMjI5OGEyMmU2Y2EwN2RkYjljMDFmMTJjOGE3MDhhNDciLCJleHAiOjE3NTg5ODc1NTYsImlhdCI6MTc1NjM5NTU1Nn0.; unified-session-manager-cookie=MTc1NjM5NTU1N3xVckJKdU1zWFdaeXBzWHZUSkhBVG5aMGJ3RS1aMk1vVlh4QW9RakFvSVptc1lPYldrejl3RmpobUdFelBwUXBYelBNX3FjSUhnbVA2OFBpV1g3TlBGQWZmQWtPYjNsMkU4MER2endSTS1Wck41Ync9fKtyiWm_Vtfo3-BojxJiGrFwUm6hT3xxFMksg9ikyrKE' \
+  -b 'cb_dm=7a41022f-9736-44e8-a03c-f38ff9f364cf; coinbase_device_id=deca3e2b-9af6-4616-bc5a-3f9561fb943f; advertising_sharing_allowed={%22value%22:true}; cm_default_preferences={%22region%22:%22DEFAULT%22%2C%22consent%22:[%22necessary%22%2C%22performance%22%2C%22functional%22%2C%22targeting%22]}; cb-gssc=eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdXRoX3RpbWUiOjE3NTYyOTg2NTcsImlzcyI6Imh0dHBzOi8vbG9naW4uY29pbmJhc2UuY29tIiwic3ViIjoiY2EyNTg5Zjg0YTVmYzFhMmEwOGNiMjQ2Nzg4MTJiZWYiLCJleHAiOjE3NTg4OTA2NTcsImlhdCI6MTc1NjI5ODY1N30.; _cfuvid=ZkYbNiII_K_l4BgNzvzq1bM8cQIrrHqVQIcC2dxhlqM-1757102210180-0.0.1.1-604800000; __cf_bm=_cQYOYwa_GtyIh8ZDeS1UCPCrR1y2.Q8O9LdM2eFiAk-1757136290-1.0.1.1-uT252I70Gw4RXXbwyR23OTkaykf.EfR2wvh83bxFqdmVIEV0zTLgTXMd8QFVfXOfKicUNDmvfuXFZuClodp2172I.4.qHCf3uhSu0WWERqw; unified-oauth-state-cookie=RSLPFLJCB3A22IS5XTKM6DIL4QDOLFDZBOHLMV4POHXW76FHLL7A====; _iidt=owF+cnI8gp6w/7QgDQVse42AeWcGe6G3sirRv0ebkeHO8vdK+tlFuO2+e7p01rWxMi0ZxyYUpeaFe9uagQvnacUvNPhwx518qIRjVJE=; identity_device_id=0377d43e-1217-51c4-aaa1-08ef29f5c815; unified-session-manager-cookie=MTc1NzEzNjMxNHwyUnNJWnJ4M1FOMDVLOW1BWG5FR0p3VUNQWGd4b3RDYktCcVZ1dk5vZ0d6Yk5kOW1RSS1jWTNSdHhhUXdnZnAzQTFkbm4yR1dzUlpwWGlDMG0xOURGUXdFWW9BSXhlUGt3Zmx4aGwxV1V5WmIzS009fL1A9ayJIanfRPDNJs97E6BtKvCgn8pNM2_WMZmA2Kmb' \
   -H 'origin: https://portal.cdp.coinbase.com' \
   -H 'priority: u=1, i' \
   -H 'referer: https://portal.cdp.coinbase.com/' \
@@ -32,7 +32,7 @@ curl 'https://cloud-api.coinbase.com/platform/projects/d2725108-271b-4ff3-b002-d
   -H 'sec-fetch-mode: cors' \
   -H 'sec-fetch-site: same-site' \
   -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36' \
-  --data-raw '{"network":"base-sepolia","address":"0x0046872823D3f2793a33Ca59979d590F688f224C","token":"eth"}'
+  --data-raw '{"network":"base-sepolia","address":"0x994248373CCD2baC2242b8c42BCee9B28d619bC2","token":"eth"}'
 
   sleep 0.5
 done

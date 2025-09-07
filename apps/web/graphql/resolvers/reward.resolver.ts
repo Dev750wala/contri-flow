@@ -25,9 +25,17 @@ export const RewardQuery = extendType({
         contributorGithubId: nonNull(stringArg()),
       },
       resolve: async (_parent, args, ctx: Context) => {
+        const contributor = await ctx.prisma.contributor.findUnique({
+          where: {
+            github_id: args.contributorGithubId,
+          },
+        });
+        if (!contributor) {
+          throw new Error('Contributor not found');
+        }
         return ctx.prisma.reward.findMany({
           where: {
-            contributor_github_id: args.contributorGithubId,
+            contributor_id: contributor.id,
           },
           include: {
             repository: true,
@@ -43,9 +51,17 @@ export const RewardQuery = extendType({
         repoGithubId: nonNull(stringArg()),
       },
       resolve: async (_parent, args, ctx: Context) => {
+        const repository = await ctx.prisma.repository.findUnique({
+          where: {
+            github_repo_id: args.repoGithubId,
+          },
+        });
+        if (!repository) {
+          throw new Error('Repository not found');
+        }
         return ctx.prisma.reward.findMany({
           where: {
-            repo_github_id: args.repoGithubId,
+            repository_id: repository.id,
           },
           include: {
             repository: true,

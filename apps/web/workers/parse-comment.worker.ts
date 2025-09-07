@@ -46,9 +46,9 @@ const worker = new Worker('parse-jobs', async (job) => {
           ...(existingUser && { user_id: existingUser.id }),
         }
       })
-      return await tx.reward.create({
+      // return await tx.reward.create({
         
-      })
+      // })
     })
     // const newReward = await prisma.reward.create({
     //   data: {
@@ -57,12 +57,12 @@ const worker = new Worker('parse-jobs', async (job) => {
     // })
   }
 
-  await onChainQueue.add('send-onchain', { rewardId: rewardRow.id }, {
-    jobId: `onchain:${rewardRow.id}`,
-    attempts: 5,
-    backoff: { type: 'exponential', delay: 1000 },
-    removeOnComplete: true,
-  });
+  // await onChainQueue.add('send-onchain', { rewardId: rewardRow.id }, {
+  //   jobId: `onchain:${rewardRow.id}`,
+  //   attempts: 5,
+  //   backoff: { type: 'exponential', delay: 1000 },
+  //   removeOnComplete: true,
+  // });
 
 }, { connection, concurrency: 4 });
 
