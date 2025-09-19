@@ -5,6 +5,7 @@ import config from '@/config';
 
 export async function createContext({ req, res }: { req: any; res: any }) {
   const token = await getToken({ req, secret: config.AUTH_SECRET });
+  // console.log('req', req.cookies);
   console.log('Token in context:', token);
 
   const session = await getSession({ req });
