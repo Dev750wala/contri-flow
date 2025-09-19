@@ -4,50 +4,58 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+interface IERC20Burnable is IERC20 {
+    function burnFrom(address account, uint256 amount) external;
+}
 
 contract ContriFlow is ReentrancyGuard, Ownable {
-    IERC20 public token;
+    using SafeERC20 for IERC20;
+
+    IERC20Burnable public immutable token;
+    address private bot;
 
     event DepositAdded(address indexed ownerAddress, uint256 amountWei);
     event DepositRemoved(address indexed ownerAddress, uint256 amountWei);
+
     event VoucherStored(
         address indexed ownerAddress,
         uint256 indexed repoGithubId,
         uint256 indexed contributorGithubId,
         uint256 ownerGithubId,
         uint256 prNumber,
-        uint256 dollarAmount8dec,
+        uint256 tokenAmountIn18dec,
         bytes32 hash
     );
 
-    event RewardClaimed(
-        address indexed ownerAddress,
-        uint256 indexed repoGithubId,
-        uint256 indexed contrubutorGithubId,
-        uint256 ownerGithubId,
-        uint256 prNumber,
-        address contributor,
-        uint256 amountWei,
-        uint256 dollarAmount8dec
-    );
-
     event ClaimRequested(
+        bytes32 indexed voucherHash,
         uint256 indexed repoGithubId,
         uint256 indexed prNumber,
-        address claimer,
+        address requester,
+        address ownerAddress,
+        uint256 ownerGithubId,
         uint256 tokenAmount,
+        uint256 platformFee,
         string destinationChain
     );
 
-    error NotOwner();
-    error InvalidBotSigner();
-    error InvalidPriceFeed();
+    event ClaimFinalized(
+        bytes32 indexed voucherHash,
+        uint256 indexed repoGithubId,
+        uint256 indexed prNumber,
+        address claimant,
+        uint256 tokenAmount,
+        string destinationChain,
+        bytes relayerMetadata
+    );
+
+    error NotBotSigner();
     error InvalidVoucher();
     error VoucherExists();
     error AlreadyClaimed();
-    error InsufficientBalance();
-    error TransferFailed();
-    error NotBotSigner();
+    error InsufficientAllowance();
     error GithubIdNotSet();
     error GithubIdMismatch();
     error ClaimInProcess();
@@ -58,66 +66,55 @@ contract ContriFlow is ReentrancyGuard, Ownable {
         PROCESSING
     }
 
-    struct RepoOwnerDetails {
-        uint256 githubId;
-        uint256 amount;
-    }
-
     struct Voucher {
         bytes32 hash;
         uint256 contributorGithubId;
-        uint256 tokenAmountIn18dec; // Token amount scaled to 18 decimals (e.g. 1 DEV => 1 * 1e18)
+        uint256 tokenAmountIn18dec; // token amount (18-dec scale)
         ClaimStatus claimed;
     }
 
-    mapping(address => RepoOwnerDetails) public ownerDetails;
+    // address -> github id
+    mapping(address => uint256) public ownerDetails;
 
-    address private bot;
-
-    modifier onlyBot() {
-        require(msg.sender == bot, "Not owner");
-        _;
-    }
-
-    // mapping (uint256 repoOwnerGithubId => mapping (uint256 repoId => mapping(uint256 prNumber =>  Voucher)) vouchersByRepoAndPr;
+    // repoOwnerGithubId -> repoId -> prNumber -> Voucher
     mapping(uint256 => mapping(uint256 => mapping(uint256 => Voucher)))
         public vouchersByRepoAndPr;
 
-    // repoOwnerGithubId -> repoId -> prNumber -> Voucher
-
     constructor(address tokenAddress) Ownable(msg.sender) {
-        token = IERC20(tokenAddress);
-        bot = msg.sender;
+        require(tokenAddress != address(0), "zero token");
+        token = IERC20Burnable(tokenAddress);
+        bot = msg.sender; // initial bot = deployer; changeable by owner
     }
 
-    function setBotSigner(address newBot) external onlyBot {
-        bot = newBot;
+    modifier onlyBot() {
+        if (msg.sender != bot) revert NotBotSigner();
+        _;
     }
 
-    /// @notice Owner deposits tokens to the contract
+    /// Owner registers GitHub id and optionally deposits tokens via transferFrom.
     function addAmount(uint256 githubId, uint256 amount) external {
-        RepoOwnerDetails storage details = ownerDetails[msg.sender];
-
-        if (details.githubId == 0) {
-            details.githubId = githubId;
-        } else if (details.githubId != githubId) revert GithubIdMismatch();
-
-        token.transferFrom(msg.sender, address(this), amount);
         if (githubId == 0) revert GithubIdNotSet();
 
-        details.amount += amount;
-        emit DepositAdded(msg.sender, amount);
+        uint256 existing = ownerDetails[msg.sender];
+        if (existing == 0) {
+            // first time registration
+            ownerDetails[msg.sender] = githubId;
+        } else {
+            // must match previously registered id
+            if (existing != githubId) revert GithubIdMismatch();
+        }
+
+        if (amount > 0) {
+            // caller must approve this contract for `amount` beforehand if they want to deposit
+            IERC20(address(token)).safeTransferFrom(msg.sender, address(this), amount);
+            emit DepositAdded(msg.sender, amount);
+        }
     }
 
-    /// @notice Owner withdraws unused tokens from a deposit
-    // function removeAmount(uint256 amountWei) external {
-    //     uint256 bal = ownerDetails[msg.sender].amount;
-    //     if (bal < amountWei) revert InsufficientBalance();
-    //     ownerDetails[msg.sender].amount -= amountWei;
-    //     (bool success, ) = payable(msg.sender).call{value: amountWei}("");
-    //     if (!success) revert TransferFailed();
-    //     emit DepositRemoved(msg.sender, amountWei);
-    // }
+    /// Only owner can change the bot signer (safer)
+    function setBotSigner(address newBot) external onlyOwner {
+        bot = newBot;
+    }
 
     function storeVoucher(
         address ownerAddress,
@@ -128,21 +125,22 @@ contract ContriFlow is ReentrancyGuard, Ownable {
         uint256 tokenAmountIn18dec,
         bytes32 hash
     ) external onlyBot {
-        // Check GitHub ID was set on-chain for ownerAddress
-        uint256 recorded = ownerDetails[ownerAddress].githubId;
-        if (recorded == 0 || recorded != ownerGithubId) revert GithubIdNotSet();
+        // enforce ownerAddress is registered with the provided GitHub ID
+        uint256 githubId = ownerDetails[ownerAddress];
+        if (githubId == 0 || githubId != ownerGithubId) revert GithubIdNotSet();
 
-        if (vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber].hash != bytes32(0)) revert VoucherExists();
+        if (vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber].hash != bytes32(0))
+            revert VoucherExists();
 
         require(tokenAmountIn18dec > 0, "Invalid token amount");
 
-        // Store voucher
         vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber] = Voucher({
             hash: hash,
             contributorGithubId: contributorGithubId,
             tokenAmountIn18dec: tokenAmountIn18dec,
             claimed: ClaimStatus.UNCLAIMED
         });
+
         emit VoucherStored(
             ownerAddress,
             repoGithubId,
@@ -154,9 +152,14 @@ contract ContriFlow is ReentrancyGuard, Ownable {
         );
     }
 
+    /// Request a cross-chain claim:
+    ///  - checks voucher & marks PROCESSING
+    ///  - pulls platformFee from ownerAddress -> platform (owner())
+    ///  - burns tokenAmount from ownerAddress (requires allowance for burnFrom)
+    ///  - emits ClaimRequested for relayer to pick up
     function requestClaim(
         string calldata secret,
-        address ownerAddress,
+        address ownerAddr, // renamed to reduce stack pressure
         uint256 ownerGithubId,
         uint256 repoGithubId,
         uint256 prNumber,
@@ -166,13 +169,13 @@ contract ContriFlow is ReentrancyGuard, Ownable {
     ) external nonReentrant {
         Voucher storage v = vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber];
 
-        if(v.hash == bytes32(0)) { revert InvalidVoucher(); }
-        
-        // Recompute voucherId as was done off-chain
+        if (v.hash == bytes32(0)) revert InvalidVoucher();
+
+        // Recompute voucher hash exactly like off-chain
         bytes32 calculatedHash = keccak256(
             abi.encodePacked(
                 secret,
-                ownerAddress,
+                ownerAddr,
                 ownerGithubId,
                 repoGithubId,
                 prNumber,
@@ -181,61 +184,103 @@ contract ContriFlow is ReentrancyGuard, Ownable {
             )
         );
 
+        // validate & mark processing (internal helper)
+        _validateVoucherAndMarkProcessing(v, calculatedHash, contributorGithubId, tokenAmountIn18dec);
+
+        uint256 platformFee = (tokenAmountIn18dec * 2) / 100;
+
+        // collect fee and burn (internal helper)
+        _collectFeeAndBurn(ownerAddr, tokenAmountIn18dec, platformFee);
+
+        emit ClaimRequested(
+            v.hash,
+            repoGithubId,
+            prNumber,
+            msg.sender,
+            ownerAddr,
+            ownerGithubId,
+            tokenAmountIn18dec,
+            platformFee,
+            destinationChain
+        );
+    }
+
+    /// Internal: validate voucher details and mark it PROCESSING
+    function _validateVoucherAndMarkProcessing(
+        Voucher storage v,
+        bytes32 calculatedHash,
+        uint256 contributorGithubId,
+        uint256 tokenAmountIn18dec
+    ) internal {
         if (
             v.hash != calculatedHash ||
             v.contributorGithubId != contributorGithubId ||
             v.tokenAmountIn18dec != tokenAmountIn18dec
-        ) {
-            revert InvalidVoucher();
-        }
+        ) revert InvalidVoucher();
+
         if (v.claimed == ClaimStatus.PROCESSING) revert ClaimInProcess();
         if (v.claimed == ClaimStatus.CLAIMED) revert AlreadyClaimed();
 
-        // Mark claimed
+        // mark processing before external calls
         v.claimed = ClaimStatus.PROCESSING;
-        uint256 tokenAmount = v.tokenAmountIn18dec;
-
-        // Deduct from owner's deposit for this repo
-        uint256 bal = ownerDetails[ownerAddress].amount;
-
-        if (bal < tokenAmount) revert InsufficientBalance();
-
-        
-        ownerDetails[ownerAddress].amount = bal - tokenAmount;
-
-        emit ClaimRequested(
-            repoGithubId,
-            prNumber,
-            msg.sender,
-            tokenAmountIn18dec,
-            destinationChain
-        );
-
-        // emit RewardClaimed(
-        //     ownerAddress,
-        //     repoGithubId,
-        //     contributorGithubId,
-        //     ownerGithubId,
-        //     prNumber,
-        //     contributor,
-        //     ethAmt,
-        //     dollarAmount8dec
-        // );
     }
 
-    function getOwnerDetails(address ownerAddress) view external returns (RepoOwnerDetails memory) {
+    /// Internal: check allowance, transfer platform fee, burn tokens from ownerAddr
+    function _collectFeeAndBurn(
+        address ownerAddr,
+        uint256 tokenAmountIn18dec,
+        uint256 platformFee
+    ) internal {
+        uint256 required = tokenAmountIn18dec + platformFee;
+        if (token.allowance(ownerAddr, address(this)) < required) revert InsufficientAllowance();
+
+        // pull fee to platform owner
+        IERC20(address(token)).safeTransferFrom(ownerAddr, owner(), platformFee);
+
+        // burn requested tokens from owner (reduces totalSupply)
+        token.burnFrom(ownerAddr, tokenAmountIn18dec);
+    }
+
+    /// Called by your relayer (bot) AFTER it has confirmed successful mint on the destination chain.
+    /// relayer should verify off-chain; on-chain we just restrict to bot signer and voucher status.
+    function finalizeClaim(
+        uint256 ownerGithubId,
+        uint256 repoGithubId,
+        uint256 prNumber,
+        address claimer,
+        uint256 tokenAmountIn18dec,
+        string calldata destinationChain,
+        bytes calldata relayerMetadata
+    ) external onlyBot {
+        Voucher storage v = vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber];
+
+        if (v.hash == bytes32(0)) revert InvalidVoucher();
+        if (v.claimed != ClaimStatus.PROCESSING) revert ClaimInProcess();
+
+        // mark claimed
+        v.claimed = ClaimStatus.CLAIMED;
+
+        emit ClaimFinalized(v.hash, repoGithubId, prNumber, claimer, tokenAmountIn18dec, destinationChain, relayerMetadata);
+    }
+
+    /// view helpers
+    function getOwnerDetails(address ownerAddress) external view returns (uint256) {
         return ownerDetails[ownerAddress];
     }
-    
-    function getVoucherDetails(uint256 repoOwnerGithubId, uint256 repoId, uint256 prNumber) external view  returns (Voucher memory) {
+
+    function getVoucherDetails(
+        uint256 repoOwnerGithubId,
+        uint256 repoId,
+        uint256 prNumber
+    ) external view returns (Voucher memory) {
         return vouchersByRepoAndPr[repoOwnerGithubId][repoId][prNumber];
     }
 
     function getCurrentSigner() external view returns (address) {
         return bot;
-    } 
+    }
 
+    // receive/fallback kept for compatibility
     fallback() external payable {}
-
     receive() external payable {}
 }

@@ -98,8 +98,9 @@ model Reward {
   contributor              Contributor          @relation(fields: [contributor_id], references: [id])
   repository_id            String
   repository               Repository           @relation(fields: [repository_id], references: [id])
-  issuar_id String
-  issuar    RepositoryMaintainer @relation(fields: [issuar_id], references: [id])
+  issuer_id String
+  issuer    RepositoryMaintainer @relation(fields: [issuer_id], references: [id])
+  // ADD TX HHash... TODO
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

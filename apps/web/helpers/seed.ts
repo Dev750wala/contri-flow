@@ -1,112 +1,195 @@
-// import { PrismaClient, RepositoryRole } from '@prisma/client';
-// import { faker } from '@faker-js/faker';
+import { PrismaClient, RepositoryRole } from '@prisma/client';
+import { faker } from '@faker-js/faker';
 
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
-// async function main() {
-//   // Create Users
-//   const users = await Promise.all(
-//     Array.from({ length: 5 }).map(async () =>
-//       prisma.user.create({
-//         data: {
-//           name: faker.person.fullName(),
-//           email: faker.internet.email(),
-//           github_id: faker.string.alphanumeric(10),
-//           wallet_address: faker.finance.ethereumAddress(),
-//         },
-//       })
-//     )
-//   );
+async function main() {
+  console.log('🌱 Starting seeding...');
 
-//   // Create Organizations
-//   const organizations = await Promise.all(
-//     Array.from({ length: 2 }).map(async () =>
-//       prisma.organization.create({
-//         data: {
-//           name: faker.company.name(),
-//           github_org_id: faker.string.alphanumeric(10),
-//           installation_id: faker.string.alphanumeric(15),
-//           app_installed: true,
-//         },
-//       })
-//     )
-//   );
+  // Clear existing data
+  await prisma.reward.deleteMany();
+  await prisma.repositoryMaintainer.deleteMany();
+  await prisma.repository.deleteMany();
+  await prisma.organization.deleteMany();
+  await prisma.contributor.deleteMany();
+  await prisma.user.deleteMany();
 
-//   // Create Repositories for each org
-//   const repositories = await Promise.all(
-//     organizations.flatMap((org) =>
-//       Array.from({ length: 2 }).map(() =>
-//         prisma.repository.create({
-//           data: {
-//             name: faker.word.words(2),
-//             github_repo_id: faker.string.alphanumeric(12),
-//             organization_id: org.id,
-//           },
-//         })
-//       )
-//     )
-//   );
+  // Create users
+  const users = await Promise.all(
+    Array.from({ length: 10 }, async () => {
+      return prisma.user.create({
+        data: {
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+          github_id: faker.string.alphanumeric(20).toLowerCase(),
+          wallet_address: faker.finance.ethereumAddress(),
+        },
+      });
+    })
+  );
 
-//   // Add RepositoryMaintainers
-//   await Promise.all(
-//     repositories.map((repo, i) => {
-//       const user = users[i % users.length];
-//       if (!user) {
-//         throw new Error('No users available for repository maintainer');
-//       }
-//       return prisma.repositoryMaintainer.create({
-//         data: {
-//           repository_id: repo.id,
-//           user_id: user.id,
-//           role: RepositoryRole.MAINTAIN,
-//           github_id: user.github_id,
-//         },
-//       });
-//     })
-//   );
+  console.log(`✅ Created ${users.length} users`);
 
-//   // Create Contributors
-//   const contributors = await Promise.all(
-//     Array.from({ length: 3 }).map(() =>
-//       prisma.contributor.create({
-//         data: {
-//           github_id: faker.string.alphanumeric(10),
-//           email: faker.internet.email(),
-//           wallet_address: faker.finance.ethereumAddress(),
-//         },
-//       })
-//     )
-//   );
+  // Create organizations
+  const organizations = await Promise.all(
+    Array.from({ length: 5 }, async () => {
+      return prisma.organization.create({
+        data: {
+          name: faker.company.name(),
+          github_org_id: faker.string.numeric(10),
+          installation_id: faker.string.uuid(),
+          app_installed: faker.datatype.boolean(),
+          sync_maintainers: faker.datatype.boolean(),
+        },
+      });
+    })
+  );
 
-//   // Create Rewards
-//   await Promise.all(
-//     contributors.flatMap((contributor) =>
-//       repositories.map((repo) =>
-//         prisma.reward.create({
-//           data: {
-//             owner_github_id: faker.string.alphanumeric(10),
-//             contributor_github_id: contributor.github_id,
-//             repo_github_id: repo.github_repo_id,
-//             pr_number: faker.number.int({ min: 1, max: 1000 }),
-//             secret: faker.string.uuid(),
-//             amount_usd: faker.number.float({ min: 10, max: 100 }),
-//             amount_eth: faker.number.float({ min: 0.01, max: 0.1 }),
-//             claimed: false,
-//             contributor_id: contributor.id,
-//             repository_id: repo.id,
-//           },
-//         })
-//       )
-//     )
-//   );
-// }
+  console.log(`✅ Created ${organizations.length} organizations`);
 
-// main()
-//   .then(() => {
-//     console.log('🌱 Seeding complete!');
-//     return prisma.$disconnect();
-//   })
-//   .catch((e) => {
-//     console.error(e);
-//     return prisma.$disconnect();
-//   });
+  // Create repositories for each organization
+  const repositories = [];
+  for (const org of organizations) {
+    const orgRepos = await Promise.all(
+      Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, async () => {
+        return prisma.repository.create({
+          data: {
+            name: faker.lorem.words(2).replace(/ /g, '-'),
+            github_repo_id: faker.string.numeric(10),
+            organization_id: org.id,
+          },
+        });
+      })
+    );
+    repositories.push(...orgRepos);
+  }
+
+  console.log(`✅ Created ${repositories.length} repositories`);
+
+  // Create repository maintainers
+  const maintainers = [];
+  for (const repo of repositories) {
+    // Choose a random number of maintainers, then pick unique users for this repo
+    const numberOfMaintainers = faker.number.int({ min: 1, max: 3 });
+    const uniqueUsersForRepo: typeof users = [];
+    const usedGithubIds = new Set<string>();
+    while (uniqueUsersForRepo.length < numberOfMaintainers) {
+      const candidate = faker.helpers.arrayElement(users);
+      if (!usedGithubIds.has(candidate.github_id)) {
+        usedGithubIds.add(candidate.github_id);
+        uniqueUsersForRepo.push(candidate);
+      }
+    }
+
+    const repoMaintainers = await Promise.all(
+      uniqueUsersForRepo.map(async (user) => {
+        return prisma.repositoryMaintainer.create({
+          data: {
+            repository_id: repo.id,
+            user_id: user.id,
+            github_id: user.github_id,
+            role: faker.helpers.arrayElement([
+              RepositoryRole.ADMIN,
+              RepositoryRole.MAINTAIN,
+            ]),
+          },
+        });
+      })
+    );
+    maintainers.push(...repoMaintainers);
+  }
+
+  console.log(`✅ Created ${maintainers.length} maintainers`);
+
+  // Create contributors
+  // Precompute unique user assignments to avoid race conditions with unique(user_id)
+  const numContributors = 15;
+  const unusedUserIds = faker.helpers.shuffle(users.map((u) => u.id));
+  const contributorPlans = Array.from({ length: numContributors }, () => {
+    const shouldAttachUser = faker.datatype.boolean({ probability: 0.6 });
+    const user_id =
+      shouldAttachUser && unusedUserIds.length > 0
+        ? unusedUserIds.pop()!
+        : null;
+    return { user_id };
+  });
+
+  const contributors = await Promise.all(
+    contributorPlans.map(async (plan) => {
+      return prisma.contributor.create({
+        data: {
+          github_id: faker.string.alphanumeric(20).toLowerCase(),
+          wallet_address: faker.datatype.boolean({ probability: 0.7 })
+            ? faker.finance.ethereumAddress()
+            : null,
+          email: faker.datatype.boolean({ probability: 0.8 })
+            ? faker.internet.email()
+            : null,
+          user_id: plan.user_id,
+        },
+      });
+    })
+  );
+
+  console.log(`✅ Created ${contributors.length} contributors`);
+
+  // Create rewards
+  const rewards = [];
+  for (const repo of repositories) {
+    const rewardsCount = faker.number.int({ min: 3, max: 8 });
+    const usedPrNumbers = new Set<number>();
+    const getUniquePrNumber = () => {
+      let n: number;
+      do {
+        n = faker.number.int({ min: 1, max: 100000 });
+      } while (usedPrNumbers.has(n));
+      usedPrNumbers.add(n);
+      return n;
+    };
+
+    const repoRewards = await Promise.all(
+      Array.from({ length: rewardsCount }, async () => {
+        const contributor = faker.helpers.arrayElement(contributors);
+        const issuer = faker.helpers.arrayElement(
+          maintainers.filter((m) => m.repository_id === repo.id)
+        );
+
+        return prisma.reward.create({
+          data: {
+            pr_number: getUniquePrNumber(),
+            secret: faker.string.uuid(),
+            amount_usd: faker.number.float({
+              min: 10,
+              max: 1000,
+              fractionDigits: 2,
+            }),
+            amount_eth: faker.datatype.boolean({ probability: 0.7 })
+              ? faker.number.float({ min: 0.01, max: 0.5, fractionDigits: 4 })
+              : null,
+            claimed: faker.datatype.boolean({ probability: 0.3 }),
+            claimed_at: faker.datatype.boolean({ probability: 0.3 })
+              ? faker.date.recent()
+              : null,
+            contributor_id: contributor.id,
+            repository_id: repo.id,
+            issuer_id: issuer.id,
+          },
+        });
+      })
+    );
+    rewards.push(...repoRewards);
+  }
+
+  console.log(`✅ Created ${rewards.length} rewards`);
+
+  console.log('🌱 Seeding completed successfully!');
+}
+
+main()
+  .catch((e) => {
+    console.error('❌ Seeding failed:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
