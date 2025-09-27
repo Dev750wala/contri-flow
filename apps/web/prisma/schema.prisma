@@ -86,21 +86,21 @@ model Contributor {
 }
 
 model Reward {
-  id         String    @id @default(cuid())
-  pr_number  Int
-  secret     String
-  amount_usd Float
-  amount_eth Float?
-  claimed    Boolean   @default(false)
-  claimed_at DateTime?
+  id          String    @id @default(cuid())
+  pr_number   Int
+  secret      String
+  tokenAmount String
+  claimed     Boolean   @default(false)
+  claimed_at  DateTime?
 
-  contributor_id           String
-  contributor              Contributor          @relation(fields: [contributor_id], references: [id])
-  repository_id            String
-  repository               Repository           @relation(fields: [repository_id], references: [id])
-  issuer_id String
-  issuer    RepositoryMaintainer @relation(fields: [issuer_id], references: [id])
-  // ADD TX HHash... TODO
+  contributor_id      String
+  contributor         Contributor          @relation(fields: [contributor_id], references: [id])
+  repository_id       String
+  repository          Repository           @relation(fields: [repository_id], references: [id])
+  issuer_id           String
+  issuer              RepositoryMaintainer @relation(fields: [issuer_id], references: [id])
+  tx_hash             String?
+  destination_address String?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

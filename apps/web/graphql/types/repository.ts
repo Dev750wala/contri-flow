@@ -4,6 +4,7 @@ import config from '@/config';
 import { Repository } from 'nexus-prisma';
 import { OrganizationType } from './organization';
 import { RewardType } from './reward';
+import { Repository as RepositoryPrisma } from '@prisma/client';
 
 export const RepositoryType = objectType({
   name: Repository.$name,
@@ -21,7 +22,7 @@ export const RepositoryType = objectType({
 
     t.field('organization', {
       type: OrganizationType,
-      resolve(parent, _args, ctx: Context) {
+      resolve(parent: RepositoryPrisma, _args, ctx: Context) {
         return ctx.prisma.organization.findUnique({
           where: {
             id: parent.organization_id,

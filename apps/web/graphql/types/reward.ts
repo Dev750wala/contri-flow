@@ -13,40 +13,40 @@ export const RewardType = objectType({
     t.nonNull.field(Reward.id);
     t.nonNull.field(Reward.pr_number);
     t.nonNull.field(Reward.secret);
-    t.nonNull.field(Reward.amount_usd);
-    t.nonNull.field(Reward.amount_eth);
     t.nonNull.field(Reward.created_at);
     t.nonNull.field(Reward.claimed);
-    t.nonNull.field(Reward.claimed_at);
+    t.field(Reward.claimed_at);
     t.nonNull.field(Reward.updated_at);
+    t.field(Reward.tx_hash);
+    t.field(Reward.destination_address);
 
-    t.nonNull.field(Reward.issuar.name, {
+    t.nonNull.field(Reward.issuer.name, {
       type: RepositoryMaintainerType,
       async resolve(parent: RewardPrisma, _args, ctx: Context) {
         return await ctx.prisma.repositoryMaintainer.findUnique({
           where: {
-            id: parent.issuar_id
-          }
-        })
-      }
-    })
+            id: parent.issuer_id,
+          },
+        });
+      },
+    });
 
     t.field('repository', {
       type: RepositoryType,
-      resolve(parent, _args, ctx: Context) {
+      resolve(parent: RewardPrisma, _args, ctx: Context) {
         return ctx.prisma.repository.findUnique({
           where: {
-            github_repo_id: parent.repo_github_id,
+            id: parent.repository_id,
           },
         });
       },
     });
     t.field('contributor', {
       type: ContributorType,
-      resolve(parent, _args, ctx: Context) {
+      resolve(parent: RewardPrisma, _args, ctx: Context) {
         return ctx.prisma.contributor.findUnique({
           where: {
-            github_id: parent.contributor_github_id,
+            id: parent.contributor_id,
           },
         });
       },

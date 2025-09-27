@@ -25,7 +25,7 @@ export const RepositoryMaintainerType = objectType({
 
     t.field('user', {
       type: UserType,
-      resolve(parent, _args, ctx: Context) {
+      resolve(parent: RepositoryMaintainerPrisma, _args, ctx: Context) {
         return ctx.prisma.user.findUnique({
           where: {
             id: parent.user_id,
@@ -34,12 +34,12 @@ export const RepositoryMaintainerType = objectType({
       },
     });
 
-    t.nonNull.field(Reward.$name, {
+    t.list.field(RepositoryMaintainer.issued_rewards.name, {
       type: RewardType,
       resolve(parent: RepositoryMaintainerPrisma, _args, ctx: Context) {
         return ctx.prisma.reward.findMany({
           where: {
-            issuar_id: parent.id,
+            issuer_id: parent.id,
           },
         });
       },
@@ -47,7 +47,7 @@ export const RepositoryMaintainerType = objectType({
 
     t.nonNull.field('repository', {
       type: RepositoryType,
-      resolve(parent, _args, ctx: Context) {
+      resolve(parent: RepositoryMaintainerPrisma, _args, ctx: Context) {
         return ctx.prisma.repository.findUnique({
           where: {
             id: parent.repository_id,

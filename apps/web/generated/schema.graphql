@@ -94,17 +94,17 @@ enum RepositoryRole {
 }
 
 type Reward {
-  amount_eth: Float!
-  amount_usd: Float!
   claimed: Boolean!
-  claimed_at: DateTime!
+  claimed_at: DateTime
   contributor: Contributor
   created_at: DateTime!
+  destination_address: String
   id: ID!
-  issuar: RepositoryMaintainer!
+  issuer: RepositoryMaintainer!
   pr_number: Int!
   repository: Repository
   secret: String!
+  tx_hash: String
   updated_at: DateTime!
 }
 

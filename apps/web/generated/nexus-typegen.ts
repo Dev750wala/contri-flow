@@ -84,14 +84,14 @@ export interface NexusGenObjects {
     role: NexusGenEnums['RepositoryRole']; // RepositoryRole!
   }
   Reward: { // root type
-    amount_eth: number; // Float!
-    amount_usd: number; // Float!
     claimed: boolean; // Boolean!
-    claimed_at: NexusGenScalars['DateTime']; // DateTime!
+    claimed_at?: NexusGenScalars['DateTime'] | null; // DateTime
     created_at: NexusGenScalars['DateTime']; // DateTime!
+    destination_address?: string | null; // String
     id: string; // ID!
     pr_number: number; // Int!
     secret: string; // String!
+    tx_hash?: string | null; // String
     updated_at: NexusGenScalars['DateTime']; // DateTime!
   }
   User: { // root type
@@ -187,17 +187,17 @@ export interface NexusGenFieldTypes {
     user: NexusGenRootTypes['User'] | null; // User
   }
   Reward: { // field return type
-    amount_eth: number; // Float!
-    amount_usd: number; // Float!
     claimed: boolean; // Boolean!
-    claimed_at: NexusGenScalars['DateTime']; // DateTime!
+    claimed_at: NexusGenScalars['DateTime'] | null; // DateTime
     contributor: NexusGenRootTypes['Contributor'] | null; // Contributor
     created_at: NexusGenScalars['DateTime']; // DateTime!
+    destination_address: string | null; // String
     id: string; // ID!
-    issuar: NexusGenRootTypes['RepositoryMaintainer']; // RepositoryMaintainer!
+    issuer: NexusGenRootTypes['RepositoryMaintainer']; // RepositoryMaintainer!
     pr_number: number; // Int!
     repository: NexusGenRootTypes['Repository'] | null; // Repository
     secret: string; // String!
+    tx_hash: string | null; // String
     updated_at: NexusGenScalars['DateTime']; // DateTime!
   }
   User: { // field return type
@@ -285,17 +285,17 @@ export interface NexusGenFieldTypeNames {
     user: 'User'
   }
   Reward: { // field return type name
-    amount_eth: 'Float'
-    amount_usd: 'Float'
     claimed: 'Boolean'
     claimed_at: 'DateTime'
     contributor: 'Contributor'
     created_at: 'DateTime'
+    destination_address: 'String'
     id: 'ID'
-    issuar: 'RepositoryMaintainer'
+    issuer: 'RepositoryMaintainer'
     pr_number: 'Int'
     repository: 'Repository'
     secret: 'String'
+    tx_hash: 'String'
     updated_at: 'DateTime'
   }
   User: { // field return type name

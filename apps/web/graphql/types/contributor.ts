@@ -30,7 +30,7 @@ export const ContributorType = objectType({
 
     t.field('user', {
       type: UserType,
-      resolve(parent, _args, ctx: Context) {
+      resolve(parent: ContributorPrisma, _args, ctx: Context) {
         return ctx.prisma.user.findUnique({
           where: {
             id: parent.user_id,

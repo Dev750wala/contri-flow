@@ -158,14 +158,7 @@ async function main() {
           data: {
             pr_number: getUniquePrNumber(),
             secret: faker.string.uuid(),
-            amount_usd: faker.number.float({
-              min: 10,
-              max: 1000,
-              fractionDigits: 2,
-            }),
-            amount_eth: faker.datatype.boolean({ probability: 0.7 })
-              ? faker.number.float({ min: 0.01, max: 0.5, fractionDigits: 4 })
-              : null,
+            tokenAmount: faker.number.int({ min: 1, max: 100000 }).toString(),
             claimed: faker.datatype.boolean({ probability: 0.3 }),
             claimed_at: faker.datatype.boolean({ probability: 0.3 })
               ? faker.date.recent()

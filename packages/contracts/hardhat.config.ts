@@ -7,7 +7,13 @@ dotenv.config({
   path: `./.env`,
 });
 
-const { PRIVATE_KEY, ETHERSCAN_API_KEY, SEPOLIA_API_KEY } = process.env;
+const {
+  PRIVATE_KEY,
+  ETHERSCAN_API_KEY,
+  SEPOLIA_API_KEY,
+  POLYGON_AMOY_API_KEY,
+  BASE_SEPOLIA_API_KEY,
+} = process.env;
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
@@ -23,6 +29,16 @@ const config: HardhatUserConfig = {
       url: `${SEPOLIA_API_KEY}`,
       accounts: [PRIVATE_KEY],
       chainId: 11155111,
+    },
+    polygon_amoy: {
+      url: `${POLYGON_AMOY_API_KEY}`,
+      accounts: [PRIVATE_KEY],
+      chainId: 80002,
+    },
+    base_sepolia: {
+      url: `${BASE_SEPOLIA_API_KEY}`,
+      accounts: [PRIVATE_KEY],
+      chainId: 84532,
     },
   },
   solidity: {

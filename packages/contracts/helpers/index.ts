@@ -15,4 +15,12 @@ export const networkConfig: NetworkConfig = {
     name: 'sepolia',
     ethUsdPriceFeed: '0x694AA1769357215DE4FAC081bf1f309aDC325306',
   },
+  80002: {
+    name: 'polygon_amoy',
+    ethUsdPriceFeed: '0x694AA1769357215DE4FAC081bf1f309aDC325306',
+  },
+  84532: {
+    name: 'base_sepolia',
+    ethUsdPriceFeed: '0x694AA1769357215DE4FAC081bf1f309aDC325306',
+  },
 };
