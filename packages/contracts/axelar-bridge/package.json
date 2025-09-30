@@ -1,0 +1,32 @@
+{
+  "name": "axelar-bridge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "hardhat compile",
+    "test": "hardhat test",
+    "lint": "eslint .",
+    "deploy:sepolia": "hardhat run deploy/00_deploy_canonical.ts --network ethereum-sepolia",
+    "deploy:base": "hardhat run deploy/01_deploy_wrapped.ts --network base-sepolia",
+    "deploy:reward": "hardhat run deploy/02_deploy_reward_manager.ts --network base-sepolia",
+    "prebridge": "ts-node scripts/prebridge.ts",
+    "monitor": "ts-node scripts/bridge-monitor.ts"
+  },
+  "dependencies": {
+    "@axelar-network/axelar-gmp-sdk-solidity": "^5.5.0",
+    "@axelar-network/axelarjs-sdk": "^1.2.5",
+    "@openzeppelin/contracts": "^4.9.6",
+    "@openzeppelin/contracts-upgradeable": "^4.9.6",
+    "ethers": "^6.12.1",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "hardhat": "^2.22.7",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5",
+    "eslint": "^8.57.0"
+  }
+}
+
+

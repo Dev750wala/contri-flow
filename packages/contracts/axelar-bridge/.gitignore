@@ -1,0 +1,8 @@
+.env
+artifacts
+cache
+logs
+node_modules
+coverage
+
+

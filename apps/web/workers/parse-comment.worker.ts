@@ -6,17 +6,18 @@ import { CommentParsingResponse, Sender as GitHubUserType } from '@/interfaces';
 
 const connection = { host: process.env.REDIS_HOST, port: Number(process.env.REDIS_PORT || 6379) };
 
-const worker = new Worker('parse-jobs', async (job) => {
-  const { repositoryId, prNumber, comments = [], issuerGithubId } = job.data as {
-    repositoryId: string; prNumber: number; comments: string[]; issuerGithubId?: string;
+const worker = new Worker('parse-comment', async (job) => {
+  const { repositoryGithubId, prNumber, comment, issuerGithubId } = job.data as {
+    repositoryGithubId: string; prNumber: number; comment: string; issuerGithubId?: string;
   };
 
-  const prompt = formatPrompt(comments.join(' '));
+  const prompt = formatPrompt(comment);
   let aiRaw: CommentParsingResponse;
 
   try {
     aiRaw = await callAiExtractor(prompt);
   } catch (err) {
+    // ADD LOGGING OR STORE THIS ERROR IN DATABASE, AS THIS IS IMPORTANT PHASE OF THE FLOW
     console.error('AI returned invalid JSON', err);
     throw new Error('AI_PARSE_ERROR');
   }
@@ -31,6 +32,8 @@ const worker = new Worker('parse-jobs', async (job) => {
     if (!contributorFromGithub) {
       throw new Error('CONTRIBUTOR_NOT_FOUND');
     }
+
+    // if
 
     const newReward = await prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({

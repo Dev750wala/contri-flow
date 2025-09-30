@@ -19,6 +19,7 @@ export const RewardType = objectType({
     t.nonNull.field(Reward.updated_at);
     t.field(Reward.tx_hash);
     t.field(Reward.destination_address);
+    t.field(Reward.comment);
 
     t.nonNull.field(Reward.issuer.name, {
       type: RepositoryMaintainerType,
