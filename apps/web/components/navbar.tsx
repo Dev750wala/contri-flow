@@ -1,11 +1,11 @@
 'use client';
 
-import { Code, LogOut, User, Settings, Github, Menu } from 'lucide-react';
+import { Code, LogOut, User, Settings, Github, Menu, Wallet, Copy, ExternalLink, Check } from 'lucide-react';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { Connector, useConnect, useAccount, useDisconnect } from 'wagmi'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,131 +14,130 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import Image from 'next/image';
-import config from '@/config';
 
 const Navbar = () => {
-  const { data: sessionData, status } = useSession();
-  const isLoading = status === 'loading';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+  const { connectors, connect } = useConnect()
+  const { address, isConnected } = useAccount()
+  const { disconnect } = useDisconnect()
+
+  const shortenAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-6)}`;
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedAddress(true);
+    setTimeout(() => setCopiedAddress(false), 2000);
+  };
+
+  const navigationLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/trade', label: 'Trade' },
+    // Add more links here later
+  ];
 
   return (
     <nav className="w-full sticky top-0 left-0 z-50 bg-gradient-to-b from-black/70 via-black/40 to-transparent backdrop-blur-xl border-b border-cyan-400/20 shadow-lg">
       <div className="container mx-auto flex items-center justify-between py-4 px-4 md:py-6 md:px-10">
+        
+        {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <Code className="h-8 w-8 text-cyan-400" />
-          <span className="text-2xl font-bold text-white">Contri-Flow</span>
+          <Wallet className="h-8 w-8 text-cyan-400" />
+          <span className="text-2xl font-bold text-white">MergePay</span>
         </Link>
-        {/* Desktop Actions */}
+
+        {/* Navigation Links - Desktop */}
+        <div className="hidden md:flex items-center space-x-8">
+          {navigationLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-cyan-100 hover:text-cyan-400 transition-colors duration-200 font-medium"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Wallet Connection - Desktop */}
         <div className="hidden md:flex items-center space-x-4">
-          {isLoading ? (
-            <div className="h-10 w-[200px] animate-pulse bg-cyan-400/20 rounded-md" />
-          ) : status === 'authenticated' ? (
-            <>
-              <Link href="/dashboard">
+          {isConnected ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button
-                  variant="ghost"
-                  className="hover:bg-cyan-900/30 transition"
+                  variant="outline"
+                  className="border-cyan-400/30 cursor-pointer bg-cyan-900/20 hover:bg-cyan-900/40 text-cyan-100 transition-all duration-200"
                 >
-                  Dashboard
+                  <Wallet className="h-4 w-4 mr-2 text-cyan-400" />
+                  {shortenAddress(address || '')}
                 </Button>
-              </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative h-11 w-11 rounded-full hover:bg-cyan-900/30 transition-all duration-200 p-0 border-2 border-cyan-400/30 shadow-cyan-400/10 shadow-md"
-                  >
-                    {sessionData.user?.github_id ? (
-                      <Image
-                        src={`${config.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.github_id)}`}
-                        alt="User avatar"
-                        height={44}
-                        width={44}
-                        className="rounded-full object-cover h-11 w-11"
-                      />
-                    ) : (
-                      <Avatar className="h-11 w-11 border border-cyan-400/30">
-                        <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-cyan-600 text-black font-semibold">
-                          {sessionData.user?.name?.charAt(0) || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-60 bg-black/95 backdrop-blur-lg border border-cyan-400/30 rounded-xl shadow-lg shadow-cyan-400/10 mt-2 p-0"
-                  align="end"
-                  sideOffset={12}
-                >
-                  {/* Pointer/arrow */}
-                  <div className="absolute -top-2 right-6 w-4 h-4 bg-black/95 border-t border-l border-cyan-400/30 rotate-45 z-10" />
-                  <div className="px-4 py-3 border-b border-cyan-400/10">
-                    <p className="text-xs font-semibold text-cyan-400">
-                      Signed in as
-                    </p>
-                    <p className="text-sm text-cyan-100 truncate">
-                      {sessionData.user?.email}
-                    </p>
-                  </div>
-                  <DropdownMenuItem className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-pointer focus:bg-cyan-900/30 focus:text-cyan-100 mt-1">
-                    <User className="h-4 w-4 text-cyan-400" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-pointer focus:bg-cyan-900/30 focus:text-cyan-100">
-                    <Settings className="h-4 w-4 text-cyan-400" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-pointer focus:bg-cyan-900/30 focus:text-cyan-100">
-                    <Github className="h-4 w-4 text-cyan-400" />
-                    <span>GitHub</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-cyan-400/20 my-1" />
-                  <DropdownMenuItem
-                    className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-pointer focus:bg-cyan-900/30 focus:text-cyan-100 mb-1"
-                    onClick={() => signOut()}
-                  >
-                    <LogOut className="h-4 w-4 text-cyan-400" />
-                    <span>Sign out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          ) : (
-            <>
-              <Link href="/auth/sign-in">
-                <Button
-                  variant="ghost"
-                  className="hover:bg-cyan-900/30 transition"
-                >
-                  Login
-                </Button>
-              </Link>
-              <motion.div
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.97 }}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-60 bg-black/95 backdrop-blur-lg border border-cyan-400/30 rounded-xl shadow-lg shadow-cyan-400/10 mt-2 p-0"
+                align="end"
+                sideOffset={12}
               >
-                <Link href="/auth/sign-in">
-                  <Button className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300 transition">
-                    Get Started
-                  </Button>
-                </Link>
-              </motion.div>
-            </>
+                <div className="px-4 py-3 border-b border-cyan-400/10">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-lg font-medium text-cyan-100 truncate">
+                      {address ? `${address.slice(0, 8)}...${address.slice(-6)}` : ''}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-cyan-900/30"
+                      onClick={() => copyToClipboard(address || '')}
+                    >
+                      {copiedAddress ? (
+                        <Check className="h-4 w-4 text-green-400" />
+                      ) : (
+                        <Copy className="h-4 w-4 text-cyan-400" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <DropdownMenuSeparator className="bg-cyan-400/20 mx-1" />
+                <DropdownMenuItem
+                  className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-pointer focus:bg-cyan-900/30 focus:text-cyan-100 mx-1 my-1 px-4 py-2"
+                  onClick={() => disconnect()}
+                >
+                  <LogOut className="h-4 w-4 text-cyan-400" />
+                  <span>Disconnect</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button 
+                onClick={() => connect({ connector: connectors[0] as Connector })}
+                className="bg-cyan-400 cursor-pointer text-black font-semibold hover:bg-cyan-300 transition-colors duration-200"
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                Connect Wallet
+              </Button>
+            </motion.div>
           )}
         </div>
+
         {/* Mobile Hamburger */}
         <div className="md:hidden flex items-center">
           <Button
             variant="ghost"
             size="icon"
-            className="text-cyan-400 hover:bg-cyan-900/30"
+            className="text-cyan-400 hover:bg-cyan-900/30 cursor-pointer"
             onClick={() => setMobileMenuOpen((v) => !v)}
             aria-label="Open menu"
           >
             <Menu className="h-7 w-7" />
           </Button>
         </div>
+
         {/* Mobile Dropdown */}
         <AnimatePresence>
           {mobileMenuOpen && (
@@ -149,70 +148,54 @@ const Navbar = () => {
               transition={{ duration: 0.2 }}
               className="fixed top-16 left-0 w-full bg-black/95 backdrop-blur-lg border-b border-cyan-400/20 z-50 md:hidden shadow-lg"
             >
-              <div className="flex flex-col items-center py-4 space-y-2">
-                {isLoading ? (
-                  <div className="h-10 w-[200px] animate-pulse bg-cyan-400/20 rounded-md" />
-                ) : status === 'authenticated' ? (
-                  <>
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Button variant="ghost" className="w-full justify-start">
-                        Dashboard
+              <div className="flex flex-col items-center py-4 space-y-3">
+                {/* Mobile Navigation Links */}
+                {navigationLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-cyan-100 hover:text-cyan-400 transition-colors duration-200 font-medium py-2"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                
+                {/* Mobile Wallet Connection */}
+                <div className="border-t border-cyan-400/20 pt-3 w-full flex flex-col items-center space-y-2">
+                  {isConnected ? (
+                    <>
+                      <div className="flex items-center gap-3 py-2">
+                        <Wallet className="h-5 w-5 text-cyan-400" />
+                        <span className="text-cyan-100 font-medium">
+                          {shortenAddress(address || '')}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        className="w-full cursor-pointer justify-center text-cyan-100 hover:bg-cyan-900/30"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          disconnect();
+                        }}
+                      >
+                        <LogOut className="h-4 w-4 text-cyan-400 mr-2" />
+                        Disconnect Wallet
                       </Button>
-                    </Link>
-                    <div className="flex items-center gap-3 py-2">
-                      {sessionData.user?.github_id ? (
-                        <Image
-                          src={`${config.NEXT_PUBLIC_GITHUB_PROFILE_LINK?.replace('GITHUB_ID', sessionData.user.github_id)}`}
-                          alt="User avatar"
-                          height={36}
-                          width={36}
-                          className="rounded-full object-cover h-9 w-9 border border-cyan-400/30"
-                        />
-                      ) : (
-                        <Avatar className="h-9 w-9 border border-cyan-400/30">
-                          <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-cyan-600 text-black font-semibold">
-                            {sessionData.user?.name?.charAt(0) || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                      <span className="text-cyan-100 font-semibold">
-                        {sessionData.user?.name}
-                      </span>
-                    </div>
+                    </>
+                  ) : (
                     <Button
-                      variant="ghost"
-                      className="w-full justify-start text-cyan-100 hover:bg-cyan-900/30"
                       onClick={() => {
                         setMobileMenuOpen(false);
-                        signOut();
+                        connect({ connector: connectors[0] as Connector });
                       }}
+                      className="w-full cursor-pointer bg-cyan-400 text-black font-semibold hover:bg-cyan-300 transition-colors duration-200"
                     >
-                      <LogOut className="h-4 w-4 text-cyan-400 mr-2" /> Sign out
+                      <Wallet className="h-4 w-4 mr-2" />
+                      Connect Wallet
                     </Button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/auth/sign-in"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Button variant="ghost" className="w-full justify-start">
-                        Login
-                      </Button>
-                    </Link>
-                    <Link
-                      href="/auth/sign-in"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Button className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300 transition">
-                        Get Started
-                      </Button>
-                    </Link>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
             </motion.div>
           )}

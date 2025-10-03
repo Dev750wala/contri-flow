@@ -8,6 +8,11 @@ interface Env {
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_PERSONAL_ACCESS_TOKEN: string;
   NEXTAUTH_URL: string;
+  REDIS_HOST_URL: string;
+  REDIS_HOST_PORT: string;
+  REDIS_HOST_PASSWORD: string;
+  GEMINI_API_URL: string;
+  GEMINI_API_KEY: string;
 }
 
 const config: Env = {
@@ -20,6 +25,11 @@ const config: Env = {
   GITHUB_WEBHOOK_SECRET: process.env.GITHUB_WEBHOOK_SECRET!,
   GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_PERSONAL_ACCESS_TOKEN!,
   NEXTAUTH_URL: process.env.NEXTAUTH_URL!,
+  REDIS_HOST_URL: process.env.REDIS_HOST_URL!,
+  REDIS_HOST_PORT: process.env.REDIS_HOST_PORT!,
+  REDIS_HOST_PASSWORD: process.env.REDIS_HOST_PASSWORD!,
+  GEMINI_API_URL: process.env.GEMINI_API_URL!,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
 };
 
 export default config;
