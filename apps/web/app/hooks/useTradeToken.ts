@@ -41,11 +41,16 @@ export const useTradeToken = () => {
 
     setEthValue(newEthValue);
     const token = await refetchTokenAmount();
-    console.log("HEllo ");
-    console.log(token.data[1]);
+    console.log("Hello ");
+    console.log("Token data:", token.data);
     
-    
-    setTokenValue(token.data ? String(token.data[1]) : '');
+    if (token.data && Array.isArray(token.data) && token.data.length > 1) {
+      console.log("Token amount:", token.data[1]);
+      setTokenValue(String(Number(token.data[1]) / 1e18));
+    } else {
+      console.log("No token data available");
+      setTokenValue('');
+    }
   };
 
   return {
