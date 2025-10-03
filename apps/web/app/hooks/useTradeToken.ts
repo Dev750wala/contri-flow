@@ -4,16 +4,7 @@ import { useReadContract } from 'wagmi';
 import UniswapRouterABI from '@/web3/UniswapV2Router02ABI.json';
 import { UNISWAP_V2_ROUTER02_ADDRESS, MPT_TOKEN_ADDRESS, WETH_ADDRESS } from '@/web3/constants';
 
-interface UseTradeTokenReturn {
-  ethValue: string;
-  tokenValue: string;
-  calculatedTokenAmount: readonly bigint[] | undefined;
-  isLoadingTokenAmount: boolean;
-  handleAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-  refetchTokenAmount: () => Promise<any>;
-}
-
-export const useTradeToken = (): UseTradeTokenReturn => {
+export const useTradeToken = () => {
   const [ethValue, setEthValue] = useState('');
   const [tokenValue, setTokenValue] = useState('');
 
@@ -33,11 +24,7 @@ export const useTradeToken = (): UseTradeTokenReturn => {
       enabled:
         ethValue !== '' && !isNaN(Number(ethValue)) && Number(ethValue) > 0,
     },
-  }) as {
-    data: readonly bigint[] | undefined;
-    refetch: () => Promise<any>;
-    isLoading: boolean;
-  };
+  });
 
   const handleAmountChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEthValue = e.target.value;
@@ -54,9 +41,11 @@ export const useTradeToken = (): UseTradeTokenReturn => {
 
     setEthValue(newEthValue);
     const token = await refetchTokenAmount();
-    console.log(token);
+    console.log("HEllo ");
+    console.log(token.data[1]);
     
-    setTokenValue(token.data ? String(token.data) : '');
+    
+    setTokenValue(token.data ? String(token.data[1]) : '');
   };
 
   return {
