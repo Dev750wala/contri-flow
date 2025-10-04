@@ -1,18 +1,22 @@
-import { ApolloClient, InMemoryCache } from '@apollo/client';
-import config from '@/config';
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+
+const httpLink = createHttpLink({
+  uri: '/api/graphql',
+  credentials: 'include',
+});
 
 const client = new ApolloClient({
-  uri: `${config.NEXTAUTH_URL}/api/graphql`,
+  link: httpLink,
   cache: new InMemoryCache(),
   defaultOptions: {
     watchQuery: {
-      errorPolicy: 'all'
+      errorPolicy: 'all',
     },
     query: {
-      errorPolicy: 'all'
-    }
+      errorPolicy: 'all',
+    },
   },
-  credentials: 'include',
 });
 
 export default client;

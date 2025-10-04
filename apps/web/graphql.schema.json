@@ -1238,6 +1238,22 @@
             "deprecationReason": null
           },
           {
+            "name": "enabled_rewards",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "github_repo_id",
             "description": null,
             "args": [],

@@ -71,6 +71,7 @@ export interface NexusGenObjects {
   Query: {};
   Repository: { // root type
     created_at: NexusGenScalars['DateTime']; // DateTime!
+    enabled_rewards: boolean; // Boolean!
     github_repo_id: string; // String!
     id: string; // ID!
     is_removed: boolean; // Boolean!
@@ -173,6 +174,7 @@ export interface NexusGenFieldTypes {
   }
   Repository: { // field return type
     created_at: NexusGenScalars['DateTime']; // DateTime!
+    enabled_rewards: boolean; // Boolean!
     github_repo_id: string; // String!
     id: string; // ID!
     is_removed: boolean; // Boolean!
@@ -276,6 +278,7 @@ export interface NexusGenFieldTypeNames {
   }
   Repository: { // field return type name
     created_at: 'DateTime'
+    enabled_rewards: 'Boolean'
     github_repo_id: 'String'
     id: 'ID'
     is_removed: 'Boolean'

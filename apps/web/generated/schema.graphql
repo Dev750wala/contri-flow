@@ -71,6 +71,7 @@ type Query {
 
 type Repository {
   created_at: DateTime!
+  enabled_rewards: Boolean!
   github_repo_id: String!
   id: ID!
   is_removed: Boolean!

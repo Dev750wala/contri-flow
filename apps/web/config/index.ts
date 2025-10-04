@@ -13,6 +13,7 @@ interface Env {
   REDIS_HOST_PASSWORD: string;
   GEMINI_API_URL: string;
   GEMINI_API_KEY: string;
+  NEXT_PUBLIC_GITHUB_APP_INSTALL_URL?: string;
 }
 
 const config: Env = {
@@ -31,6 +32,7 @@ const config: Env = {
   REDIS_HOST_PASSWORD: process.env.REDIS_HOST_PASSWORD!,
   GEMINI_API_URL: process.env.GEMINI_API_URL!,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
+  NEXT_PUBLIC_GITHUB_APP_INSTALL_URL: process.env.NEXT_PUBLIC_GITHUB_APP_INSTALL_URL!,
 };
 
 export default config;

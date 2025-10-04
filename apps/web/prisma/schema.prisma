@@ -50,17 +50,20 @@ model Organization {
 }
 
 model Repository {
-  id              String                 @id @default(cuid())
+  id              String       @id @default(cuid())
   name            String
-  github_repo_id  String                 @unique
+  github_repo_id  String       @unique
   organization_id String
-  organization    Organization           @relation(fields: [organization_id], references: [id])
-  maintainers     RepositoryMaintainer[]
-  rewards         Reward[]
-  is_removed      Boolean                @default(false)
-  removed_at      DateTime?
-  created_at      DateTime               @default(now())
-  updated_at      DateTime               @updatedAt
+  organization    Organization @relation(fields: [organization_id], references: [id])
+
+  enabled_rewards Boolean @default(false)
+
+  maintainers RepositoryMaintainer[]
+  rewards     Reward[]
+  is_removed  Boolean                @default(false)
+  removed_at  DateTime?
+  created_at  DateTime               @default(now())
+  updated_at  DateTime               @updatedAt
 
   @@index([github_repo_id])
 }

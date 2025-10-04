@@ -18,12 +18,34 @@ import {
   GitBranch,
 } from 'lucide-react';
 import { ImageWithFallback } from './ImageWithFallback';
-
-interface LandingPageProps {
-  onLogin: (userType: 'owner' | 'contributor') => void;
-}
+import { useFetchOrganizationsForOwner } from '@/hooks/useFetchOrganizationsForOwner';
+import { useRouter } from 'next/navigation';
 
 export function LandingPage() {
+  const { data: organizationsForOwner, loading, error, fetchOrganizations } = useFetchOrganizationsForOwner();
+  const router = useRouter();
+
+  const handleFetchOrganizations = async () => {
+    try {
+      const result = await fetchOrganizations();
+
+      console.log('organizationsForOwner:', result.data);
+      
+      
+      if (result.data?.listOrganizationsForOwner && result.data.listOrganizationsForOwner.length > 0) {
+        // User has organizations, redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        // User has no organizations, redirect to new installation setup
+        router.push('/installation-new');
+      }
+    } catch (err) {
+      console.error('Error fetching organizations:', err);
+      // On error, redirect to new installation setup as fallback
+      router.push('/new-installation-setup');
+    }
+  };
+
   return (
     <div className="w-full">
       {/* Hero Section */}
@@ -34,7 +56,7 @@ export function LandingPage() {
           </Badge>
 
           <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold mb-8 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent leading-tight">
-            ContriFlow
+            MergePay
           </h1>
 
           <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto leading-relaxed">
@@ -46,10 +68,11 @@ export function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button
               size="lg"
-              // onClick={() => onLogin('owner')}
               className="flex items-center gap-3 px-8 py-4 text-lg font-semibold"
+              onClick={handleFetchOrganizations}
+              disabled={loading}
             >
-              Get Started as an Organization
+              {loading ? 'Loading...' : 'Get Started as an Organization'}
               <ArrowRight className="h-5 w-5" />
             </Button>
           </div>
@@ -284,18 +307,19 @@ export function LandingPage() {
             <Button
               size="lg"
               variant="secondary"
-              // onClick={() => onLogin('owner')}
               className="flex items-center gap-3 px-8 py-4 text-lg font-semibold"
+              onClick={handleFetchOrganizations}
+              disabled={loading}
             >
-              Start Rewarding Contributors
+              {loading ? 'Loading...' : 'Start Rewarding Contributors'}
               <ArrowRight className="h-5 w-5" />
             </Button>
 
             <Button
               size="lg"
               variant="outline"
-              // onClick={() => onLogin('contributor')}
               className="flex items-center gap-3 px-8 py-4 text-lg font-semibold bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+              onClick={() => router.push('/auth/sign-in')}
             >
               Start Earning Rewards
               <ArrowRight className="h-5 w-5" />

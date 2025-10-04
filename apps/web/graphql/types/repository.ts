@@ -20,6 +20,8 @@ export const RepositoryType = objectType({
     t.nonNull.field(Repository.created_at);
     t.nonNull.field(Repository.updated_at);
 
+    t.nonNull.field(Repository.enabled_rewards)
+    
     t.field('organization', {
       type: OrganizationType,
       resolve(parent: RepositoryPrisma, _args, ctx: Context) {

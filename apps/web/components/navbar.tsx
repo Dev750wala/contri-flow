@@ -18,7 +18,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Connector, useConnect, useAccount, useDisconnect } from 'wagmi';
+import {
+  Connector,
+  useConnect,
+  useAccount,
+  useDisconnect,
+  useBalance,
+} from 'wagmi';
+import { useTokenBalance } from '@/app/hooks/useGetTokenBalance';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +46,8 @@ const Navbar = () => {
   const { connectors, connect } = useConnect();
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
+
+  const { balance, isLoadingBalance } = useTokenBalance();
 
   useEffect(() => {
     const fetchGithubUser = async () => {
@@ -160,8 +169,8 @@ const Navbar = () => {
                             className="rounded-full"
                           />
                         ) : (
-                          session.user?.name?.charAt(0)?.toUpperCase() ||
-                          'U')}
+                          session.user?.name?.charAt(0)?.toUpperCase() || 'U'
+                        )}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
@@ -255,6 +264,17 @@ const Navbar = () => {
                     </Button>
                   </div>
                 </div>
+                <DropdownMenuItem className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-default focus:bg-cyan-900/30 focus:text-cyan-100 mx-1 my-1 px-4 py-2">
+                  <Wallet className="h-4 w-4 text-cyan-400" />
+                  <span>
+                    Balance:{' '}
+                    {isLoadingBalance
+                      ? 'Loading...'
+                      : balance
+                        ? `${Number(balance).toFixed(6)} MPT`
+                        : '0 MPT'}
+                  </span>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-cyan-400/20 mx-1" />
                 <DropdownMenuItem
                   className="flex items-center gap-2 text-cyan-100 hover:bg-cyan-900/30 cursor-pointer focus:bg-cyan-900/30 focus:text-cyan-100 mx-1 my-1 px-4 py-2"
@@ -398,9 +418,19 @@ const Navbar = () => {
                     <>
                       <div className="flex items-center gap-3 py-2">
                         <Wallet className="h-5 w-5 text-cyan-400" />
-                        <span className="text-cyan-100 font-medium">
-                          {shortenAddress(address || '')}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-cyan-100 font-medium">
+                            {shortenAddress(address || '')}
+                          </span>
+                          <span className="text-xs text-cyan-300">
+                            Balance:{' '}
+                            {isLoadingBalance
+                              ? 'Loading...'
+                              : balance
+                                ? `${Number(balance).toFixed(6)} MPT`
+                                : '0 MPT'}
+                          </span>
+                        </div>
                       </div>
                       <Button
                         variant="ghost"

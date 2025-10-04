@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Providers } from './provider';
+import { Toaster } from '@/components/ui/sonner';
 
 // const geistSans = localFont({
 //   src: "./fonts/GeistVF.woff",
@@ -13,8 +14,8 @@ import { Providers } from './provider';
 // });
 
 export const metadata: Metadata = {
-  title: 'ContriFlow',
-  description: 'Created by Dev Sadisatsowala',
+  title: 'MergePay',
+  description: 'Created by MergePay Team',
 };
 
 export default function RootLayout({
@@ -34,6 +35,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <Toaster />
           </ThemeProvider>
         </Providers>
       </body>

@@ -196,6 +196,7 @@ export type QueryUserByGithubIdArgs = {
 export type Repository = {
   __typename?: 'Repository';
   created_at: Scalars['DateTime']['output'];
+  enabled_rewards: Scalars['Boolean']['output'];
   github_repo_id: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   is_removed: Scalars['Boolean']['output'];

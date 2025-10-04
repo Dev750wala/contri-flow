@@ -48,13 +48,13 @@ export const OrganizationQuery = extendType({
     t.list.field('listOrganizationsForOwner', {
       type: 'Organization',
       async resolve(_root, _args, ctx: Context) {
-        if (!ctx.session) {
+        if (!ctx.session || !ctx.session.user || !ctx.session.user.userId) {
           throw new Error('Not authenticated');
         }
         const orgs = await ctx.prisma.organization.findMany({
           where: {
-            owner_id: ctx.session.user.userId
-          }
+            owner_id: ctx.session.user.userId,
+          },
         });
         return orgs;
       },
@@ -71,7 +71,7 @@ export const OrganizationMutation = extendType({
         organizationId: nonNull(stringArg()),
       },
       async resolve(_root, args, ctx: Context) {
-        if (!ctx.session) {
+        if (!ctx.session || !ctx.session.user || !ctx.session.user.userId) {
           throw new Error('Not authenticated');
         }
         const currentUser = await ctx.prisma.user.findUnique({
