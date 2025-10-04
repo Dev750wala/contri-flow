@@ -12,7 +12,10 @@
     "dev:tunnel": "concurrently \"next dev --port 3000\" \"cloudflared tunnel --url http://localhost:3000\"",
     "nexus:gen": "ts-node --transpile-only --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" graphql/schema",
     "tunnel": "cloudflared tunnel --url http://localhost:3000",
-    "seed": "tsx helpers/seed.ts"
+    "seed": "tsx helpers/seed.ts",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:watch": "graphql-codegen --config src/graphql/codegen.ts --watch",
+    "codegen:init": "graphql-codegen init"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
@@ -89,6 +92,13 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",
+    "@graphql-codegen/cli": "6.0.0",
+    "@graphql-codegen/client-preset": "5.0.2",
+    "@graphql-codegen/introspection": "5.0.0",
+    "@graphql-codegen/schema-ast": "^5.0.0",
+    "@graphql-codegen/typescript": "^5.0.1",
+    "@graphql-codegen/typescript-operations": "^5.0.1",
+    "@graphql-codegen/typescript-react-apollo": "^4.3.3",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/graphql": "^14.5.0",

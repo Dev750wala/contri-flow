@@ -17,6 +17,7 @@ model User {
   email          String?                @unique
   github_id      String                 @unique @db.Citext
   wallet_address String?
+  organization   Organization[]
   maintenances   RepositoryMaintainer[]
   contributor    Contributor?
   created_at     DateTime               @default(now())
@@ -26,18 +27,23 @@ model User {
 }
 
 model Organization {
-  id                 String       @id @default(cuid())
+  id                 String    @id @default(cuid())
   name               String
-  github_org_id      String       @unique
-  installation_id    String       @unique
-  app_installed      Boolean      @default(false)
+  github_org_id      String    @unique
+  installation_id    String    @unique
+  app_installed      Boolean   @default(false)
   app_uninstalled_at DateTime?
-  suspended          Boolean      @default(false)
-  repositories       Repository[]
-  sync_maintainers   Boolean      @default(false)
+  suspended          Boolean   @default(false)
+
+  owner_github_id String
+  owner_id        String?
+  owner           User?   @relation(fields: [owner_id], references: [id])
+
+  repositories     Repository[]
+  sync_maintainers Boolean      @default(false)
   // members            OrganizationMember[]
-  created_at         DateTime     @default(now())
-  updated_at         DateTime     @updatedAt
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
 
   @@index([github_org_id])
   @@index([installation_id])

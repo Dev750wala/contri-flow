@@ -34,6 +34,8 @@ type Organization {
   id: ID!
   installation_id: String!
   name: String!
+  owner: User!
+  owner_github_id: String!
   repositories: [Repository]
   suspended: Boolean!
   sync_maintainers: Boolean!
@@ -50,6 +52,7 @@ type Query {
   allUsers(token: String!): [User]
   contributor(id: String!): Contributor
   contributorByGithubId(github_id: String!): Contributor
+  listOrganizationsForOwner: [Organization]
   me: User
   organization(id: String!): Organization
   organizationByGithubId(githubOrgId: String!): Organization
@@ -79,10 +82,10 @@ type Repository {
 }
 
 type RepositoryMaintainer {
-  Reward: Reward!
   created_at: DateTime!
   github_id: String!
   id: ID!
+  issued_rewards: [Reward]
   repository: Repository!
   role: RepositoryRole!
   user: User
@@ -96,6 +99,7 @@ enum RepositoryRole {
 type Reward {
   claimed: Boolean!
   claimed_at: DateTime
+  comment: String!
   contributor: Contributor
   created_at: DateTime!
   destination_address: String
@@ -116,6 +120,7 @@ type User {
   id: ID!
   maintenances: [RepositoryMaintainer]
   name: String!
+  organizations: [Organization]
   updated_at: DateTime!
   wallet_address: String
 }

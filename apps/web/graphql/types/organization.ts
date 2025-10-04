@@ -20,6 +20,7 @@ export const OrganizationType = objectType({
     t.nonNull.field(Organization.sync_maintainers);
     t.field(Organization.app_uninstalled_at);
     t.nonNull.field(Organization.suspended);
+    t.nonNull.field(Organization.owner_github_id);
 
     t.nonNull.field(Organization.created_at);
     t.nonNull.field(Organization.updated_at);
@@ -35,5 +36,16 @@ export const OrganizationType = objectType({
         });
       },
     });
+
+    t.nonNull.field(Organization.owner.name, {
+      type: 'User',
+      async resolve(parent, _args, ctx: Context) {
+        return await ctx.prisma.organization
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .owner();
+      },
+    })
   },
 });

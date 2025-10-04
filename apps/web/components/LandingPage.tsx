@@ -23,59 +23,47 @@ interface LandingPageProps {
   onLogin: (userType: 'owner' | 'contributor') => void;
 }
 
-export function LandingPage({ onLogin }: LandingPageProps) {
+export function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="w-full">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-background to-muted/20 py-20">
-        <div className="container mx-auto px-4 text-center">
-          <Badge variant="secondary" className="mb-4">
+      <section className="relative py-24 px-4">
+        <div className="container mx-auto text-center">
+          <Badge variant="secondary" className="mb-6 px-4 py-2">
             Decentralized • Transparent • Secure
           </Badge>
 
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold mb-8 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent leading-tight">
             ContriFlow
           </h1>
 
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto leading-relaxed">
             A decentralized platform that automatically rewards open-source
             contributors with ETH based on merged pull requests. Transparent,
             secure, and built on blockchain.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button
               size="lg"
-              onClick={() => onLogin('owner')}
-              className="flex items-center gap-2"
+              // onClick={() => onLogin('owner')}
+              className="flex items-center gap-3 px-8 py-4 text-lg font-semibold"
             >
-              <Github className="h-5 w-5" />
-              I'm a Repository Owner
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => onLogin('contributor')}
-              className="flex items-center gap-2"
-            >
-              <GitBranch className="h-5 w-5" />
-              I'm a Contributor
-              <ArrowRight className="h-4 w-4" />
+              Get Started as an Organization
+              <ArrowRight className="h-5 w-5" />
             </Button>
           </div>
         </div>
       </section>
 
       {/* Problem Statement */}
-      <section className="py-16">
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Solving Open Source Incentivization
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Open-source projects often lack proper incentivization for
               contributors, leading to missed opportunities for innovation and
               collaboration.
@@ -132,19 +120,19 @@ export function LandingPage({ onLogin }: LandingPageProps) {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 bg-muted/20">
+      <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">How ContriFlow Works</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">How ContriFlow Works</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Our decentralized system automates the entire reward process from
               contribution detection to ETH distribution.
             </p>
           </div>
 
           {/* Architecture Diagram */}
-          <div className="mb-12">
-            <h3 className="text-xl font-semibold mb-6 text-center">
+          <div className="mb-16">
+            <h3 className="text-2xl font-semibold mb-8 text-center">
               Initial Setup Flow
             </h3>
             <Card className="max-w-4xl mx-auto">
@@ -250,19 +238,19 @@ export function LandingPage({ onLogin }: LandingPageProps) {
       </section>
 
       {/* Tech Stack */}
-      <section className="py-16">
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Built with Modern Technology
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               ContriFlow leverages cutting-edge blockchain and web technologies
               for a secure and seamless experience.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {[
               'Next.js',
               'TypeScript',
@@ -271,9 +259,9 @@ export function LandingPage({ onLogin }: LandingPageProps) {
               'Chainlink',
               'PostgreSQL',
             ].map((tech) => (
-              <Card key={tech} className="text-center">
-                <CardContent className="py-6">
-                  <Badge variant="outline">{tech}</Badge>
+              <Card key={tech} className="text-center hover:shadow-lg transition-shadow duration-300">
+                <CardContent className="py-8">
+                  <Badge variant="outline" className="text-sm px-3 py-1">{tech}</Badge>
                 </CardContent>
               </Card>
             ))}
@@ -282,35 +270,35 @@ export function LandingPage({ onLogin }: LandingPageProps) {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-primary text-primary-foreground">
+      <section className="py-24 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Ready to Transform Open Source?
           </h2>
-          <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
+          <p className="text-xl mb-12 opacity-90 max-w-3xl mx-auto leading-relaxed">
             Join ContriFlow and be part of the future of decentralized
             contribution rewards.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button
               size="lg"
               variant="secondary"
-              onClick={() => onLogin('owner')}
-              className="flex items-center gap-2"
+              // onClick={() => onLogin('owner')}
+              className="flex items-center gap-3 px-8 py-4 text-lg font-semibold"
             >
               Start Rewarding Contributors
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-5 w-5" />
             </Button>
 
             <Button
               size="lg"
               variant="outline"
-              onClick={() => onLogin('contributor')}
-              className="flex items-center gap-2 bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+              // onClick={() => onLogin('contributor')}
+              className="flex items-center gap-3 px-8 py-4 text-lg font-semibold bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
             >
               Start Earning Rewards
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-5 w-5" />
             </Button>
           </div>
         </div>

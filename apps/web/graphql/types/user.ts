@@ -1,4 +1,4 @@
-import { objectType } from 'nexus';
+import { list, objectType } from 'nexus';
 import { Context } from '../context';
 import { User } from 'nexus-prisma';
 import { RepositoryMaintainerType } from './repository-maintainer';
@@ -38,5 +38,15 @@ export const UserType = objectType({
         });
       },
     });
+
+    t.list.field('organizations', {
+      type: 'Organization',
+      async resolve(parent, _args, ctx: Context) {
+        return await ctx.prisma.organization
+          .findMany({
+            where: { owner_github_id: parent.github_id },
+          });
+      },
+    })
   },
 });

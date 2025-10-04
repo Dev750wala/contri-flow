@@ -63,6 +63,7 @@ export interface NexusGenObjects {
     id: string; // ID!
     installation_id: string; // String!
     name: string; // String!
+    owner_github_id: string; // String!
     suspended: boolean; // Boolean!
     sync_maintainers: boolean; // Boolean!
     updated_at: NexusGenScalars['DateTime']; // DateTime!
@@ -86,6 +87,7 @@ export interface NexusGenObjects {
   Reward: { // root type
     claimed: boolean; // Boolean!
     claimed_at?: NexusGenScalars['DateTime'] | null; // DateTime
+    comment: string; // String!
     created_at: NexusGenScalars['DateTime']; // DateTime!
     destination_address?: string | null; // String
     id: string; // ID!
@@ -141,6 +143,8 @@ export interface NexusGenFieldTypes {
     id: string; // ID!
     installation_id: string; // String!
     name: string; // String!
+    owner: NexusGenRootTypes['User']; // User!
+    owner_github_id: string; // String!
     repositories: Array<NexusGenRootTypes['Repository'] | null> | null; // [Repository]
     suspended: boolean; // Boolean!
     sync_maintainers: boolean; // Boolean!
@@ -151,6 +155,7 @@ export interface NexusGenFieldTypes {
     allUsers: Array<NexusGenRootTypes['User'] | null> | null; // [User]
     contributor: NexusGenRootTypes['Contributor'] | null; // Contributor
     contributorByGithubId: NexusGenRootTypes['Contributor'] | null; // Contributor
+    listOrganizationsForOwner: Array<NexusGenRootTypes['Organization'] | null> | null; // [Organization]
     me: NexusGenRootTypes['User'] | null; // User
     organization: NexusGenRootTypes['Organization'] | null; // Organization
     organizationByGithubId: NexusGenRootTypes['Organization'] | null; // Organization
@@ -178,10 +183,10 @@ export interface NexusGenFieldTypes {
     updated_at: NexusGenScalars['DateTime']; // DateTime!
   }
   RepositoryMaintainer: { // field return type
-    Reward: NexusGenRootTypes['Reward']; // Reward!
     created_at: NexusGenScalars['DateTime']; // DateTime!
     github_id: string; // String!
     id: string; // ID!
+    issued_rewards: Array<NexusGenRootTypes['Reward'] | null> | null; // [Reward]
     repository: NexusGenRootTypes['Repository']; // Repository!
     role: NexusGenEnums['RepositoryRole']; // RepositoryRole!
     user: NexusGenRootTypes['User'] | null; // User
@@ -189,6 +194,7 @@ export interface NexusGenFieldTypes {
   Reward: { // field return type
     claimed: boolean; // Boolean!
     claimed_at: NexusGenScalars['DateTime'] | null; // DateTime
+    comment: string; // String!
     contributor: NexusGenRootTypes['Contributor'] | null; // Contributor
     created_at: NexusGenScalars['DateTime']; // DateTime!
     destination_address: string | null; // String
@@ -208,6 +214,7 @@ export interface NexusGenFieldTypes {
     id: string; // ID!
     maintenances: Array<NexusGenRootTypes['RepositoryMaintainer'] | null> | null; // [RepositoryMaintainer]
     name: string; // String!
+    organizations: Array<NexusGenRootTypes['Organization'] | null> | null; // [Organization]
     updated_at: NexusGenScalars['DateTime']; // DateTime!
     wallet_address: string | null; // String
   }
@@ -239,6 +246,8 @@ export interface NexusGenFieldTypeNames {
     id: 'ID'
     installation_id: 'String'
     name: 'String'
+    owner: 'User'
+    owner_github_id: 'String'
     repositories: 'Repository'
     suspended: 'Boolean'
     sync_maintainers: 'Boolean'
@@ -249,6 +258,7 @@ export interface NexusGenFieldTypeNames {
     allUsers: 'User'
     contributor: 'Contributor'
     contributorByGithubId: 'Contributor'
+    listOrganizationsForOwner: 'Organization'
     me: 'User'
     organization: 'Organization'
     organizationByGithubId: 'Organization'
@@ -276,10 +286,10 @@ export interface NexusGenFieldTypeNames {
     updated_at: 'DateTime'
   }
   RepositoryMaintainer: { // field return type name
-    Reward: 'Reward'
     created_at: 'DateTime'
     github_id: 'String'
     id: 'ID'
+    issued_rewards: 'Reward'
     repository: 'Repository'
     role: 'RepositoryRole'
     user: 'User'
@@ -287,6 +297,7 @@ export interface NexusGenFieldTypeNames {
   Reward: { // field return type name
     claimed: 'Boolean'
     claimed_at: 'DateTime'
+    comment: 'String'
     contributor: 'Contributor'
     created_at: 'DateTime'
     destination_address: 'String'
@@ -306,6 +317,7 @@ export interface NexusGenFieldTypeNames {
     id: 'ID'
     maintenances: 'RepositoryMaintainer'
     name: 'String'
+    organizations: 'Organization'
     updated_at: 'DateTime'
     wallet_address: 'String'
   }

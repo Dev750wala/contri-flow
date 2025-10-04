@@ -8,25 +8,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Wallet, ArrowDownUp } from 'lucide-react';
 import Navbar from '@/components/navbar';
 import { useTradeToken } from '@/app/hooks/useTradeToken';
+import { useAccount } from 'wagmi';
 
 export default function DepositCard() {
-  const {
-    ethValue,
-    tokenValue,
-    isLoadingTokenAmount,
-    handleAmountChange,
-  } = useTradeToken();
+  const { ethValue, tokenValue, isLoadingTokenAmount, handleAmountChange } =
+    useTradeToken();
+
+  const { isConnected } = useAccount();
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="h-[85vh] flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20">
         <div className="w-full max-w-md mx-auto">
           <div className="relative group">
             <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-primary to-accent opacity-25 blur-lg transition-all duration-1000 group-hover:opacity-50 group-hover:duration-200" />
@@ -51,7 +49,7 @@ export default function DepositCard() {
                       placeholder="0.00"
                       value={ethValue}
                       onChange={handleAmountChange}
-                      className="py-6 text-6xl font-bold pr-20 text-left border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
+                      className="py-6 text-3xl font-bold pr-20 text-left border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
                     />
                     <div className="absolute inset-y-0 right-4 flex items-center">
                       <span className="text-xl font-light tracking-wider text-foreground">
@@ -76,7 +74,7 @@ export default function DepositCard() {
                       placeholder="0.0"
                       value={tokenValue}
                       readOnly
-                      className="py-6 text-6xl font-bold pr-20 text-left border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
+                      className="py-6 text-3xl font-bold pr-20 text-left border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
                     />
                     <div className="absolute inset-y-0 right-4 flex items-center">
                       <span className="text-xl font-light tracking-wider text-foreground">
@@ -87,12 +85,10 @@ export default function DepositCard() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" size="lg">
+                <Button className="w-full" size="lg" onClick={() => {}}>
                   <Wallet className="mr-2 h-5 w-5" />
-                  Connect Wallet & Buy
-                  {
-                    isLoadingTokenAmount ? ' (Calculating...)' : ''
-                  }
+                  <span>{isConnected ? 'Buy' : 'Connect Wallet & Buy'}</span>
+                  {isLoadingTokenAmount ? ' (Calculating...)' : ''}
                 </Button>
               </CardFooter>
             </Card>

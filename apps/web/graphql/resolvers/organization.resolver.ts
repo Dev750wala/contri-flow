@@ -44,6 +44,21 @@ export const OrganizationQuery = extendType({
         });
       },
     });
+
+    t.list.field('listOrganizationsForOwner', {
+      type: 'Organization',
+      async resolve(_root, _args, ctx: Context) {
+        if (!ctx.session) {
+          throw new Error('Not authenticated');
+        }
+        const orgs = await ctx.prisma.organization.findMany({
+          where: {
+            owner_id: ctx.session.user.userId
+          }
+        });
+        return orgs;
+      },
+    });
   },
 });
 
@@ -65,6 +80,11 @@ export const OrganizationMutation = extendType({
         if (!currentUser) {
           throw new Error('User not found');
         }
+
+        return await ctx.prisma.organization.update({
+          where: { id: args.organizationId },
+          data: { sync_maintainers: true },
+        });
       },
     });
   },

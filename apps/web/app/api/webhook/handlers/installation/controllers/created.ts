@@ -21,6 +21,10 @@ export async function handleInstallationCreatedEvent(
     const githubOrgId = installation.account.id.toString();
     const installationId = installation.id.toString();
 
+    const ownerExists = await prisma.user.findUnique({
+      where: { github_id: sender.id.toString() },
+    });
+
     const organization = await prisma.organization.upsert({
       where: { github_org_id: githubOrgId },
       update: {
@@ -29,12 +33,16 @@ export async function handleInstallationCreatedEvent(
         app_uninstalled_at: null,
         suspended: false,
         name: installation.account.login,
+        owner_github_id: sender.id.toString(),
+        ...ownerExists && { owner: { connect: { id: ownerExists.id } } },
       },
       create: {
         github_org_id: githubOrgId,
         installation_id: installationId,
         name: installation.account.login,
         app_installed: true,
+        owner_github_id: sender.id.toString(),
+        owner: ownerExists ? { connect: { id: ownerExists.id } } : undefined,
       },
     });
 
