@@ -19,7 +19,7 @@ import { verifyGithubHookSignature } from '@/helpers';
 export async function POST(request: Request) {
   const body = await request.json();
 
-  let signatureVerified = await verifyGithubHookSignature(request, body);
+  const signatureVerified = await verifyGithubHookSignature(request, body);
 
   if (!signatureVerified) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
@@ -33,21 +33,25 @@ export async function POST(request: Request) {
       response = await handleInstallationEvent(
         body as AppInstallationInterface
       );
+      break
 
     case 'installation_repositories':
       response = await handleInstallationRespositoriesEvent(
         body as InstallationRepositories
       );
+      break;
 
     case 'repository':
       response = await handleRepositoriesEvent(
         body as RepositoryRenamedWebhookPayload
       );
+      break;
 
     case 'member':
       response = await handleMemberEvent(
         body as MemberEventInterface
       );
+      break;
 
     // case 'issue_comment':
     //   response = await handleIssueCommentEvent(

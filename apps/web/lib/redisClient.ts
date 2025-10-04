@@ -16,7 +16,7 @@ const redisConfig: RedisOptions = {
     return err.message.includes(targetError);
   },
   // Enable TLS if using cloud Redis
-  tls: config.REDIS_HOST_URL.includes('aivencloud.com') ? {} : undefined,
+  tls: config.REDIS_HOST_URL?.includes('aivencloud.com') ? {} : undefined,
 };
 
 export const redisClient = new Redis(redisConfig);
