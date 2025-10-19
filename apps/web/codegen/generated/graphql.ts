@@ -18,6 +18,20 @@ export type Scalars = {
   DateTime: { input: any; output: any; }
 };
 
+export type CheckInstallationData = {
+  __typename?: 'CheckInstallationData';
+  organization?: Maybe<Organization>;
+  repositories: Array<Repository>;
+  type?: Maybe<Scalars['String']['output']>;
+};
+
+export type CheckInstallationResponse = {
+  __typename?: 'CheckInstallationResponse';
+  data?: Maybe<CheckInstallationData>;
+  error?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
 export type Contributor = {
   __typename?: 'Contributor';
   created_at: Scalars['DateTime']['output'];
@@ -94,6 +108,7 @@ export type Query = {
   __typename?: 'Query';
   allRepositories?: Maybe<Array<Maybe<Repository>>>;
   allUsers?: Maybe<Array<Maybe<User>>>;
+  checkInstallation?: Maybe<CheckInstallationResponse>;
   contributor?: Maybe<Contributor>;
   contributorByGithubId?: Maybe<Contributor>;
   listOrganizationsForOwner?: Maybe<Array<Maybe<Organization>>>;
@@ -121,6 +136,11 @@ export type QueryAllRepositoriesArgs = {
 
 export type QueryAllUsersArgs = {
   token: Scalars['String']['input'];
+};
+
+
+export type QueryCheckInstallationArgs = {
+  installationId: Scalars['String']['input'];
 };
 
 
@@ -200,6 +220,7 @@ export type Repository = {
   github_repo_id: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   is_removed: Scalars['Boolean']['output'];
+  maintainers: Array<RepositoryMaintainer>;
   name: Scalars['String']['output'];
   organization?: Maybe<Organization>;
   removed_at?: Maybe<Scalars['DateTime']['output']>;
@@ -259,5 +280,13 @@ export type ListOrganizationsForOwnerQueryVariables = Exact<{ [key: string]: nev
 
 export type ListOrganizationsForOwnerQuery = { __typename?: 'Query', listOrganizationsForOwner?: Array<{ __typename?: 'Organization', id: string, name: string, created_at: any } | null> | null };
 
+export type CheckInstallationQueryVariables = Exact<{
+  installationId: Scalars['String']['input'];
+}>;
+
+
+export type CheckInstallationQuery = { __typename?: 'Query', checkInstallation?: { __typename?: 'CheckInstallationResponse', error?: string | null, success: boolean, data?: { __typename?: 'CheckInstallationData', type?: string | null, repositories: Array<{ __typename?: 'Repository', id: string, name: string, maintainers: Array<{ __typename?: 'RepositoryMaintainer', github_id: string }> }>, organization?: { __typename?: 'Organization', name: string, github_org_id: string } | null } | null } | null };
+
 
 export const ListOrganizationsForOwnerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ListOrganizationsForOwner"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"listOrganizationsForOwner"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]} as unknown as DocumentNode<ListOrganizationsForOwnerQuery, ListOrganizationsForOwnerQueryVariables>;
+export const CheckInstallationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CheckInstallation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"checkInstallation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"installationId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"error"}},{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"repositories"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"maintainers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"github_id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"organization"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"github_org_id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<CheckInstallationQuery, CheckInstallationQueryVariables>;

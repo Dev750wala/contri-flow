@@ -24,11 +24,11 @@ export interface Maintainer {
   avatar?: string;
 }
 
-export interface RewardStats {
-  totalDistributed: number;
-  contributorsRewarded: number;
-  currency: string;
-}
+// export interface RewardStats {
+//   totalDistributed: number;
+//   contributorsRewarded: number;
+//   currency: string;
+// }
 
 export interface Repository {
   id: string;
@@ -36,23 +36,14 @@ export interface Repository {
   owner: string;
   fullName: string;
   githubUrl: string;
-  lastActivity: {
-    type: 'commit' | 'pr';
-    date: string;
-    branch?: string;
-  };
   rewardsEnabled: boolean;
-  rewardStats: RewardStats;
+  // rewardStats: RewardStats;
   maintainers: Maintainer[];
   tokenInfo: {
     symbol: string;
     address: string;
     name: string;
   };
-  languages: {
-    name: string;
-    color: string;
-  }[];
   webhookActive: boolean;
 }
 
@@ -142,27 +133,9 @@ const RepositoryCard: React.FC<RepositoryCardProps> = ({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Last Activity */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            {repository.lastActivity.type === 'commit' ? (
-              <GitCommit className="h-4 w-4" />
-            ) : (
-              <GitBranch className="h-4 w-4" />
-            )}
-            <span>
-              Last {repository.lastActivity.type} {formatDate(repository.lastActivity.date)}
-              {repository.lastActivity.branch && (
-                <span className="text-xs ml-1">
-                  on <code className="bg-muted px-1 rounded">{repository.lastActivity.branch}</code>
-                </span>
-              )}
-            </span>
-          </div>
-        </div>
 
         {/* Reward Stats */}
-        {repository.rewardsEnabled && (
+        {/* {repository.rewardsEnabled && (
           <div className="grid grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -183,38 +156,7 @@ const RepositoryCard: React.FC<RepositoryCardProps> = ({
               </div>
             </div>
           </div>
-        )}
-
-        {/* Languages */}
-        {repository.languages.length > 0 && (
-          <div className="space-y-2">
-            <div className="text-xs text-muted-foreground">Top Languages</div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {repository.languages.slice(0, 3).map((language) => (
-                <Badge 
-                  key={language.name}
-                  variant="outline" 
-                  className="text-xs"
-                  style={{ 
-                    borderColor: language.color,
-                    color: language.color
-                  }}
-                >
-                  <div 
-                    className="w-2 h-2 rounded-full mr-1" 
-                    style={{ backgroundColor: language.color }}
-                  />
-                  {language.name}
-                </Badge>
-              ))}
-              {repository.languages.length > 3 && (
-                <span className="text-xs text-muted-foreground">
-                  +{repository.languages.length - 3} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        )} */}
 
         {/* Maintainers */}
         {repository.maintainers.length > 0 && (

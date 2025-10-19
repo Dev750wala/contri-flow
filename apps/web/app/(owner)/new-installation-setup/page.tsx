@@ -7,6 +7,10 @@ import Navbar from '@/components/navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  CheckInstallationDocument,
+  CheckInstallationQuery,
+} from '@/codegen/generated/graphql';
 import { 
   CheckCircle, 
   Clock, 
@@ -16,166 +20,126 @@ import {
   ArrowRight,
   Settings
 } from 'lucide-react';
+import { createLanguage } from '@/constants/languages';
+import { useQuery } from '@apollo/client';
 
-// Sample data for demonstration
-const sampleRepositories: Repository[] = [
-  {
-    id: '1',
-    name: 'awesome-project',
-    owner: 'myorg',
-    fullName: 'myorg/awesome-project',
-    githubUrl: 'https://github.com/myorg/awesome-project',
-    lastActivity: {
-      type: 'commit',
-      date: '2024-10-02T10:30:00Z',
-      branch: 'main'
-    },
-    rewardsEnabled: true,
-    rewardStats: {
-      totalDistributed: 15750.50,
-      contributorsRewarded: 23,
-      currency: 'USDC'
-    },
-    maintainers: [
-      {
-        id: '1',
-        username: 'johndoe',
-        avatar: 'https://github.com/johndoe.png'
-      },
-      {
-        id: '2', 
-        username: 'janedoe',
-        avatar: 'https://github.com/janedoe.png'
-      },
-      {
-        id: '3',
-        username: 'bobsmith'
-      }
-    ],
-    tokenInfo: {
-      symbol: 'USDC',
-      address: '0xa0b86a33e6441e6a0be6d00a6b2b5bce7c63b8b1',
-      name: 'USD Coin'
-    },
-    languages: [
-      { name: 'TypeScript', color: '#3178c6' },
-      { name: 'JavaScript', color: '#f1e05a' },
-      { name: 'CSS', color: '#563d7c' },
-      { name: 'HTML', color: '#e34c26' }
-    ],
-    webhookActive: true
-  },
-  {
-    id: '2',
-    name: 'web3-tools',
-    owner: 'myorg',
-    fullName: 'myorg/web3-tools',
-    githubUrl: 'https://github.com/myorg/web3-tools',
-    lastActivity: {
-      type: 'pr',
-      date: '2024-09-28T14:20:00Z',
-      branch: 'feature/new-api'
-    },
-    rewardsEnabled: false,
-    rewardStats: {
-      totalDistributed: 0,
-      contributorsRewarded: 0,
-      currency: 'ETH'
-    },
-    maintainers: [
-      {
-        id: '1',
-        username: 'johndoe',
-        avatar: 'https://github.com/johndoe.png'
-      }
-    ],
-    tokenInfo: {
-      symbol: 'ETH',
-      address: '0x0000000000000000000000000000000000000000',
-      name: 'Ethereum'
-    },
-    languages: [
-      { name: 'Solidity', color: '#aa6746' },
-      { name: 'JavaScript', color: '#f1e05a' },
-      { name: 'Python', color: '#3572A5' },
-      { name: 'Shell', color: '#89e051' }
-    ],
-    webhookActive: false
-  },
-  {
-    id: '3',
-    name: 'react-components',
-    owner: 'myorg',
-    fullName: 'myorg/react-components',
-    githubUrl: 'https://github.com/myorg/react-components',
-    lastActivity: {
-      type: 'commit',
-      date: '2024-10-01T09:15:00Z',
-      branch: 'main'
-    },
-    rewardsEnabled: true,
-    rewardStats: {
-      totalDistributed: 2340.25,
-      contributorsRewarded: 8,
-      currency: 'USDT'
-    },
-    maintainers: [
-      {
-        id: '2',
-        username: 'janedoe',
-        avatar: 'https://github.com/janedoe.png'
-      },
-      {
-        id: '4',
-        username: 'alice'
-      },
-      {
-        id: '5',
-        username: 'charlie'
-      },
-      {
-        id: '6',
-        username: 'david'
-      }
-    ],
-    tokenInfo: {
-      symbol: 'USDT',
-      address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-      name: 'Tether USD'
-    },
-    languages: [
-      { name: 'TypeScript', color: '#3178c6' },
-      { name: 'SCSS', color: '#c6538c' },
-      { name: 'JavaScript', color: '#f1e05a' },
-      { name: 'CSS', color: '#563d7c' },
-      { name: 'HTML', color: '#e34c26' }
-    ],
-    webhookActive: true
-  }
-];
+// Platform token info constant
+const PLATFORM_TOKEN_INFO = {
+  symbol: 'MPT',
+  address: '0xa62fCE379F63E7f4cA1dcDEe355Cb21e9FbA8775',
+  name: 'MergePay Token'
+};
+
+// Backend repository response type
+interface BackendRepository {
+  id: string | number;
+  name: string;
+  owner: string;
+  full_name: string;
+  html_url: string;
+  languages?: string[]; // Array of language names from backend
+}
 
 const NewInstallationPageContent = () => {
-  const [repositories, setRepositories] = useState<Repository[]>(sampleRepositories);
   const searchParams = useSearchParams();
+  const [repositories, setRepositories] = useState<Repository[]>([]);
+  const [enabledRepoIds, setEnabledRepoIds] = useState<Set<string>>(new Set());
   
   // Get query parameters from GitHub App installation
   const setupAction = searchParams.get('setup_action');
   const installationId = searchParams.get('installation_id');
   const state = searchParams.get('state');
 
+  const { data: checkInstallationData, loading, error } = useQuery<CheckInstallationQuery>(CheckInstallationDocument, {
+    variables: { installationId },
+    skip: !installationId,
+  });
+
+  // Transform backend repository data to frontend format
+  const transformRepository = (backendRepo: BackendRepository): Repository => {
+    const repoId = String(backendRepo.id);
+    
+    return {
+      id: repoId,
+      name: backendRepo.name,
+      owner: backendRepo.owner,
+      fullName: backendRepo.full_name,
+      githubUrl: backendRepo.html_url,
+      rewardsEnabled: enabledRepoIds.has(repoId),
+      maintainers: [], // Will be populated from backend if needed
+      tokenInfo: PLATFORM_TOKEN_INFO,
+      webhookActive: false
+    };
+  };
+
   const handleToggleRewards = (repoId: string, enabled: boolean) => {
+    setEnabledRepoIds(prev => {
+      const newSet = new Set(prev);
+      if (enabled) {
+        newSet.add(repoId);
+      } else {
+        newSet.delete(repoId);
+      }
+      return newSet;
+    });
+    
+    // Update the repository's rewardsEnabled state directly
     setRepositories(prev =>
       prev.map(repo =>
-        repo.id === repoId ? { ...repo, rewardsEnabled: enabled } : repo
+        repo.id === repoId
+          ? { ...repo, rewardsEnabled: enabled }
+          : repo
       )
     );
   };
 
   const handleManageSettings = (repoId: string) => {
-    // This would typically navigate to a settings page or open a modal
-    console.log('Managing settings for repository:', repoId);
-    // For now, we'll just show an alert
-    alert(`Managing settings for repository ${repoId}`);
+    // For onboarding, this will enable/disable the repository
+    const currentlyEnabled = enabledRepoIds.has(repoId);
+    handleToggleRewards(repoId, !currentlyEnabled);
+  };
+
+  const handleAddRepositories = async () => {
+    if (enabledRepoIds.size === 0) {
+      alert('Please select at least one repository to enable rewards.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // TODO: Add mutation logic here to save enabled repositories to backend
+      console.log('Enabling repositories:', Array.from(enabledRepoIds));
+      
+      // Example mutation:
+      // const response = await fetch('/api/graphql', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     query: `
+      //       mutation EnableRepositories($installationId: String!, $repositoryIds: [String!]!) {
+      //         enableRepositories(installationId: $installationId, repositoryIds: $repositoryIds) {
+      //           success
+      //           message
+      //         }
+      //       }
+      //     `,
+      //     variables: {
+      //       installationId,
+      //       repositoryIds: Array.from(enabledRepoIds)
+      //     }
+      //   })
+      // });
+      // const { data } = await response.json();
+      // if (data.enableRepositories.success) {
+      //   // Redirect to dashboard or success page
+      //   window.location.href = '/dashboard';
+      // }
+    } catch (error) {
+      console.error('Error enabling repositories:', error);
+      alert('Failed to enable repositories. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Render content based on setup_action
@@ -261,24 +225,56 @@ const NewInstallationPageContent = () => {
                 </div>
 
                 {/* Repository Grid */}
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {repositories.map((repository) => (
-                    <RepositoryCard
-                      key={repository.id}
-                      repository={repository}
-                      onToggleRewards={handleToggleRewards}
-                      onManageSettings={handleManageSettings}
-                    />
-                  ))}
-                </div>
+                {loading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="text-center space-y-4">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                      <p className="text-muted-foreground">Loading repositories...</p>
+                    </div>
+                  </div>
+                ) : repositories.length > 0 ? (
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {repositories.map((repository) => (
+                      <RepositoryCard
+                        key={repository.id}
+                        repository={repository}
+                        onToggleRewards={handleToggleRewards}
+                        onManageSettings={handleManageSettings}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No repositories found for this installation.</p>
+                  </div>
+                )}
 
                 {/* Save Button */}
-                <div className="flex justify-center pt-6">
-                  <Button size="lg" className="min-w-[200px]">
-                    <ArrowRight className="h-4 w-4 mr-2" />
-                    Continue Setup
-                  </Button>
-                </div>
+                {repositories.length > 0 && (
+                  <div className="flex flex-col items-center gap-4 pt-6">
+                    <div className="text-sm text-muted-foreground">
+                      {enabledRepoIds.size} {enabledRepoIds.size === 1 ? 'repository' : 'repositories'} selected
+                    </div>
+                    <Button 
+                      size="lg" 
+                      className="min-w-[200px]"
+                      onClick={handleAddRepositories}
+                      disabled={loading || enabledRepoIds.size === 0}
+                    >
+                      {loading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <ArrowRight className="h-4 w-4 mr-2" />
+                          Continue Setup
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -410,4 +406,3 @@ const NewInstallationPage = () => {
 };
 
 export default NewInstallationPage;
-  

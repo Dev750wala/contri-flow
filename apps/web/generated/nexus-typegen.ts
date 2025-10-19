@@ -46,6 +46,16 @@ export interface NexusGenScalars {
 }
 
 export interface NexusGenObjects {
+  CheckInstallationData: { // root type
+    organization?: NexusGenRootTypes['Organization'] | null; // Organization
+    repositories: NexusGenRootTypes['Repository'][]; // [Repository!]!
+    type?: string | null; // String
+  }
+  CheckInstallationResponse: { // root type
+    data?: NexusGenRootTypes['CheckInstallationData'] | null; // CheckInstallationData
+    error?: string | null; // String
+    success: boolean; // Boolean!
+  }
   Contributor: { // root type
     created_at: NexusGenScalars['DateTime']; // DateTime!
     email?: string | null; // String
@@ -119,6 +129,16 @@ export type NexusGenRootTypes = NexusGenObjects
 export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars & NexusGenEnums
 
 export interface NexusGenFieldTypes {
+  CheckInstallationData: { // field return type
+    organization: NexusGenRootTypes['Organization'] | null; // Organization
+    repositories: NexusGenRootTypes['Repository'][]; // [Repository!]!
+    type: string | null; // String
+  }
+  CheckInstallationResponse: { // field return type
+    data: NexusGenRootTypes['CheckInstallationData'] | null; // CheckInstallationData
+    error: string | null; // String
+    success: boolean; // Boolean!
+  }
   Contributor: { // field return type
     created_at: NexusGenScalars['DateTime']; // DateTime!
     email: string | null; // String
@@ -154,6 +174,7 @@ export interface NexusGenFieldTypes {
   Query: { // field return type
     allRepositories: Array<NexusGenRootTypes['Repository'] | null> | null; // [Repository]
     allUsers: Array<NexusGenRootTypes['User'] | null> | null; // [User]
+    checkInstallation: NexusGenRootTypes['CheckInstallationResponse'] | null; // CheckInstallationResponse
     contributor: NexusGenRootTypes['Contributor'] | null; // Contributor
     contributorByGithubId: NexusGenRootTypes['Contributor'] | null; // Contributor
     listOrganizationsForOwner: Array<NexusGenRootTypes['Organization'] | null> | null; // [Organization]
@@ -178,6 +199,7 @@ export interface NexusGenFieldTypes {
     github_repo_id: string; // String!
     id: string; // ID!
     is_removed: boolean; // Boolean!
+    maintainers: NexusGenRootTypes['RepositoryMaintainer'][]; // [RepositoryMaintainer!]!
     name: string; // String!
     organization: NexusGenRootTypes['Organization'] | null; // Organization
     removed_at: NexusGenScalars['DateTime'] | null; // DateTime
@@ -223,6 +245,16 @@ export interface NexusGenFieldTypes {
 }
 
 export interface NexusGenFieldTypeNames {
+  CheckInstallationData: { // field return type name
+    organization: 'Organization'
+    repositories: 'Repository'
+    type: 'String'
+  }
+  CheckInstallationResponse: { // field return type name
+    data: 'CheckInstallationData'
+    error: 'String'
+    success: 'Boolean'
+  }
   Contributor: { // field return type name
     created_at: 'DateTime'
     email: 'String'
@@ -258,6 +290,7 @@ export interface NexusGenFieldTypeNames {
   Query: { // field return type name
     allRepositories: 'Repository'
     allUsers: 'User'
+    checkInstallation: 'CheckInstallationResponse'
     contributor: 'Contributor'
     contributorByGithubId: 'Contributor'
     listOrganizationsForOwner: 'Organization'
@@ -282,6 +315,7 @@ export interface NexusGenFieldTypeNames {
     github_repo_id: 'String'
     id: 'ID'
     is_removed: 'Boolean'
+    maintainers: 'RepositoryMaintainer'
     name: 'String'
     organization: 'Organization'
     removed_at: 'DateTime'
@@ -354,6 +388,9 @@ export interface NexusGenArgTypes {
     }
     allUsers: { // args
       token: string; // String!
+    }
+    checkInstallation: { // args
+      installationId: string; // String!
     }
     contributor: { // args
       id: string; // String!

@@ -62,3 +62,34 @@ export const RepositoryQuery = extendType({
     });
   },
 });
+
+
+export const RepositoryMutation = extendType({
+  type: 'Mutation',
+  definition(t) {
+    t.field('enableRewardOnRepository', {
+      type: list(nonNull(RepositoryType)),
+      args: {
+        repositoryId: nonNull(list(nonNull(stringArg()))),
+      },
+      resolve: async (_parent, args, ctx: Context) => {
+        const { repositoryId } = args;
+        try {
+                  return ctx.prisma.repository.updateMany({
+          where: {
+            id: {
+              in: repositoryId,
+            },
+          },
+          data: {
+            rewardsEnabled: true,
+          },
+        });
+
+        } catch (error) {
+          
+        }
+      },
+    });
+  },
+});

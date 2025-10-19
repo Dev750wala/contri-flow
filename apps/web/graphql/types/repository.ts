@@ -5,6 +5,7 @@ import { Repository } from 'nexus-prisma';
 import { OrganizationType } from './organization';
 import { RewardType } from './reward';
 import { Repository as RepositoryPrisma } from '@prisma/client';
+import { RepositoryMaintainerType } from './repository-maintainer';
 
 export const RepositoryType = objectType({
   name: Repository.$name,
@@ -19,6 +20,17 @@ export const RepositoryType = objectType({
 
     t.nonNull.field(Repository.created_at);
     t.nonNull.field(Repository.updated_at);
+
+    t.nonNull.list.nonNull.field(Repository.maintainers.name, {
+      type: RepositoryMaintainerType,
+      resolve(parent: RepositoryPrisma, _args, ctx: Context) {
+        return ctx.prisma.repositoryMaintainer.findMany({
+          where: {
+            repository_id: parent.id,
+          }
+        })
+      }
+    })
 
     t.nonNull.field(Repository.enabled_rewards)
     

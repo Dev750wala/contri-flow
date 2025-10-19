@@ -30,7 +30,10 @@ export default function DepositCard() {
     isTransactionSuccess,
     ethBalance,
     isLoadingBalance,
+    mptBalance,
+    isLoadingMptBalance,
     isInsufficientBalance,
+    isInsufficientMptBalance,
     handleAmountChange,
     handleSellAmountChange,
     handleBuyTokens,
@@ -188,13 +191,39 @@ export default function DepositCard() {
                           placeholder="0.0"
                           value={sellTokenValue}
                           onChange={handleSellAmountChange}
-                          className="py-6 text-3xl font-bold pr-20 text-left border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
+                          className={`py-6 text-3xl font-bold pr-20 text-left border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent ${
+                            isInsufficientMptBalance ? 'text-red-500' : ''
+                          }`}
                         />
                         <div className="absolute inset-y-0 right-4 flex items-center">
                           <span className="text-xl font-light tracking-wider text-foreground">
                             MPT
                           </span>
                         </div>
+                      </div>
+                      
+                      {/* Balance Display */}
+                      <div className="flex justify-between items-center px-1">
+                        <div className="text-sm text-muted-foreground">
+                          {isConnected ? (
+                            isLoadingMptBalance ? (
+                              <span>Loading balance...</span>
+                            ) : mptBalance ? (
+                              <span>
+                                Balance: {(Number(mptBalance) / 1e18).toFixed(6)} MPT
+                              </span>
+                            ) : (
+                              <span>Balance: 0 MPT</span>
+                            )
+                          ) : (
+                            <span>Connect wallet to see balance</span>
+                          )}
+                        </div>
+                        {isInsufficientMptBalance && (
+                          <div className="text-sm text-red-500 font-medium">
+                            Insufficient balance
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -251,12 +280,14 @@ export default function DepositCard() {
                     className="w-full cursor-pointer" 
                     size="lg" 
                     onClick={handleSellTokens}
-                    disabled={isConnecting || isLoadingEthAmount || (!sellTokenValue && isConnected)}
+                    disabled={isConnecting || isLoadingEthAmount || (!sellTokenValue && isConnected) || isInsufficientMptBalance}
                   >
                     <TrendingDown className="mr-2 h-5 w-5" />
                     <span>
                       {isConnecting 
-                        ? 'Connecting...' 
+                        ? 'Connecting...'
+                        : isInsufficientMptBalance
+                          ? 'Insufficient Balance' 
                         : isConnected 
                           ? (sellTokenValue ? 'Sell Tokens' : 'Enter MPT Amount')
                           : 'Connect Wallet & Sell'
