@@ -1,16 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import RepositoryCard, { Repository } from '@/components/RepositoryCard';
+import React, { Suspense } from 'react';
+import RepositoryCard from '@/components/RepositoryCard';
 import Navbar from '@/components/navbar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  CheckInstallationDocument,
-  CheckInstallationQuery,
-} from '@/codegen/generated/graphql';
 import { 
   CheckCircle, 
   Clock, 
@@ -18,262 +13,290 @@ import {
   AlertTriangle, 
   Github,
   ArrowRight,
-  Settings
+  Settings,
+  Users
 } from 'lucide-react';
-import { createLanguage } from '@/constants/languages';
-import { useQuery } from '@apollo/client';
+import { useNewInstallationSetup } from './useNewInstallationSetup';
+import { MPT_TOKEN_ADDRESS } from '@/web3/constants';
 
-// Platform token info constant
 const PLATFORM_TOKEN_INFO = {
   symbol: 'MPT',
-  address: '0xa62fCE379F63E7f4cA1dcDEe355Cb21e9FbA8775',
+  address: MPT_TOKEN_ADDRESS,
   name: 'MergePay Token'
 };
 
-// Backend repository response type
-interface BackendRepository {
-  id: string | number;
-  name: string;
-  owner: string;
-  full_name: string;
-  html_url: string;
-  languages?: string[]; // Array of language names from backend
-}
-
 const NewInstallationPageContent = () => {
-  const searchParams = useSearchParams();
-  const [repositories, setRepositories] = useState<Repository[]>([]);
-  const [enabledRepoIds, setEnabledRepoIds] = useState<Set<string>>(new Set());
-  
-  // Get query parameters from GitHub App installation
-  const setupAction = searchParams.get('setup_action');
-  const installationId = searchParams.get('installation_id');
-  const state = searchParams.get('state');
-
-  const { data: checkInstallationData, loading, error } = useQuery<CheckInstallationQuery>(CheckInstallationDocument, {
-    variables: { installationId },
-    skip: !installationId,
-  });
-
-  // Transform backend repository data to frontend format
-  const transformRepository = (backendRepo: BackendRepository): Repository => {
-    const repoId = String(backendRepo.id);
+  const {
+    // State
+    repositories,
+    enabledRepoIds,
+    loading,
+    fetchingMaintainers,
+    setupAction,
+    installationId,
     
-    return {
-      id: repoId,
-      name: backendRepo.name,
-      owner: backendRepo.owner,
-      fullName: backendRepo.full_name,
-      githubUrl: backendRepo.html_url,
-      rewardsEnabled: enabledRepoIds.has(repoId),
-      maintainers: [], // Will be populated from backend if needed
-      tokenInfo: PLATFORM_TOKEN_INFO,
-      webhookActive: false
-    };
-  };
-
-  const handleToggleRewards = (repoId: string, enabled: boolean) => {
-    setEnabledRepoIds(prev => {
-      const newSet = new Set(prev);
-      if (enabled) {
-        newSet.add(repoId);
-      } else {
-        newSet.delete(repoId);
-      }
-      return newSet;
-    });
+    // Query states
+    checkInstallationLoading,
+    checkInstallationError,
     
-    // Update the repository's rewardsEnabled state directly
-    setRepositories(prev =>
-      prev.map(repo =>
-        repo.id === repoId
-          ? { ...repo, rewardsEnabled: enabled }
-          : repo
-      )
-    );
-  };
-
-  const handleManageSettings = (repoId: string) => {
-    // For onboarding, this will enable/disable the repository
-    const currentlyEnabled = enabledRepoIds.has(repoId);
-    handleToggleRewards(repoId, !currentlyEnabled);
-  };
-
-  const handleAddRepositories = async () => {
-    if (enabledRepoIds.size === 0) {
-      alert('Please select at least one repository to enable rewards.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // TODO: Add mutation logic here to save enabled repositories to backend
-      console.log('Enabling repositories:', Array.from(enabledRepoIds));
-      
-      // Example mutation:
-      // const response = await fetch('/api/graphql', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     query: `
-      //       mutation EnableRepositories($installationId: String!, $repositoryIds: [String!]!) {
-      //         enableRepositories(installationId: $installationId, repositoryIds: $repositoryIds) {
-      //           success
-      //           message
-      //         }
-      //       }
-      //     `,
-      //     variables: {
-      //       installationId,
-      //       repositoryIds: Array.from(enabledRepoIds)
-      //     }
-      //   })
-      // });
-      // const { data } = await response.json();
-      // if (data.enableRepositories.success) {
-      //   // Redirect to dashboard or success page
-      //   window.location.href = '/dashboard';
-      // }
-    } catch (error) {
-      console.error('Error enabling repositories:', error);
-      alert('Failed to enable repositories. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Mutation states
+    enablingRewards,
+    enablingRewardsError,
+    
+    // Handlers
+    handleToggleRewards,
+    handleManageSettings,
+    handleAddRepositories,
+  } = useNewInstallationSetup();
 
   // Render content based on setup_action
   const renderContent = () => {
     switch (setupAction) {
       case 'request':
         return (
-          <div className="container mx-auto py-8 px-4">
-            <div className="max-w-2xl mx-auto">
-              <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/30">
-                <CardHeader className="text-center">
-                  <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <CardTitle className="text-2xl font-bold text-orange-900 dark:text-orange-100">
-                    Installation Request Submitted
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center space-y-4">
-                  <p className="text-orange-800 dark:text-orange-200">
-                    Your request to install ContriFlow has been submitted to the organization owner.
-                  </p>
-                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-orange-200 dark:border-orange-800">
-                    <div className="flex items-center justify-center space-x-2 mb-2">
-                      <Badge variant="outline" className="border-orange-300 text-orange-700 dark:border-orange-700 dark:text-orange-300">
-                        <Github className="h-3 w-3 mr-1" />
-                        Pending Approval
-                      </Badge>
+          <div className="min-h-screen bg-gradient-to-b from-background via-background to-orange-50/20 dark:to-orange-950/10 flex items-center justify-center">
+            <div className="container mx-auto py-8 px-4">
+              <div className="max-w-2xl mx-auto">
+                <Card className="border-orange-200 bg-gradient-to-br from-orange-50 via-white to-orange-50/50 dark:border-orange-800 dark:from-orange-950/20 dark:via-background dark:to-orange-950/10 shadow-xl">
+                  <CardContent className="pt-12 pb-10">
+                    <div className="text-center space-y-6">
+                      {/* Animated Icon */}
+                      <div className="relative inline-block">
+                        <div className="absolute inset-0 bg-orange-500/20 blur-2xl rounded-full animate-pulse"></div>
+                        <div className="relative mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg animate-bounce">
+                          <Clock className="h-10 w-10 text-white" />
+                        </div>
+                      </div>
+
+                      {/* Header */}
+                      <div className="space-y-2">
+                        <CardTitle className="text-3xl font-bold bg-gradient-to-r from-orange-700 to-orange-900 dark:from-orange-400 dark:to-orange-600 bg-clip-text text-transparent">
+                          Installation Request Submitted
+                        </CardTitle>
+                        <p className="text-orange-800 dark:text-orange-200 text-lg">
+                          Your request to install ContriFlow has been submitted to the organization owner.
+                        </p>
+                      </div>
+
+                      {/* Status Card */}
+                      <Card className="bg-white dark:bg-gray-900 border-orange-200 dark:border-orange-800 shadow-md">
+                        <CardContent className="pt-6 space-y-4">
+                          <div className="flex items-center justify-center">
+                            <Badge className="bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700 text-sm py-1.5 px-4">
+                              <Github className="h-4 w-4 mr-2" />
+                              Pending Approval
+                            </Badge>
+                          </div>
+                          <div className="space-y-2 text-left px-4">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                              <strong className="text-foreground">What happens next?</strong>
+                            </p>
+                            <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
+                              <li>The organization owner will receive a notification</li>
+                              <li>They can approve or deny the installation request</li>
+                              <li>You'll be notified via email once a decision is made</li>
+                            </ul>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
+                        <Button variant="outline" onClick={() => window.close()} className="min-w-[160px]">
+                          Close Window
+                        </Button>
+                        <Button asChild className="min-w-[160px]">
+                          <a href="https://github.com/settings/installations" target="_blank" rel="noopener noreferrer">
+                            <Settings className="h-4 w-4 mr-2" />
+                            Manage Installations
+                          </a>
+                        </Button>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      The organization owner will receive a notification and can approve or deny the installation.
-                      You'll be notified once a decision is made.
-                    </p>
-                  </div>
-                  <div className="flex justify-center space-x-4">
-                    <Button variant="outline" onClick={() => window.close()}>
-                      Close Window
-                    </Button>
-                    <Button asChild>
-                      <a href="https://github.com/settings/installations" target="_blank" rel="noopener noreferrer">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Manage Installations
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         );
 
       case 'install':
         return (
-          <div className="container mx-auto py-8 px-4">
-            <div className="space-y-6">
-              {/* Success Header */}
-              <div className="max-w-2xl mx-auto text-center space-y-4 mb-8">
-                <div className="mx-auto h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight text-green-900 dark:text-green-100">
-                    Installation Successful!
-                  </h1>
-                  <p className="text-green-700 dark:text-green-300 mt-2">
-                    ContriFlow has been successfully installed. Now select which repositories you want to enable rewards for.
-                  </p>
-                </div>
-                {installationId && (
-                  <Badge variant="outline" className="border-green-300 text-green-700 dark:border-green-700 dark:text-green-300">
-                    Installation ID: {installationId}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Repository Selection */}
-              <div className="space-y-4">
-                <div className="text-center">
-                  <h2 className="text-2xl font-semibold">Select Repositories</h2>
-                  <p className="text-muted-foreground">
-                    Choose which GitHub repositories you want to enable rewards for.
-                  </p>
-                </div>
-
-                {/* Repository Grid */}
-                {loading ? (
-                  <div className="flex justify-center items-center py-12">
-                    <div className="text-center space-y-4">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                      <p className="text-muted-foreground">Loading repositories...</p>
+          <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+            <div className="container mx-auto py-8 px-4 max-w-7xl">
+              {/* Success Header Section */}
+              <Card className="mb-8 border-green-200 bg-gradient-to-br from-green-50 via-white to-green-50/50 dark:border-green-900/50 dark:from-green-950/20 dark:via-background dark:to-green-950/10 shadow-lg">
+                <CardContent className="pt-8 pb-8">
+                  <div className="max-w-3xl mx-auto text-center space-y-4">
+                    <div className="relative inline-block">
+                      <div className="absolute inset-0 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
+                      <div className="relative mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg">
+                        <CheckCircle className="h-8 w-8 text-white" />
+                      </div>
                     </div>
+                    <div className="space-y-2">
+                      <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-green-700 to-green-900 dark:from-green-400 dark:to-green-600 bg-clip-text text-transparent">
+                        Installation Successful!
+                      </h1>
+                      <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                        ContriFlow has been successfully installed on your GitHub account. 
+                        Now select which repositories you want to enable automated rewards for.
+                      </p>
+                    </div>
+                    {installationId && (
+                      <Badge variant="outline" className="border-green-300 text-green-700 bg-green-50 dark:border-green-700 dark:text-green-300 dark:bg-green-950/30 text-sm py-1 px-3">
+                        <CheckCircle className="h-3 w-3 mr-2" />
+                        Installation ID: {installationId}
+                      </Badge>
+                    )}
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Repository Selection Section */}
+              <div className="space-y-6">
+                {/* Section Header */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight">Configure Repositories</h2>
+                    <p className="text-muted-foreground mt-1">
+                      Enable reward systems for your GitHub repositories
+                    </p>
+                  </div>
+                  {repositories.length > 0 && (
+                    <div className="flex items-center gap-3 px-4 py-2 bg-muted/50 rounded-lg border">
+                      <div className="text-sm font-medium text-muted-foreground">
+                        Selected:
+                      </div>
+                      <Badge variant="secondary" className="text-base font-semibold">
+                        {enabledRepoIds.size} / {repositories.length}
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+
+                {/* Repository Grid or Loading/Error States */}
+                {checkInstallationLoading || fetchingMaintainers ? (
+                  <Card className="border-dashed">
+                    <CardContent className="flex flex-col justify-center items-center py-16">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse"></div>
+                        <div className="relative animate-spin rounded-full h-16 w-16 border-4 border-muted border-t-primary"></div>
+                      </div>
+                      <p className="text-muted-foreground mt-6 text-lg font-medium">
+                        {checkInstallationLoading ? 'Loading your repositories...' : 'Fetching maintainer details...'}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-2">This may take a moment</p>
+                    </CardContent>
+                  </Card>
+                ) : checkInstallationError ? (
+                  <Card className="border-red-200 bg-red-50/50 dark:border-red-900/50 dark:bg-red-950/20">
+                    <CardContent className="flex flex-col items-center py-12 text-center">
+                      <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
+                        <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
+                        Error Loading Repositories
+                      </h3>
+                      <p className="text-red-700 dark:text-red-300 max-w-md">
+                        {checkInstallationError.message}
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        className="mt-6"
+                        onClick={() => window.location.reload()}
+                      >
+                        Try Again
+                      </Button>
+                    </CardContent>
+                  </Card>
                 ) : repositories.length > 0 ? (
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {repositories.map((repository) => (
-                      <RepositoryCard
-                        key={repository.id}
-                        repository={repository}
-                        onToggleRewards={handleToggleRewards}
-                        onManageSettings={handleManageSettings}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">No repositories found for this installation.</p>
-                  </div>
-                )}
-
-                {/* Save Button */}
-                {repositories.length > 0 && (
-                  <div className="flex flex-col items-center gap-4 pt-6">
-                    <div className="text-sm text-muted-foreground">
-                      {enabledRepoIds.size} {enabledRepoIds.size === 1 ? 'repository' : 'repositories'} selected
+                  <>
+                    <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                      {repositories.map((repository) => (
+                        <RepositoryCard
+                          key={repository.id}
+                          repository={repository}
+                          onToggleRewards={handleToggleRewards}
+                          onManageSettings={handleManageSettings}
+                        />
+                      ))}
                     </div>
-                    <Button 
-                      size="lg" 
-                      className="min-w-[200px]"
-                      onClick={handleAddRepositories}
-                      disabled={loading || enabledRepoIds.size === 0}
-                    >
-                      {loading ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <ArrowRight className="h-4 w-4 mr-2" />
-                          Continue Setup
-                        </>
-                      )}
-                    </Button>
-                  </div>
+
+                    {/* Action Footer */}
+                    <Card className="sticky bottom-4 border-2 shadow-2xl bg-background/95 backdrop-blur-sm">
+                      <CardContent className="py-6">
+                        {/* Error Display */}
+                        {enablingRewardsError && (
+                          <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
+                            <p className="text-sm text-red-700 dark:text-red-300">
+                              {enablingRewardsError.message || 'Failed to enable rewards. Please try again.'}
+                            </p>
+                          </div>
+                        )}
+                        
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                          <div className="text-center md:text-left">
+                            <div className="text-sm font-medium text-muted-foreground">
+                              {enabledRepoIds.size === 0 ? (
+                                <>
+                                  <AlertTriangle className="h-4 w-4 inline mr-2 text-yellow-600" />
+                                  Select at least one repository to continue
+                                </>
+                              ) : (
+                                <>
+                                  You've selected <span className="font-bold text-foreground">{enabledRepoIds.size}</span> {enabledRepoIds.size === 1 ? 'repository' : 'repositories'} for automated rewards
+                                </>
+                              )}
+                            </div>
+                            {enabledRepoIds.size > 0 && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Platform Token: {PLATFORM_TOKEN_INFO.symbol} ({PLATFORM_TOKEN_INFO.name})
+                              </div>
+                            )}
+                          </div>
+                          <Button 
+                            size="lg" 
+                            className="min-w-[200px] shadow-lg hover:shadow-xl transition-all"
+                            onClick={handleAddRepositories}
+                            disabled={loading || enablingRewards || enabledRepoIds.size === 0}
+                          >
+                            {(loading || enablingRewards) ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                                {enablingRewards ? 'Enabling Rewards...' : 'Processing...'}
+                              </>
+                            ) : (
+                              <>
+                                Continue Setup
+                                <ArrowRight className="h-4 w-4 ml-2" />
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : (
+                  <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center py-16 text-center">
+                      <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                        <Github className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-semibold mb-2">No Repositories Found</h3>
+                      <p className="text-muted-foreground max-w-md mb-6">
+                        We couldn't find any repositories for this installation. 
+                        Please check your GitHub App settings.
+                      </p>
+                      <Button asChild variant="outline">
+                        <a href="https://github.com/settings/installations" target="_blank" rel="noopener noreferrer">
+                          <Settings className="h-4 w-4 mr-2" />
+                          Manage Installations
+                        </a>
+                      </Button>
+                    </CardContent>
+                  </Card>
                 )}
               </div>
             </div>
@@ -282,71 +305,139 @@ const NewInstallationPageContent = () => {
 
       case 'update':
         return (
-          <div className="container mx-auto py-8 px-4">
-            <div className="max-w-2xl mx-auto">
-              <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30">
-                <CardHeader className="text-center">
-                  <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <Settings className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <CardTitle className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    Installation Updated
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center space-y-4">
-                  <p className="text-blue-800 dark:text-blue-200">
-                    Your ContriFlow installation has been successfully updated with new permissions or repository access.
-                  </p>
-                  {installationId && (
-                    <Badge variant="outline" className="border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-300">
-                      Installation ID: {installationId}
-                    </Badge>
-                  )}
-                  <div className="flex justify-center space-x-4">
-                    <Button variant="outline" onClick={() => window.history.back()}>
-                      Go Back
-                    </Button>
-                    <Button asChild>
-                      <a href="/dashboard">
-                        <ArrowRight className="h-4 w-4 mr-2" />
-                        Go to Dashboard
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="min-h-screen bg-gradient-to-b from-background via-background to-blue-50/20 dark:to-blue-950/10 flex items-center justify-center">
+            <div className="container mx-auto py-8 px-4">
+              <div className="max-w-2xl mx-auto">
+                <Card className="border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-50/50 dark:border-blue-800 dark:from-blue-950/20 dark:via-background dark:to-blue-950/10 shadow-xl">
+                  <CardContent className="pt-12 pb-10">
+                    <div className="text-center space-y-6">
+                      {/* Icon */}
+                      <div className="relative inline-block">
+                        <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full"></div>
+                        <div className="relative mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
+                          <Settings className="h-10 w-10 text-white animate-spin" style={{ animationDuration: '3s' }} />
+                        </div>
+                      </div>
+
+                      {/* Header */}
+                      <div className="space-y-2">
+                        <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-blue-900 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
+                          Installation Updated Successfully
+                        </CardTitle>
+                        <p className="text-blue-800 dark:text-blue-200 text-lg max-w-lg mx-auto">
+                          Your ContriFlow installation has been updated with new permissions or repository access.
+                        </p>
+                      </div>
+
+                      {/* Installation ID Badge */}
+                      {installationId && (
+                        <div className="flex justify-center">
+                          <Badge className="bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700 text-sm py-1.5 px-4">
+                            <CheckCircle className="h-3 w-3 mr-2" />
+                            Installation ID: {installationId}
+                          </Badge>
+                        </div>
+                      )}
+
+                      {/* Info Card */}
+                      <Card className="bg-white dark:bg-gray-900 border-blue-200 dark:border-blue-800 shadow-md">
+                        <CardContent className="pt-6">
+                          <div className="text-left space-y-3 px-4">
+                            <p className="text-sm font-medium text-foreground">
+                              What's been updated:
+                            </p>
+                            <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
+                              <li>New repository access permissions</li>
+                              <li>Updated GitHub App settings</li>
+                              <li>Latest features and improvements</li>
+                            </ul>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
+                        <Button variant="outline" onClick={() => window.history.back()} className="min-w-[160px]">
+                          Go Back
+                        </Button>
+                        <Button asChild className="min-w-[160px]">
+                          <a href="/dashboard">
+                            Go to Dashboard
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         );
 
       case 'cancel':
         return (
-          <div className="container mx-auto py-8 px-4">
-            <div className="max-w-2xl mx-auto">
-              <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30">
-                <CardHeader className="text-center">
-                  <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                    <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
-                  </div>
-                  <CardTitle className="text-2xl font-bold text-red-900 dark:text-red-100">
-                    Installation Cancelled
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center space-y-4">
-                  <p className="text-red-800 dark:text-red-200">
-                    The ContriFlow installation was cancelled. You can try installing again anytime.
-                  </p>
-                  <div className="flex justify-center space-x-4">
-                    <Button variant="outline" onClick={() => window.close()}>
-                      Close Window
-                    </Button>
-                    <Button>
-                      <Github className="h-4 w-4 mr-2" />
-                      Try Again
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="min-h-screen bg-gradient-to-b from-background via-background to-red-50/20 dark:to-red-950/10 flex items-center justify-center">
+            <div className="container mx-auto py-8 px-4">
+              <div className="max-w-2xl mx-auto">
+                <Card className="border-red-200 bg-gradient-to-br from-red-50 via-white to-red-50/50 dark:border-red-800 dark:from-red-950/20 dark:via-background dark:to-red-950/10 shadow-xl">
+                  <CardContent className="pt-12 pb-10">
+                    <div className="text-center space-y-6">
+                      {/* Icon */}
+                      <div className="relative inline-block">
+                        <div className="absolute inset-0 bg-red-500/20 blur-2xl rounded-full"></div>
+                        <div className="relative mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center shadow-lg">
+                          <XCircle className="h-10 w-10 text-white" />
+                        </div>
+                      </div>
+
+                      {/* Header */}
+                      <div className="space-y-2">
+                        <CardTitle className="text-3xl font-bold bg-gradient-to-r from-red-700 to-red-900 dark:from-red-400 dark:to-red-600 bg-clip-text text-transparent">
+                          Installation Cancelled
+                        </CardTitle>
+                        <p className="text-red-800 dark:text-red-200 text-lg">
+                          The ContriFlow installation was cancelled.
+                        </p>
+                      </div>
+
+                      {/* Info Card */}
+                      <Card className="bg-white dark:bg-gray-900 border-red-200 dark:border-red-800 shadow-md">
+                        <CardContent className="pt-6">
+                          <div className="text-center space-y-3 px-4">
+                            <p className="text-sm text-muted-foreground">
+                              Don't worry! You can install ContriFlow anytime to start automating your repository rewards.
+                            </p>
+                            <div className="pt-2">
+                              <p className="text-xs text-muted-foreground font-medium">
+                                Why use ContriFlow?
+                              </p>
+                              <ul className="text-xs text-muted-foreground space-y-1 mt-2 text-left inline-block">
+                                <li>✓ Automate contributor rewards</li>
+                                <li>✓ Track contributions efficiently</li>
+                                <li>✓ Build engaged communities</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
+                        <Button variant="outline" onClick={() => window.close()} className="min-w-[160px]">
+                          Close Window
+                        </Button>
+                        <Button asChild className="min-w-[160px]">
+                          <a href="https://github.com/apps/contriflow/installations/new" target="_blank" rel="noopener noreferrer">
+                            <Github className="h-4 w-4 mr-2" />
+                            Try Again
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         );
@@ -354,34 +445,88 @@ const NewInstallationPageContent = () => {
       default:
         // No setup_action or unknown value - show general installation page
         return (
-          <div className="container mx-auto py-8 px-4">
-            <div className="space-y-6">
-              {/* Header */}
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight">ContriFlow Setup</h1>
-                <p className="text-muted-foreground">
-                  Welcome to ContriFlow! Set up automated rewards for your GitHub repositories.
-                </p>
-              </div>
+          <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 flex items-center justify-center">
+            <div className="container mx-auto py-8 px-4">
+              <div className="max-w-3xl mx-auto">
+                <Card className="border-2 shadow-xl">
+                  <CardContent className="pt-12 pb-10">
+                    <div className="text-center space-y-6">
+                      {/* Icon */}
+                      <div className="relative inline-block">
+                        <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full"></div>
+                        <div className="relative mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center shadow-lg">
+                          <Github className="h-10 w-10 text-white" />
+                        </div>
+                      </div>
 
-              {!setupAction && (
-                <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/30">
-                  <CardContent className="flex items-center space-x-3 pt-6">
-                    <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                    <p className="text-yellow-800 dark:text-yellow-200">
-                      It looks like you accessed this page directly. Please install the GitHub App first.
-                    </p>
+                      {/* Header */}
+                      <div className="space-y-3">
+                        <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                          Welcome to ContriFlow
+                        </h1>
+                        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                          Automate rewards for your GitHub repositories and build thriving contributor communities.
+                        </p>
+                      </div>
+
+                      {/* Warning Card */}
+                      {!setupAction && (
+                        <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/30 shadow-sm">
+                          <CardContent className="flex items-center gap-3 pt-6">
+                            <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
+                            <p className="text-yellow-800 dark:text-yellow-200 text-sm text-left">
+                              It looks like you accessed this page directly. Please install the GitHub App first to get started.
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Features Grid */}
+                      <div className="grid md:grid-cols-3 gap-4 pt-4">
+                        <Card className="bg-muted/50 border-muted">
+                          <CardContent className="pt-6 text-center">
+                            <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-3">
+                              <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                            </div>
+                            <h3 className="font-semibold mb-1 text-sm">Automated Rewards</h3>
+                            <p className="text-xs text-muted-foreground">Reward contributors automatically</p>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-muted/50 border-muted">
+                          <CardContent className="pt-6 text-center">
+                            <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-3">
+                              <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <h3 className="font-semibold mb-1 text-sm">Community Building</h3>
+                            <p className="text-xs text-muted-foreground">Grow engaged communities</p>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-muted/50 border-muted">
+                          <CardContent className="pt-6 text-center">
+                            <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mx-auto mb-3">
+                              <Settings className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <h3 className="font-semibold mb-1 text-sm">Easy Management</h3>
+                            <p className="text-xs text-muted-foreground">Simple setup and control</p>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* CTA Button */}
+                      <div className="pt-6">
+                        <Button size="lg" asChild className="min-w-[240px] shadow-lg hover:shadow-xl transition-all">
+                          <a href="https://github.com/apps/contriflow/installations/new" target="_blank" rel="noopener noreferrer">
+                            <Github className="h-5 w-5 mr-2" />
+                            Install GitHub App
+                          </a>
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-3">
+                          Free to install • Takes less than a minute
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              )}
-
-              <div className="flex justify-center">
-                <Button size="lg" asChild>
-                  <a href="https://github.com/apps/contriflow/installations/new" target="_blank" rel="noopener noreferrer">
-                    <Github className="h-4 w-4 mr-2" />
-                    Install GitHub App
-                  </a>
-                </Button>
               </div>
             </div>
           </div>
@@ -393,6 +538,7 @@ const NewInstallationPageContent = () => {
     <>
       <Navbar />
       {renderContent()}
+      
     </>
   );
 };

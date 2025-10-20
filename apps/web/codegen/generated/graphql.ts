@@ -48,6 +48,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   addRepositoryMaintainer: RepositoryMaintainer;
   claimReward?: Maybe<Reward>;
+  enableRewardsOnRepository?: Maybe<RepositoryMutationResponse>;
   enableSyncMaintainers?: Maybe<Organization>;
   linkContributorToUser?: Maybe<Contributor>;
   removeRepositoryMaintainer?: Maybe<Scalars['Boolean']['output']>;
@@ -64,6 +65,11 @@ export type MutationAddRepositoryMaintainerArgs = {
 
 export type MutationClaimRewardArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type MutationEnableRewardsOnRepositoryArgs = {
+  repositoryId: Array<Scalars['String']['input']>;
 };
 
 
@@ -239,6 +245,12 @@ export type RepositoryMaintainer = {
   user?: Maybe<User>;
 };
 
+export type RepositoryMutationResponse = {
+  __typename?: 'RepositoryMutationResponse';
+  error?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
 export enum RepositoryRole {
   Admin = 'ADMIN',
   Maintain = 'MAINTAIN'
@@ -285,8 +297,16 @@ export type CheckInstallationQueryVariables = Exact<{
 }>;
 
 
-export type CheckInstallationQuery = { __typename?: 'Query', checkInstallation?: { __typename?: 'CheckInstallationResponse', error?: string | null, success: boolean, data?: { __typename?: 'CheckInstallationData', type?: string | null, repositories: Array<{ __typename?: 'Repository', id: string, name: string, maintainers: Array<{ __typename?: 'RepositoryMaintainer', github_id: string }> }>, organization?: { __typename?: 'Organization', name: string, github_org_id: string } | null } | null } | null };
+export type CheckInstallationQuery = { __typename?: 'Query', checkInstallation?: { __typename?: 'CheckInstallationResponse', error?: string | null, success: boolean, data?: { __typename?: 'CheckInstallationData', type?: string | null, repositories: Array<{ __typename?: 'Repository', id: string, enabled_rewards: boolean, name: string, github_repo_id: string, maintainers: Array<{ __typename?: 'RepositoryMaintainer', github_id: string }> }>, organization?: { __typename?: 'Organization', name: string, github_org_id: string } | null } | null } | null };
+
+export type EnableRewardsOnRepositoryMutationVariables = Exact<{
+  repositoryId: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+
+export type EnableRewardsOnRepositoryMutation = { __typename?: 'Mutation', enableRewardsOnRepository?: { __typename?: 'RepositoryMutationResponse', success: boolean, error?: string | null } | null };
 
 
 export const ListOrganizationsForOwnerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ListOrganizationsForOwner"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"listOrganizationsForOwner"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"created_at"}}]}}]}}]} as unknown as DocumentNode<ListOrganizationsForOwnerQuery, ListOrganizationsForOwnerQueryVariables>;
-export const CheckInstallationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CheckInstallation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"checkInstallation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"installationId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"error"}},{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"repositories"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"maintainers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"github_id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"organization"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"github_org_id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<CheckInstallationQuery, CheckInstallationQueryVariables>;
+export const CheckInstallationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CheckInstallation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"checkInstallation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"installationId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"installationId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"error"}},{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"repositories"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"enabled_rewards"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"github_repo_id"}},{"kind":"Field","name":{"kind":"Name","value":"maintainers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"github_id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"organization"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"github_org_id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<CheckInstallationQuery, CheckInstallationQueryVariables>;
+export const EnableRewardsOnRepositoryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"EnableRewardsOnRepository"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"repositoryId"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"enableRewardsOnRepository"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"repositoryId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"repositoryId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<EnableRewardsOnRepositoryMutation, EnableRewardsOnRepositoryMutationVariables>;

@@ -33,6 +33,7 @@ scalar DateTime
 type Mutation {
   addRepositoryMaintainer(github_id: String!, repositoryId: String!, role: RepositoryRole!, userId: String!): RepositoryMaintainer!
   claimReward(id: String!): Reward
+  enableRewardsOnRepository(repositoryId: [String!]!): RepositoryMutationResponse
   enableSyncMaintainers(organizationId: String!): Organization
   linkContributorToUser(github_id: String!, userId: String!): Contributor
   removeRepositoryMaintainer(id: String!): Boolean
@@ -104,6 +105,11 @@ type RepositoryMaintainer {
   repository: Repository!
   role: RepositoryRole!
   user: User
+}
+
+type RepositoryMutationResponse {
+  error: String
+  success: Boolean!
 }
 
 enum RepositoryRole {

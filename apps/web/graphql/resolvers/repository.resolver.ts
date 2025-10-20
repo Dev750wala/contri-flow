@@ -1,7 +1,14 @@
-import { extendType, list, nonNull, stringArg } from 'nexus';
+import { extendType, list, nonNull, objectType, stringArg } from 'nexus';
 import { Context } from '../context';
 import config from '@/config';
 import { RepositoryType } from '../types/repository';
+
+export const repositoryMutationResponse = objectType({
+  name: 'RepositoryMutationResponse',
+  definition(t) {
+    t.nonNull.boolean('success');
+    t.nullable.string('error');  }
+})
 
 export const RepositoryQuery = extendType({
   type: 'Query',
@@ -67,27 +74,28 @@ export const RepositoryQuery = extendType({
 export const RepositoryMutation = extendType({
   type: 'Mutation',
   definition(t) {
-    t.field('enableRewardOnRepository', {
-      type: list(nonNull(RepositoryType)),
+    t.field('enableRewardsOnRepository', {
+      type: repositoryMutationResponse,
       args: {
-        repositoryId: nonNull(list(nonNull(stringArg()))),
+        repositoryId: nonNull(list(nonNull(stringArg()))), // repos id should be provided of DB, not of github
       },
       resolve: async (_parent, args, ctx: Context) => {
         const { repositoryId } = args;
         try {
-                  return ctx.prisma.repository.updateMany({
-          where: {
-            id: {
-              in: repositoryId,
+          const something = await ctx.prisma.repository.updateMany({
+            where: {
+              id: { in: repositoryId },
             },
-          },
-          data: {
-            rewardsEnabled: true,
-          },
-        });
-
-        } catch (error) {
+            data: {
+              enabled_rewards: true,
+            },
+          });
+          console.log("something", something);
           
+
+          return something.count > 0 ? { success: true, error: null } : { success: false, error: 'No repositories updated' };
+        } catch (error) {
+          return { success: false, error: error.message };
         }
       },
     });

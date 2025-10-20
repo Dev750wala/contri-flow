@@ -15,11 +15,13 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 type Documents = {
     "\n  query ListOrganizationsForOwner {\n      listOrganizationsForOwner {\n          id\n          name\n          created_at\n      }\n  }\n": typeof types.ListOrganizationsForOwnerDocument,
-    "\n  query CheckInstallation($installationId: String!) {\n    checkInstallation(installationId: $installationId) {\n      error\n      data {\n        type\n        repositories {\n          id\n          name\n          maintainers {\n            github_id\n          }\n        }\n        organization {\n          name\n          github_org_id\n        }\n      }\n      success\n    }\n  }\n": typeof types.CheckInstallationDocument,
+    "\n  query CheckInstallation($installationId: String!) {\n    checkInstallation(installationId: $installationId) {\n      error\n      data {\n        type\n        repositories {\n          id\n          enabled_rewards\n          name\n          github_repo_id\n          maintainers {\n            github_id\n          }\n        }\n        organization {\n          name\n          github_org_id\n        }\n      }\n      success\n    }\n  }\n": typeof types.CheckInstallationDocument,
+    "\n  mutation EnableRewardsOnRepository($repositoryId: [String!]!) {\n    enableRewardsOnRepository(repositoryId: $repositoryId) {\n      success\n      error\n    }\n  }\n": typeof types.EnableRewardsOnRepositoryDocument,
 };
 const documents: Documents = {
     "\n  query ListOrganizationsForOwner {\n      listOrganizationsForOwner {\n          id\n          name\n          created_at\n      }\n  }\n": types.ListOrganizationsForOwnerDocument,
-    "\n  query CheckInstallation($installationId: String!) {\n    checkInstallation(installationId: $installationId) {\n      error\n      data {\n        type\n        repositories {\n          id\n          name\n          maintainers {\n            github_id\n          }\n        }\n        organization {\n          name\n          github_org_id\n        }\n      }\n      success\n    }\n  }\n": types.CheckInstallationDocument,
+    "\n  query CheckInstallation($installationId: String!) {\n    checkInstallation(installationId: $installationId) {\n      error\n      data {\n        type\n        repositories {\n          id\n          enabled_rewards\n          name\n          github_repo_id\n          maintainers {\n            github_id\n          }\n        }\n        organization {\n          name\n          github_org_id\n        }\n      }\n      success\n    }\n  }\n": types.CheckInstallationDocument,
+    "\n  mutation EnableRewardsOnRepository($repositoryId: [String!]!) {\n    enableRewardsOnRepository(repositoryId: $repositoryId) {\n      success\n      error\n    }\n  }\n": types.EnableRewardsOnRepositoryDocument,
 };
 
 /**
@@ -43,7 +45,11 @@ export function graphql(source: "\n  query ListOrganizationsForOwner {\n      li
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query CheckInstallation($installationId: String!) {\n    checkInstallation(installationId: $installationId) {\n      error\n      data {\n        type\n        repositories {\n          id\n          name\n          maintainers {\n            github_id\n          }\n        }\n        organization {\n          name\n          github_org_id\n        }\n      }\n      success\n    }\n  }\n"): (typeof documents)["\n  query CheckInstallation($installationId: String!) {\n    checkInstallation(installationId: $installationId) {\n      error\n      data {\n        type\n        repositories {\n          id\n          name\n          maintainers {\n            github_id\n          }\n        }\n        organization {\n          name\n          github_org_id\n        }\n      }\n      success\n    }\n  }\n"];
+export function graphql(source: "\n  query CheckInstallation($installationId: String!) {\n    checkInstallation(installationId: $installationId) {\n      error\n      data {\n        type\n        repositories {\n          id\n          enabled_rewards\n          name\n          github_repo_id\n          maintainers {\n            github_id\n          }\n        }\n        organization {\n          name\n          github_org_id\n        }\n      }\n      success\n    }\n  }\n"): (typeof documents)["\n  query CheckInstallation($installationId: String!) {\n    checkInstallation(installationId: $installationId) {\n      error\n      data {\n        type\n        repositories {\n          id\n          enabled_rewards\n          name\n          github_repo_id\n          maintainers {\n            github_id\n          }\n        }\n        organization {\n          name\n          github_org_id\n        }\n      }\n      success\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation EnableRewardsOnRepository($repositoryId: [String!]!) {\n    enableRewardsOnRepository(repositoryId: $repositoryId) {\n      success\n      error\n    }\n  }\n"): (typeof documents)["\n  mutation EnableRewardsOnRepository($repositoryId: [String!]!) {\n    enableRewardsOnRepository(repositoryId: $repositoryId) {\n      success\n      error\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

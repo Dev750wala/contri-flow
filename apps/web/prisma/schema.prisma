@@ -16,7 +16,6 @@ model User {
   name           String
   email          String?                @unique
   github_id      String                 @unique @db.Citext
-  wallet_address String?
   organization   Organization[]
   maintenances   RepositoryMaintainer[]
   contributor    Contributor?
@@ -85,7 +84,6 @@ model RepositoryMaintainer {
 model Contributor {
   id             String   @id @default(cuid())
   github_id      String   @unique
-  wallet_address String?
   email          String?  @unique
   user_id        String?  @unique
   user           User?    @relation(fields: [user_id], references: [id])
@@ -95,12 +93,11 @@ model Contributor {
 }
 
 model Reward {
-  id          String    @id @default(cuid())
-  pr_number   Int
-  secret      String
-  tokenAmount String
-  claimed     Boolean   @default(false)
-  claimed_at  DateTime?
+  id           String    @id @default(cuid())
+  pr_number    Int
+  secret       String
+  token_amount String
+  claimed      Boolean   @default(false)
 
   contributor_id      String
   contributor         Contributor          @relation(fields: [contributor_id], references: [id])
@@ -108,14 +105,28 @@ model Reward {
   repository          Repository           @relation(fields: [repository_id], references: [id])
   issuer_id           String
   issuer              RepositoryMaintainer @relation(fields: [issuer_id], references: [id])
-  tx_hash             String?
+
   comment             String
-  destination_address String?
+  payout              Payout?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@unique([repository_id, pr_number])
+}
+
+model Payout {
+  id                String @id @default(cuid())
+  tx_hash           String @unique
+  source_chain      String
+  destination_chain String
+  total_amount      String
+  receiver_address  String
+
+  claimed_at DateTime @default(now())
+
+  reward_id String @unique
+  reward    Reward @relation(fields: [reward_id], references: [id])
 }
 
 enum RepositoryRole {

@@ -95,6 +95,10 @@ export interface NexusGenObjects {
     id: string; // ID!
     role: NexusGenEnums['RepositoryRole']; // RepositoryRole!
   }
+  RepositoryMutationResponse: { // root type
+    error?: string | null; // String
+    success: boolean; // Boolean!
+  }
   Reward: { // root type
     claimed: boolean; // Boolean!
     claimed_at?: NexusGenScalars['DateTime'] | null; // DateTime
@@ -152,6 +156,7 @@ export interface NexusGenFieldTypes {
   Mutation: { // field return type
     addRepositoryMaintainer: NexusGenRootTypes['RepositoryMaintainer']; // RepositoryMaintainer!
     claimReward: NexusGenRootTypes['Reward'] | null; // Reward
+    enableRewardsOnRepository: NexusGenRootTypes['RepositoryMutationResponse'] | null; // RepositoryMutationResponse
     enableSyncMaintainers: NexusGenRootTypes['Organization'] | null; // Organization
     linkContributorToUser: NexusGenRootTypes['Contributor'] | null; // Contributor
     removeRepositoryMaintainer: boolean | null; // Boolean
@@ -215,6 +220,10 @@ export interface NexusGenFieldTypes {
     role: NexusGenEnums['RepositoryRole']; // RepositoryRole!
     user: NexusGenRootTypes['User'] | null; // User
   }
+  RepositoryMutationResponse: { // field return type
+    error: string | null; // String
+    success: boolean; // Boolean!
+  }
   Reward: { // field return type
     claimed: boolean; // Boolean!
     claimed_at: NexusGenScalars['DateTime'] | null; // DateTime
@@ -268,6 +277,7 @@ export interface NexusGenFieldTypeNames {
   Mutation: { // field return type name
     addRepositoryMaintainer: 'RepositoryMaintainer'
     claimReward: 'Reward'
+    enableRewardsOnRepository: 'RepositoryMutationResponse'
     enableSyncMaintainers: 'Organization'
     linkContributorToUser: 'Contributor'
     removeRepositoryMaintainer: 'Boolean'
@@ -331,6 +341,10 @@ export interface NexusGenFieldTypeNames {
     role: 'RepositoryRole'
     user: 'User'
   }
+  RepositoryMutationResponse: { // field return type name
+    error: 'String'
+    success: 'Boolean'
+  }
   Reward: { // field return type name
     claimed: 'Boolean'
     claimed_at: 'DateTime'
@@ -370,6 +384,9 @@ export interface NexusGenArgTypes {
     }
     claimReward: { // args
       id: string; // String!
+    }
+    enableRewardsOnRepository: { // args
+      repositoryId: string[]; // [String!]!
     }
     enableSyncMaintainers: { // args
       organizationId: string; // String!

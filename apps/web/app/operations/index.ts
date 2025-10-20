@@ -18,7 +18,9 @@ export const CHECK_INSTALLATION_QUERY = gql`
         type
         repositories {
           id
+          enabled_rewards
           name
+          github_repo_id
           maintainers {
             github_id
           }
@@ -32,3 +34,12 @@ export const CHECK_INSTALLATION_QUERY = gql`
     }
   }
 `;
+
+export const ENABLE_REWARDS_ON_REPOSITORIES = gql`
+  mutation EnableRewardsOnRepository($repositoryId: [String!]!) {
+    enableRewardsOnRepository(repositoryId: $repositoryId) {
+      success
+      error
+    }
+  }
+`
