@@ -6,12 +6,19 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IERC20.sol";
 import "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
 import {IAxelarGasService} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IAxelarGasService.sol";
-import { IInterchainTokenService } from "@axelar-network/interchain-token-service/contracts/interfaces/IInterchainTokenService.sol";
-import "./Helpers.sol";   
+import {IInterchainTokenService} from "@axelar-network/interchain-token-service/contracts/interfaces/IInterchainTokenService.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {AddressBytes} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/libs/AddressBytes.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
+import "./Helpers.sol";
 
 contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
-    using Helpers for *; 
+    using Strings for uint256;
+
+    using Helpers for *;
+    using AddressBytes for *;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     IERC20 public immutable token;
     address private bot;
@@ -20,26 +27,24 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
     IAxelarGasService public immutable gasService;
     address immutable interchainTokenService;
 
-    event DepositAdded(address indexed ownerAddress, uint256 amountWei);
-    event DepositRemoved(address indexed ownerAddress, uint256 amountWei);
+    event DepositAdded(address indexed orgAddress, uint256 amountWei);
+    event DepositRemoved(address indexed orgAddress, uint256 amountWei);
 
     event VoucherStored(
-        address indexed ownerAddress,
-        uint256 indexed repoGithubId,
-        uint256 indexed contributorGithubId,
-        uint256 ownerGithubId,
-        uint256 prNumber,
+        uint32 indexed repoGithubId,
+        uint64 indexed contributorGithubId,
+        uint64 orgGithubId,
+        uint32 prNumber,
         uint256 tokenAmountIn18dec,
         bytes32 hash
     );
 
     event ClaimRequested(
         bytes32 indexed voucherHash,
-        uint256 indexed repoGithubId,
-        uint256 indexed prNumber,
+        uint32 indexed repoGithubId,
+        uint32 indexed prNumber,
         address requester,
-        address ownerAddress,
-        uint256 ownerGithubId,
+        uint64 orgGithubId,
         uint256 tokenAmount,
         uint256 platformFee,
         Helpers.Chain destinationChain
@@ -47,8 +52,8 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
 
     event ClaimFinalized(
         bytes32 indexed voucherHash,
-        uint256 indexed repoGithubId,
-        uint256 indexed prNumber,
+        uint32 indexed repoGithubId,
+        uint32 indexed prNumber,
         address claimant,
         uint256 tokenAmount,
         Helpers.Chain destinationChain
@@ -60,16 +65,17 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
     error InvalidVoucher();
     error VoucherExists();
     error AlreadyClaimed();
-    error InsufficientAllowance();
+    error InsufficientBalanceInContract();
     error GithubIdNotSet();
     error GithubIdMismatch();
     error ClaimInProcess();
     error ApprovalFailed();
+    error NoGithubOrganizationFoundToFund();
+    error NotEnoughFundsForOrganization();
 
     enum ClaimStatus {
         CLAIMED,
-        UNCLAIMED,
-        PROCESSING
+        UNCLAIMED
     }
 
     // enum Chain {
@@ -79,16 +85,28 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
 
     struct Voucher {
         bytes32 hash;
-        uint256 contributorGithubId;
+        uint64 contributorGithubId;
         uint256 tokenAmountIn18dec; // token amount (18-dec scale)
         ClaimStatus claimed;
     }
 
-    // address -> github id
-    mapping(address => uint256) public ownerDetails;
+    struct ClaimRequest {
+        string secret;
+        uint64 orgGithubId;
+        uint32 repoGithubId;
+        uint32 prNumber;
+        uint64 contributorGithubId;
+        uint256 tokenAmountIn18dec;
+        address executableAddress;
+        Helpers.Chain destinationChain;
+    }
 
-    // repoOwnerGithubId -> repoId -> prNumber -> Voucher
-    mapping(uint256 => mapping(uint256 => mapping(uint256 => Voucher)))
+    // organization github id -> token amount
+    mapping(uint64 => uint256) public fundForOrganization;
+    mapping(uint64 => EnumerableSet.AddressSet) private addressesByGithubId;
+
+    // orgGithubId -> repoId -> prNumber -> Voucher
+    mapping(uint64 => mapping(uint32 => mapping(uint32 => Voucher)))
         public vouchersByRepoAndPr;
 
     constructor(
@@ -109,15 +127,20 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
     }
 
     function checkUpkeep(
-        bytes calldata
+        bytes calldata /* checkData */
     )
         external
         view
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
-        upkeepNeeded = address(this).balance < MIN_BALANCE;
-        performData = "";
+        uint256 bal = address(this).balance;
+        upkeepNeeded = bal < MIN_BALANCE;
+        if (upkeepNeeded) {
+            performData = abi.encode(bal);
+        } else {
+            performData = "";
+        }
     }
 
     function performUpkeep(bytes calldata) external override {
@@ -126,23 +149,16 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
         }
     }
 
-    /// Owner registers GitHub id and optionally deposits tokens via transferFrom.
-    function addAmount(uint256 githubId) external {
-        if (githubId == 0) revert GithubIdNotSet();
-
-        uint256 existing = ownerDetails[msg.sender];
-        if (existing == 0) {
-            // first time registration
-            ownerDetails[msg.sender] = githubId;
-        } else {
-            // must match previously registered id
-            if (existing != githubId) revert GithubIdMismatch();
-        }
+    /// Organization registers GitHub id and optionally deposits tokens via transferFrom.
+    function addAmount(uint64 orgGithubId) external {
+        if (orgGithubId == 0) revert GithubIdNotSet();
 
         uint256 allowance = token.allowance(msg.sender, address(this));
 
         if (allowance > 0) {
+            addressesByGithubId[orgGithubId].add(msg.sender);
             // caller must approve this contract for `amount` beforehand if they want to deposit
+            fundForOrganization[orgGithubId] += allowance;
             token.transferFrom(msg.sender, address(this), allowance);
             emit DepositAdded(msg.sender, allowance);
         }
@@ -154,26 +170,33 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
     }
 
     function storeVoucher(
-        address ownerAddress,
-        uint256 ownerGithubId,
-        uint256 repoGithubId,
-        uint256 contributorGithubId,
-        uint256 prNumber,
+        uint64 orgGithubId,
+        uint32 repoGithubId,
+        uint64 contributorGithubId,
+        uint32 prNumber,
         uint256 tokenAmountIn18dec,
         bytes32 hash
     ) external onlyBot {
-        // enforce ownerAddress is registered with the provided GitHub ID
-        uint256 githubId = ownerDetails[ownerAddress];
-        if (githubId == 0 || githubId != ownerGithubId) revert GithubIdNotSet();
+        // // enforce ownerAddress is registered with the provided GitHub ID
+        // uint256 githubId = githubOfAddress[ownerAddress];
+        // if (githubId == 0 || githubId != ownerGithubId) revert GithubIdNotSet();
 
         if (
-            vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber].hash !=
+            vouchersByRepoAndPr[orgGithubId][repoGithubId][prNumber].hash !=
             bytes32(0)
         ) revert VoucherExists();
 
+        if (addressesByGithubId[orgGithubId].length() == 0) {
+            revert NoGithubOrganizationFoundToFund();
+        }
+
+        if (fundForOrganization[orgGithubId] < tokenAmountIn18dec) {
+            revert NotEnoughFundsForOrganization();
+        }
+
         require(tokenAmountIn18dec > 0, "Invalid token amount");
 
-        vouchersByRepoAndPr[ownerGithubId][repoGithubId][prNumber] = Voucher({
+        vouchersByRepoAndPr[orgGithubId][repoGithubId][prNumber] = Voucher({
             hash: hash,
             contributorGithubId: contributorGithubId,
             tokenAmountIn18dec: tokenAmountIn18dec,
@@ -181,10 +204,9 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
         });
 
         emit VoucherStored(
-            ownerAddress,
             repoGithubId,
             contributorGithubId,
-            ownerGithubId,
+            orgGithubId,
             prNumber,
             tokenAmountIn18dec,
             hash
@@ -196,101 +218,106 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
     ///  - pulls platformFee from ownerAddress -> platform (owner())
     ///  - burns tokenAmount from ownerAddress (requires allowance for burnFrom)
     ///  - emits ClaimRequested for relayer to pick up
-    function requestClaim(
-        string calldata secret,
-        address ownerAddr, // renamed to reduce stack pressure
-        uint256 ownerGithubId,
-        uint256 repoGithubId,
-        uint256 prNumber,
-        uint256 contributorGithubId,
-        uint256 tokenAmountIn18dec,
-        bytes calldata executableAddress,
-        Helpers.Chain destinationChain
-    ) external nonReentrant {
-        Voucher storage v = vouchersByRepoAndPr[ownerGithubId][repoGithubId][
-            prNumber
-        ];
+    function requestClaim(ClaimRequest calldata request) external nonReentrant {
+        Voucher storage v = vouchersByRepoAndPr[request.orgGithubId][
+            request.repoGithubId
+        ][request.prNumber];
 
         if (v.hash == bytes32(0)) revert InvalidVoucher();
 
-        // Recompute voucher hash exactly like off-chain
         bytes32 calculatedHash = keccak256(
             abi.encodePacked(
-                secret,
-                ownerAddr,
-                ownerGithubId,
-                repoGithubId,
-                prNumber,
-                contributorGithubId,
-                tokenAmountIn18dec
+                request.secret,
+                request.orgGithubId,
+                request.repoGithubId,
+                request.prNumber,
+                request.contributorGithubId,
+                request.tokenAmountIn18dec
             )
         );
 
-        // validate & mark processing (internal helper)
         _validateVoucherAndMarkProcessing(
             v,
             calculatedHash,
-            contributorGithubId,
-            tokenAmountIn18dec
+            request.contributorGithubId,
+            request.tokenAmountIn18dec
         );
 
-        uint256 platformFee = (tokenAmountIn18dec * 2) / 100;
+        uint256 platformFee = (request.tokenAmountIn18dec * 2) / 100;
+        _collectFeeAndBurn(
+            request.tokenAmountIn18dec,
+            platformFee,
+            request.orgGithubId
+        );
 
-        // collect fee and burn (internal helper)
-        _collectFeeAndBurn(ownerAddr, tokenAmountIn18dec, platformFee);
-
-        if (destinationChain == Helpers.Chain.ETHEREUM_SEPOLIA) {
+        if (request.destinationChain == Helpers.Chain.ETHEREUM_SEPOLIA) {
             bool sentOnNative = handleNativeTransfer(
                 msg.sender,
-                tokenAmountIn18dec
+                request.tokenAmountIn18dec
             );
-
             if (sentOnNative) {
-                _finalizeClaim(ownerGithubId, repoGithubId, prNumber, msg.sender, tokenAmountIn18dec, destinationChain);
+                _finalizeClaim(
+                    request.orgGithubId,
+                    request.repoGithubId,
+                    request.prNumber,
+                    msg.sender,
+                    request.tokenAmountIn18dec,
+                    request.destinationChain
+                );
+                v.claimed = ClaimStatus.CLAIMED;
             }
         } else {
-            // Build non-empty payload required by ITS executable on destination chain
-            // Encodes minimal data for the destination contract to handle the claim
-            bytes memory payload = abi.encode(
-                ownerGithubId,
-                repoGithubId,
-                prNumber,
-                msg.sender, // claimer/recipient on destination chain
-                tokenAmountIn18dec
-            );
-
-            uint256 gasFees = estimateGasFee(
-                Helpers.chainToAxelarName(destinationChain),
-                Helpers.bytesToStringAddress(executableAddress),
-                payload
-            );
-            // bytes32 tokenId = bytes32(0);
-            // IInterchainTokenService(interchainTokenService).callContractWithInterchainToken{value: gasFees}(
-            //     tokenId,
-            //     Helpers.chainToAxelarName(destinationChain),
-            //     executableAddress,        // base sepolia contract address (which will be executed by axelar)
-            //     tokenAmountIn18dec,
-            //     new bytes(0)
-            // );
-            IInterchainTokenService(interchainTokenService).callContractWithInterchainToken{value: gasFees}(
-                0x5b28793d6ddc2d161f8c7078933758d730076e5d43522d2d10b3bd2f28e9832b,
-                Helpers.chainToAxelarName(destinationChain),
-                executableAddress, // destination chain executable contract address
-                tokenAmountIn18dec,
-                payload
-            );
+            _handleCrossChainClaim(request, v);
         }
 
         emit ClaimRequested(
             v.hash,
-            repoGithubId,
-            prNumber,
+            request.repoGithubId,
+            request.prNumber,
             msg.sender,
-            ownerAddr,
-            ownerGithubId,
-            tokenAmountIn18dec,
+            request.orgGithubId,
+            request.tokenAmountIn18dec,
             platformFee,
-            destinationChain
+            request.destinationChain
+        );
+    }
+
+    function _handleCrossChainClaim(
+        ClaimRequest calldata request,
+        Voucher storage v
+    ) internal {
+        bytes memory payload = bytes.concat(
+            bytes4(0),
+            abi.encode(
+                request.orgGithubId,
+                request.repoGithubId,
+                request.prNumber,
+                msg.sender,
+                request.tokenAmountIn18dec
+            )
+        );
+
+        bytes memory bytesDestinationAddress = AddressBytes.toBytes(
+            request.executableAddress
+        );
+
+        uint256 gasFees = estimateGasFee(
+            Helpers.chainToAxelarName(request.destinationChain),
+            request.executableAddress,
+            payload
+        );
+
+        require(address(this).balance >= gasFees, "Insufficient gas fees sent");
+
+        v.claimed = ClaimStatus.CLAIMED;
+
+        IInterchainTokenService(interchainTokenService)
+            .callContractWithInterchainToken{value: gasFees}(
+            0x5b28793d6ddc2d161f8c7078933758d730076e5d43522d2d10b3bd2f28e9832b,
+            Helpers.chainToAxelarName(request.destinationChain),
+            bytesDestinationAddress,
+            request.tokenAmountIn18dec,
+            payload
         );
     }
 
@@ -300,48 +327,47 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
         bytes32 calculatedHash,
         uint256 contributorGithubId,
         uint256 tokenAmountIn18dec
-    ) internal {
+    ) internal view {
         if (
             v.hash != calculatedHash ||
             v.contributorGithubId != contributorGithubId ||
             v.tokenAmountIn18dec != tokenAmountIn18dec
         ) revert InvalidVoucher();
 
-        if (v.claimed == ClaimStatus.PROCESSING) revert ClaimInProcess();
         if (v.claimed == ClaimStatus.CLAIMED) revert AlreadyClaimed();
-
-        // mark processing before external calls
-        v.claimed = ClaimStatus.PROCESSING;
     }
 
-    /// Internal: check allowance, transfer platform fee, burn tokens from ownerAddr
     function _collectFeeAndBurn(
-        address ownerAddr,
         uint256 tokenAmountIn18dec,
-        uint256 platformFee
+        uint256 platformFee,
+        uint64 orgGithubId
     ) internal {
         uint256 required = tokenAmountIn18dec + platformFee;
-        if (token.allowance(ownerAddr, address(this)) < required)
-            revert InsufficientAllowance();
+        if (token.balanceOf(address(this)) < required)
+            revert InsufficientBalanceInContract();
 
         // pull fee to platform owner
-        bool approved = token.approve(owner(), platformFee);
-
-        if (!approved) {
-            revert ApprovalFailed();
+        // bool approved = token.approve(owner(), platformFee);
+        if (fundForOrganization[orgGithubId] < required) {
+            revert NotEnoughFundsForOrganization();
         }
-        token.transferFrom(ownerAddr, owner(), platformFee);
+
+        // if (!approved) {
+        //     revert ApprovalFailed();
+        // }
+        fundForOrganization[orgGithubId] -= required;
+        token.transfer(owner(), platformFee);
     }
 
     function estimateGasFee(
         string memory destinationChain,
-        string memory destinationAddress,
+        address destinationAddress,
         bytes memory payload
     ) internal view returns (uint256) {
         return
             gasService.estimateGasFee(
                 destinationChain,
-                destinationAddress,
+                Helpers.addressToHexString(destinationAddress),
                 payload,
                 GAS_LIMIT,
                 new bytes(0)
@@ -352,22 +378,19 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
         address to,
         uint256 amount
     ) internal returns (bool sent) {
-        bool approved = token.approve(to, amount);
-        require(approved, "Approval Denied");
-
-        sent = token.transferFrom(address(this), to, amount);
+        sent = token.transfer(to, amount);
     }
 
     function finalizeClaim(
-        uint256 ownerGithubId,
-        uint256 repoGithubId,
-        uint256 prNumber,
+        uint64 orgGithubId,
+        uint32 repoGithubId,
+        uint32 prNumber,
         address claimer,
         uint256 tokenAmountIn18dec,
         Helpers.Chain destinationChain
     ) external onlyBot {
         _finalizeClaim(
-            ownerGithubId,
+            orgGithubId,
             repoGithubId,
             prNumber,
             claimer,
@@ -379,19 +402,18 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
     /// Called by your relayer (bot) AFTER it has confirmed successful mint on the destination chain.
     /// relayer should verify off-chain; on-chain we just restrict to bot signer and voucher status.
     function _finalizeClaim(
-        uint256 ownerGithubId,
-        uint256 repoGithubId,
-        uint256 prNumber,
+        uint64 orgGithubId,
+        uint32 repoGithubId,
+        uint32 prNumber,
         address claimer,
         uint256 tokenAmountIn18dec,
         Helpers.Chain destinationChain
-    ) internal  {
-        Voucher storage v = vouchersByRepoAndPr[ownerGithubId][repoGithubId][
+    ) internal {
+        Voucher storage v = vouchersByRepoAndPr[orgGithubId][repoGithubId][
             prNumber
         ];
 
         if (v.hash == bytes32(0)) revert InvalidVoucher();
-        if (v.claimed != ClaimStatus.PROCESSING) revert ClaimInProcess();
 
         // mark claimed
         v.claimed = ClaimStatus.CLAIMED;
@@ -406,19 +428,33 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
         );
     }
 
-    /// view helpers
-    function getOwnerDetails(
-        address ownerAddress
-    ) external view returns (uint256) {
-        return ownerDetails[ownerAddress];
+    function emergencyWithdrawTokens(
+        address _token,
+        uint256 _amount
+    ) external onlyOwner {
+        IERC20(_token).transfer(owner(), _amount);
     }
 
+    function emergencyWithdrawEth() external onlyOwner {
+        (bool success, ) = payable(owner()).call{value: address(this).balance}(
+            ""
+        );
+        require(success, "Transfer failed");
+    }
+
+    /// view helpers
+    // function getOwnerDetails(
+    //     address ownerAddress
+    // ) external view returns (uint256) {
+    //     return githubOfAddress[ownerAddress];
+    // }
+
     function getVoucherDetails(
-        uint256 repoOwnerGithubId,
-        uint256 repoId,
-        uint256 prNumber
+        uint64 orgGithubId,
+        uint32 repoId,
+        uint32 prNumber
     ) external view returns (Voucher memory) {
-        return vouchersByRepoAndPr[repoOwnerGithubId][repoId][prNumber];
+        return vouchersByRepoAndPr[orgGithubId][repoId][prNumber];
     }
 
     function getCurrentSigner() external view returns (address) {

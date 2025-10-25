@@ -9,7 +9,7 @@ import {
 } from '@axelar-network/axelarjs-sdk';
 import interchainTokenServiceContractABI from '../utils/interchainTokenServiceABI.json';
 import interchainTokenFactoryContractABI from '../utils/interchainTokenFactoryABI.json';
-import interchainTokenContractABI from '../utils/interchainTokenABI.json';
+// import interchainTokenContractABI from '../utils/interchainTokenABI.json';
 import { InterfaceAbi } from 'ethers';
 
 const interchainTokenServiceContractAddress =
@@ -162,3 +162,7 @@ main().catch((error) => {
 // deployed to base-sepolia
 // Transaction Hash: 0xa27ea809706142740ee46018112a6687a58b4a5d82e0a65ad480327e5fcb77f1
 
+
+
+
+// GAS SERVICE CONTRACT ADDRESS ON SEPOLIA: 0xbE406F0189A0B4cf3A05C286473D23791Dd44Cc6
