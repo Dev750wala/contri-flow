@@ -4,28 +4,15 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IERC20.sol";
-import "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
-import {IAxelarGasService} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IAxelarGasService.sol";
-import {IInterchainTokenService} from "@axelar-network/interchain-token-service/contracts/interfaces/IInterchainTokenService.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {AddressBytes} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/libs/AddressBytes.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "./Helpers.sol";
-
-contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
+contract ContriFlow is ReentrancyGuard, Ownable {
     using Strings for uint256;
 
-    using Helpers for *;
-    using AddressBytes for *;
     using EnumerableSet for EnumerableSet.AddressSet;
 
     IERC20 public immutable token;
-    address private bot;
-    uint256 public constant MIN_BALANCE = 0.1 ether;
-    uint256 public constant GAS_LIMIT = 200000;
-    IAxelarGasService public immutable gasService;
-    address immutable interchainTokenService;
 
     event DepositAdded(address indexed orgAddress, uint256 amountWei);
     event DepositRemoved(address indexed orgAddress, uint256 amountWei);
@@ -38,28 +25,10 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
         uint256 tokenAmountIn18dec,
         bytes32 hash
     );
-
-    event ClaimRequested(
-        bytes32 indexed voucherHash,
-        uint32 indexed repoGithubId,
-        uint32 indexed prNumber,
-        address requester,
-        uint64 orgGithubId,
-        uint256 tokenAmount,
-        uint256 platformFee,
-        Helpers.Chain destinationChain
+    
+    event ClaimReleased(
+        ds
     );
-
-    event ClaimFinalized(
-        bytes32 indexed voucherHash,
-        uint32 indexed repoGithubId,
-        uint32 indexed prNumber,
-        address claimant,
-        uint256 tokenAmount,
-        Helpers.Chain destinationChain
-    );
-
-    event RefillRequested(uint256 indexed current_balance);
 
     error NotBotSigner();
     error InvalidVoucher();
@@ -72,16 +41,12 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
     error ApprovalFailed();
     error NoGithubOrganizationFoundToFund();
     error NotEnoughFundsForOrganization();
+    error failedToTransferTokens();
 
     enum ClaimStatus {
         CLAIMED,
         UNCLAIMED
     }
-
-    // enum Chain {
-    //     ETHEREUM_SEPOLIA,
-    //     BASE_SEPOLIA
-    // }
 
     struct Voucher {
         bytes32 hash;
@@ -96,57 +61,22 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
         uint32 repoGithubId;
         uint32 prNumber;
         uint64 contributorGithubId;
+        address contributorAddress;
         uint256 tokenAmountIn18dec;
-        address executableAddress;
-        Helpers.Chain destinationChain;
     }
 
     // organization github id -> token amount
     mapping(uint64 => uint256) public fundForOrganization;
+    // organization github ID -> addresses of those who funded organization
     mapping(uint64 => EnumerableSet.AddressSet) private addressesByGithubId;
 
     // orgGithubId -> repoId -> prNumber -> Voucher
     mapping(uint64 => mapping(uint32 => mapping(uint32 => Voucher)))
         public vouchersByRepoAndPr;
 
-    constructor(
-        address tokenAddress,
-        address _gasReceiver,
-        address _interchainTokenService
-    ) Ownable(msg.sender) {
+    constructor(address tokenAddress) Ownable(msg.sender) {
         require(tokenAddress != address(0), "zero token");
         token = IERC20(tokenAddress);
-        bot = msg.sender;
-        gasService = IAxelarGasService(_gasReceiver);
-        interchainTokenService = _interchainTokenService;
-    }
-
-    modifier onlyBot() {
-        if (msg.sender != bot) revert NotBotSigner();
-        _;
-    }
-
-    function checkUpkeep(
-        bytes calldata /* checkData */
-    )
-        external
-        view
-        override
-        returns (bool upkeepNeeded, bytes memory performData)
-    {
-        uint256 bal = address(this).balance;
-        upkeepNeeded = bal < MIN_BALANCE;
-        if (upkeepNeeded) {
-            performData = abi.encode(bal);
-        } else {
-            performData = "";
-        }
-    }
-
-    function performUpkeep(bytes calldata) external override {
-        if (address(this).balance < MIN_BALANCE) {
-            emit RefillRequested(address(this).balance);
-        }
     }
 
     /// Organization registers GitHub id and optionally deposits tokens via transferFrom.
@@ -164,11 +94,6 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
         }
     }
 
-    /// Only owner can change the bot signer (safer)
-    function setBotSigner(address newBot) external onlyOwner {
-        bot = newBot;
-    }
-
     function storeVoucher(
         uint64 orgGithubId,
         uint32 repoGithubId,
@@ -176,7 +101,7 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
         uint32 prNumber,
         uint256 tokenAmountIn18dec,
         bytes32 hash
-    ) external onlyBot {
+    ) external onlyOwner {
         // // enforce ownerAddress is registered with the provided GitHub ID
         // uint256 githubId = githubOfAddress[ownerAddress];
         // if (githubId == 0 || githubId != ownerGithubId) revert GithubIdNotSet();
@@ -217,7 +142,6 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
     ///  - checks voucher & marks PROCESSING
     ///  - pulls platformFee from ownerAddress -> platform (owner())
     ///  - burns tokenAmount from ownerAddress (requires allowance for burnFrom)
-    ///  - emits ClaimRequested for relayer to pick up
     function requestClaim(ClaimRequest calldata request) external nonReentrant {
         Voucher storage v = vouchersByRepoAndPr[request.orgGithubId][
             request.repoGithubId
@@ -250,75 +174,10 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
             request.orgGithubId
         );
 
-        if (request.destinationChain == Helpers.Chain.ETHEREUM_SEPOLIA) {
-            bool sentOnNative = handleNativeTransfer(
-                msg.sender,
-                request.tokenAmountIn18dec
-            );
-            if (sentOnNative) {
-                _finalizeClaim(
-                    request.orgGithubId,
-                    request.repoGithubId,
-                    request.prNumber,
-                    msg.sender,
-                    request.tokenAmountIn18dec,
-                    request.destinationChain
-                );
-                v.claimed = ClaimStatus.CLAIMED;
-            }
-        } else {
-            _handleCrossChainClaim(request, v);
-        }
-
-        emit ClaimRequested(
-            v.hash,
-            request.repoGithubId,
-            request.prNumber,
-            msg.sender,
-            request.orgGithubId,
-            request.tokenAmountIn18dec,
-            platformFee,
-            request.destinationChain
-        );
-    }
-
-    function _handleCrossChainClaim(
-        ClaimRequest calldata request,
-        Voucher storage v
-    ) internal {
-        bytes memory payload = bytes.concat(
-            bytes4(0),
-            abi.encode(
-                request.orgGithubId,
-                request.repoGithubId,
-                request.prNumber,
-                msg.sender,
-                request.tokenAmountIn18dec
-            )
-        );
-
-        bytes memory bytesDestinationAddress = AddressBytes.toBytes(
-            request.executableAddress
-        );
-
-        uint256 gasFees = estimateGasFee(
-            Helpers.chainToAxelarName(request.destinationChain),
-            request.executableAddress,
-            payload
-        );
-
-        require(address(this).balance >= gasFees, "Insufficient gas fees sent");
-
+        bool sent = token.transfer(request.contributorAddress, request.tokenAmountIn18dec);
+        
+        if (!sent) revert failedToTransferTokens();
         v.claimed = ClaimStatus.CLAIMED;
-
-        IInterchainTokenService(interchainTokenService)
-            .callContractWithInterchainToken{value: gasFees}(
-            0x5b28793d6ddc2d161f8c7078933758d730076e5d43522d2d10b3bd2f28e9832b,
-            Helpers.chainToAxelarName(request.destinationChain),
-            bytesDestinationAddress,
-            request.tokenAmountIn18dec,
-            payload
-        );
     }
 
     /// Internal: validate voucher details and mark it PROCESSING
@@ -359,75 +218,6 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
         token.transfer(owner(), platformFee);
     }
 
-    function estimateGasFee(
-        string memory destinationChain,
-        address destinationAddress,
-        bytes memory payload
-    ) internal view returns (uint256) {
-        return
-            gasService.estimateGasFee(
-                destinationChain,
-                Helpers.addressToHexString(destinationAddress),
-                payload,
-                GAS_LIMIT,
-                new bytes(0)
-            );
-    }
-
-    function handleNativeTransfer(
-        address to,
-        uint256 amount
-    ) internal returns (bool sent) {
-        sent = token.transfer(to, amount);
-    }
-
-    function finalizeClaim(
-        uint64 orgGithubId,
-        uint32 repoGithubId,
-        uint32 prNumber,
-        address claimer,
-        uint256 tokenAmountIn18dec,
-        Helpers.Chain destinationChain
-    ) external onlyBot {
-        _finalizeClaim(
-            orgGithubId,
-            repoGithubId,
-            prNumber,
-            claimer,
-            tokenAmountIn18dec,
-            destinationChain
-        );
-    }
-
-    /// Called by your relayer (bot) AFTER it has confirmed successful mint on the destination chain.
-    /// relayer should verify off-chain; on-chain we just restrict to bot signer and voucher status.
-    function _finalizeClaim(
-        uint64 orgGithubId,
-        uint32 repoGithubId,
-        uint32 prNumber,
-        address claimer,
-        uint256 tokenAmountIn18dec,
-        Helpers.Chain destinationChain
-    ) internal {
-        Voucher storage v = vouchersByRepoAndPr[orgGithubId][repoGithubId][
-            prNumber
-        ];
-
-        if (v.hash == bytes32(0)) revert InvalidVoucher();
-
-        // mark claimed
-        v.claimed = ClaimStatus.CLAIMED;
-
-        emit ClaimFinalized(
-            v.hash,
-            repoGithubId,
-            prNumber,
-            claimer,
-            tokenAmountIn18dec,
-            destinationChain
-        );
-    }
-
     function emergencyWithdrawTokens(
         address _token,
         uint256 _amount
@@ -443,22 +233,12 @@ contract ContriFlow is ReentrancyGuard, Ownable, AutomationCompatibleInterface {
     }
 
     /// view helpers
-    // function getOwnerDetails(
-    //     address ownerAddress
-    // ) external view returns (uint256) {
-    //     return githubOfAddress[ownerAddress];
-    // }
-
     function getVoucherDetails(
         uint64 orgGithubId,
         uint32 repoId,
         uint32 prNumber
     ) external view returns (Voucher memory) {
         return vouchersByRepoAndPr[orgGithubId][repoId][prNumber];
-    }
-
-    function getCurrentSigner() external view returns (address) {
-        return bot;
     }
 
     // receive/fallback kept for compatibility
