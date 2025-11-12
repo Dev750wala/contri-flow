@@ -1,15 +1,13 @@
 import { IssueCommentEventInterface } from '@/interfaces';
 import { ControllerReturnType } from '../../../interface';
 import prisma from '@/lib/prisma';
-import {
-  commentParseQueue,
-  getCommentParseWorker,
-} from '@/services/commentParserQueue';
+import { commentParseQueue } from '@/services/commentParserQueue';
 import { Repository, RepositoryMaintainer } from '@prisma/client';
 
 export async function handleIssueCommentCreated(
   body: IssueCommentEventInterface
 ): Promise<ControllerReturnType> {
+  console.log('body: ', JSON.stringify(body));
   const {
     issue: {
       number: pr_number,
@@ -22,6 +20,7 @@ export async function handleIssueCommentCreated(
       user: { id: commentor_github_id },
     },
     repository: { id: repository_github_id },
+    sender: { id: sender_github_id },  // The person who comments for issuing reward.
   } = body;
 
   if (!merged_at) {
@@ -35,19 +34,20 @@ export async function handleIssueCommentCreated(
 
   let repository: Repository | null;
   let issuar: RepositoryMaintainer | null;
-  await prisma.$transaction(async (tx) => {
+  const transactionResult = await prisma.$transaction(async (tx) => {
     repository = await tx.repository.findUnique({
       where: {
         github_repo_id: repository_github_id.toString(),
       },
     });
-    if (!repository)
+    if (!repository) {
       return {
         message: 'Repository not found',
         statusCode: 404,
         success: false,
         error: 'The repository was not found',
       };
+    }
     const rewardExists = await tx.reward.findUnique({
       where: {
         repository_id_pr_number: {
@@ -64,11 +64,12 @@ export async function handleIssueCommentCreated(
         data: rewardExists,
       };
     }
-    const issuar = await tx.repositoryMaintainer.findUnique({
+    console.log(repository.id, contributor_github_id)
+    issuar = await tx.repositoryMaintainer.findUnique({
       where: {
         repository_id_github_id: {
           repository_id: repository.id,
-          github_id: contributor_github_id.toString(),
+          github_id: sender_github_id.toString(),
         },
       },
     });
@@ -80,13 +81,26 @@ export async function handleIssueCommentCreated(
         error: 'User is not a maintainer',
       };
     }
+    return null;
   });
 
-  // Initialize worker if not already done
-  getCommentParseWorker();
+  // If transaction returned an error response, return it
+  if (transactionResult) {
+    return transactionResult;
+  }
 
-  // add the jobs to queue
-  await commentParseQueue.add(
+  // Validate that we have the required data
+  if (!repository || !issuar) {
+    return {
+      message: 'Failed to retrieve repository or maintainer information',
+      statusCode: 500,
+      success: false,
+      error: 'Internal server error',
+    };
+  }
+
+  console.log('[Controller] Adding job to commentParseQueue');
+  const job = await commentParseQueue.add(
     'parse-comment',
     {
       commentBody,
@@ -98,9 +112,10 @@ export async function handleIssueCommentCreated(
       commentorId: issuar.id,
     },
     {
-      attempts: 5,
+      attempts: 1,
     }
   );
+  console.log(`[Controller] Job ${job.id} added to queue successfully`);
 
   return {
     message: 'Comment parsing job added to queue',

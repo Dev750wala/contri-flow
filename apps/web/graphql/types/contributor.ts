@@ -12,7 +12,6 @@ export const ContributorType = objectType({
     t.nonNull.field(Contributor.id);
     t.nonNull.field(Contributor.github_id);
     t.field(Contributor.email);
-    t.field(Contributor.wallet_address);
 
     t.nonNull.field(Contributor.created_at);
     t.nonNull.field(Contributor.updated_at);

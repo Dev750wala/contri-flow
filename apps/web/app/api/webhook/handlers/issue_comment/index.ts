@@ -6,6 +6,7 @@ export async function handleIssueCommentEvent(
 ) {
     switch (body.action) {
         case 'created':
+          console.log('Handling issue comment created event');
             return await handleIssueCommentCreated(body);
     }
 }

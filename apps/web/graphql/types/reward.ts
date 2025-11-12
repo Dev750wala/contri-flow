@@ -5,6 +5,7 @@ import { RepositoryType } from './repository';
 import { ContributorType } from './contributor';
 import { RepositoryMaintainerType } from './repository-maintainer';
 import { Reward as RewardPrisma } from '@prisma/client';
+import { PayoutType } from './payout';
 
 export const RewardType = objectType({
   name: Reward.$name,
@@ -15,10 +16,7 @@ export const RewardType = objectType({
     t.nonNull.field(Reward.secret);
     t.nonNull.field(Reward.created_at);
     t.nonNull.field(Reward.claimed);
-    t.field(Reward.claimed_at);
     t.nonNull.field(Reward.updated_at);
-    t.field(Reward.tx_hash);
-    t.field(Reward.destination_address);
     t.field(Reward.comment);
 
     t.nonNull.field(Reward.issuer.name, {
@@ -52,5 +50,14 @@ export const RewardType = objectType({
         });
       },
     });
+
+    t.field(Reward.payout.name, {
+      type: PayoutType,
+      resolve: async (parent: RewardPrisma, _args, ctx: Context) => {
+        return await ctx.prisma.payout.findUnique({
+          where: { reward_id: parent.id },
+        });
+      },
+    })
   },
 });

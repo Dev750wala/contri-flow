@@ -5,6 +5,35 @@ import { CommentParsingResponse } from '@/interfaces';
 import config from '@/config';
 import jwt from "jsonwebtoken";
 
+interface GeminiAPIResponse {
+  candidates: {
+    content: {
+      parts: {
+        text: string; // JSON string containing contributor and reward
+      }[];
+      role: string;
+    };
+    finishReason: string;
+    avgLogprobs: number;
+  }[];
+  usageMetadata: {
+    promptTokenCount: number;
+    candidatesTokenCount: number;
+    totalTokenCount: number;
+    promptTokensDetails: {
+      modality: string;
+      tokenCount: number;
+    }[];
+    candidatesTokensDetails: {
+      modality: string;
+      tokenCount: number;
+    }[];
+  };
+  modelVersion: string;
+  responseId: string;
+}
+
+
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -19,25 +48,73 @@ export function formatPrompt(input: string) {
 }
 
 export async function parseComment(prompt: string): Promise<CommentParsingResponse> {
-  const response = await fetch(`${config.GEMINI_API_URL}?key=${config.GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ prompt }),
-  });
+  try {
+    const payload = {
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt,  // Use the dynamic prompt
+            },
+          ],
+        },
+      ],
+    };
 
-  if (!response.ok) {
-    throw new Error('AI extraction failed');
+    const response = await fetch(`${config.GEMINI_API_URL}?key=${config.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('AI extraction failed with status:', response.status, errorText);
+      throw new Error(`AI extraction failed with status: ${response.status}, Error: ${errorText}`);
+    }
+
+    const rawResponse = await response.text();
+    console.log('Raw AI response:', rawResponse);
+
+    let data: GeminiAPIResponse;
+    try {
+      data = JSON.parse(rawResponse);
+    } catch (err) {
+      console.error('Failed to parse AI response as JSON:', rawResponse);
+      throw new Error('AI extraction returned invalid JSON');
+    }
+
+    // Ensure valid response structure
+    if (!data.candidates || data.candidates.length === 0) {
+      console.error('No candidates found in the AI response:', data);
+      throw new Error('AI response does not contain valid candidates');
+    }
+
+    // Get the first candidate's content
+    const candidateContent = data.candidates[0].content;
+    if (candidateContent.parts && candidateContent.parts.length > 0) {
+      // Parse the 'text' field of the first part of the content (which is a JSON string)
+      const parsedContent = JSON.parse(candidateContent.parts[0].text);
+
+      // Return the parsed content in the desired format
+      return {
+        contributor: parsedContent.contributor,
+        reward: parsedContent.reward,
+      };
+    } else {
+      throw new Error('AI response content is missing expected parts.');
+    }
+
+  } catch (err) {
+    console.error('Error in parsing comment:', err);
+    throw new Error('AI_PARSE_ERROR');
   }
-
-  const data = await response.json();
-
-  if (!data || typeof JSON.parse(data) !== 'object') {
-    throw new Error('Invalid AI extraction response');
-  }
-  return JSON.parse(data) as CommentParsingResponse;
 }
+
+
 
 export function generateSecret() {
   return Array.from(Array(100), () => Math.floor(Math.random() * 36).toString(36)).join('');

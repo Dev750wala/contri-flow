@@ -118,9 +118,10 @@ model Reward {
 model Payout {
   id                String @id @default(cuid())
   tx_hash           String @unique
-  source_chain      String
+
   destination_chain String
   total_amount      String
+  platform_fee      String
   receiver_address  String
 
   claimed_at DateTime @default(now())

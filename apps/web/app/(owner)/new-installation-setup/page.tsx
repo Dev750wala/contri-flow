@@ -1,6 +1,8 @@
 'use client';
 
 import React, { Suspense } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import RepositoryCard from '@/components/RepositoryCard';
 import Navbar from '@/components/navbar';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
@@ -14,7 +16,8 @@ import {
   Github,
   ArrowRight,
   Settings,
-  Users
+  Users,
+  Loader2
 } from 'lucide-react';
 import { useNewInstallationSetup } from './useNewInstallationSetup';
 import { MPT_TOKEN_ADDRESS } from '@/web3/constants';
@@ -26,6 +29,9 @@ const PLATFORM_TOKEN_INFO = {
 };
 
 const NewInstallationPageContent = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const {
     // State
     repositories,
@@ -48,6 +54,38 @@ const NewInstallationPageContent = () => {
     handleManageSettings,
     handleAddRepositories,
   } = useNewInstallationSetup();
+
+  // Redirect to sign in if not authenticated
+  React.useEffect(() => {
+    if (status === 'loading') return; // Still loading
+
+    if (!session) {
+      // User is not authenticated, redirect to sign in with return URL
+      const returnUrl = encodeURIComponent(window.location.href);
+      router.push(`/auth/sign-in?callbackUrl=${returnUrl}`);
+      return;
+    }
+  }, [session, status, router]);
+
+  // Show loading state while checking authentication
+  if (status === 'loading') {
+    return (
+      <>
+        <Navbar />
+        <div className="w-full min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Authenticating...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // If not authenticated, return null (redirect will happen in useEffect)
+  if (!session) {
+    return null;
+  }
 
   // Render content based on setup_action
   const renderContent = () => {

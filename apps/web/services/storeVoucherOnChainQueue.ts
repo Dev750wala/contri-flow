@@ -1,4 +1,4 @@
-import { redisClient } from '@/lib/redisClient';
+import { bullMQRedisClient } from '@/lib/redisClient';
 import { Job, Queue, Worker } from 'bullmq';
 import prisma from '@/lib/prisma';
 import { parseComment, formatPrompt, generateSecret } from '@/lib/utils';
@@ -16,7 +16,7 @@ interface CommentParseJobData {
 
 export const onChainQueue = new Queue<CommentParseJobData, boolean, string>(
   'ONCHAIN-QUEUE',
-  { connection: redisClient }
+  { connection: bullMQRedisClient }
 );
 
 // Initialize worker only when needed to avoid connection issues
@@ -29,7 +29,7 @@ const getOnChainWorker = () => {
       async (job: Job<CommentParseJobData, void, string>) => {
         // TODO MAKE A WORKER TO PROCESS THIS JOB TO STORE THE VOUCHER ON THE CHAIN.
       },
-      { connection: redisClient }
+      { connection: bullMQRedisClient }
     );
   }
   return onChainWorker;

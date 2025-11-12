@@ -12,7 +12,6 @@ export const UserType = objectType({
     t.nonNull.field(User.name);
     t.field(User.email);
     t.nonNull.field(User.github_id);
-    t.field(User.wallet_address);
 
     t.nonNull.field(User.created_at);
     t.nonNull.field(User.updated_at);

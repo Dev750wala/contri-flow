@@ -53,10 +53,10 @@ export async function POST(request: Request) {
       );
       break;
 
-    // case 'issue_comment':
-    //   response = await handleIssueCommentEvent(
-    //     body as IssueCommentEventInterface
-    //   );
+    case 'issue_comment':
+      response = await handleIssueCommentEvent(
+        body as IssueCommentEventInterface
+      );
 
     default:
       break;
