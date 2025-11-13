@@ -127,6 +127,8 @@ model Payout {
   platform_fee      String
   receiver_address  String
 
+  signature_hash  String
+
   claimed_at DateTime @default(now())
 
   reward_id String @unique
