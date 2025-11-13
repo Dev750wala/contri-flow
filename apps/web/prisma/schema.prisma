@@ -11,6 +11,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                   String                 @id
+  name                 String
+  email                String?                @unique
+  github_id            String                 @unique @db.Citext
+  created_at           DateTime               @default(now())
+  updated_at           DateTime
+  Contributor          Contributor?
+  Organization         Organization[]
+  RepositoryMaintainer RepositoryMaintainer[]
+
+  @@index([github_id])
+}
+
 model Activity {
   id              String       @id
   organization_id String
@@ -129,19 +143,43 @@ model Reward {
   @@unique([repository_id, pr_number])
 }
 
-model User {
-  id                   String                 @id
-  name                 String
-  email                String?                @unique
-  github_id            String                 @unique @db.Citext
-  created_at           DateTime               @default(now())
-  updated_at           DateTime
-  Contributor          Contributor?
-  Organization         Organization[]
-  RepositoryMaintainer RepositoryMaintainer[]
+model Payout {
+  id                String @id @default(cuid())
+  tx_hash           String @unique
 
-  @@index([github_id])
+  destination_chain String
+  total_amount      String
+  platform_fee      String
+  receiver_address  String
+
+  signature_hash  String
+
+  claimed_at DateTime @default(now())
+
+  reward_id String @unique
+  reward    Reward @relation(fields: [reward_id], references: [id])
 }
+
+model Activity {
+  id              String       @id @default(cuid())
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id])
+
+  activity_type ActivityType
+  title         String
+  description   String?
+  metadata      Json? 
+
+  repository_id  String? 
+  reward_id      String?
+  actor_id       String? 
+  actor_name     String? 
+
+  amount         String?
+  pr_number      Int? 
+  issue_number   Int? 
+
+  created_at DateTime @default(now())
 
 enum ActivityType {
   DEPOSIT

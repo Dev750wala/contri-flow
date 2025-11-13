@@ -19,6 +19,7 @@ import CONTRIFLOW_ABI from '@/web3/ContriFlowABI.json';
 import { postPRComment, generateRewardCommentContent } from '@/lib/githubComment';
 import { logActivity } from '@/lib/activityLogger';
 import { getOrganizationBalance } from '@/lib/contractBalance';
+import { addOwnerEmailJob } from './ownerEmailQueue';
 
 interface CommentParseJobData {
   commentBody: string;
@@ -156,6 +157,30 @@ export const commentParseWorker = new Worker(
         available: organizationFunds.toString(),
         required: requiredAmount.toString(),
       });
+
+      // Send email notification to organization owner about insufficient funds
+      await addOwnerEmailJob(
+        {
+          organizationId: repository.organization.id,
+          organizationName: repository.organization.name,
+          organizationGithubId: repository.organization.github_org_id,
+          ownerGithubId: repository.organization.owner_github_id,
+          availableFunds: organizationFunds.toString(),
+          requiredAmount: requiredAmount.toString(),
+          prNumber,
+          repositoryName: repository.name,
+          contributorLogin: aiRaw.contributor,
+          reason: 'INSUFFICIENT_FUNDS',
+          metadata: {
+            rewardAmount: aiRaw.reward.toString(),
+            timestamp: new Date().toISOString(),
+          },
+        },
+        1 // High priority for insufficient funds
+      );
+
+      console.log('[Worker] Owner notification email job added to queue');
+
       throw new Error('INSUFFICIENT_ORGANIZATION_FUNDS');
     }
 
@@ -179,6 +204,14 @@ export const commentParseWorker = new Worker(
     console.log('[Worker] Generating secret for reward...');
     const secret = generateSecret();
     console.log('[Worker] Secret generated, creating reward in database...');
+
+    // Convert reward amount to wei (18 decimals) for ERC20 standard precision
+    const tokenAmountInWei = parseEther(aiRaw.reward.toString());
+    console.log('[Worker] Token amount converted to wei:', {
+      original: aiRaw.reward.toString(),
+      wei: tokenAmountInWei.toString(),
+      formatted: `${aiRaw.reward} tokens = ${tokenAmountInWei.toString()} wei`,
+    });
 
     newReward = await prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({
@@ -209,7 +242,7 @@ export const commentParseWorker = new Worker(
         data: {
           pr_number: prNumber,
           secret,
-          token_amount: aiRaw.reward.toString(),
+          token_amount: tokenAmountInWei.toString(), // Store as wei (18 decimals)
           contributor: { connect: { id: contributor.id } },
           repository: { connect: { id: repositoryId } },
           issuer: { connect: { id: commentorId } },
@@ -221,6 +254,7 @@ export const commentParseWorker = new Worker(
         id: reward.id,
         pr_number: reward.pr_number,
         token_amount: reward.token_amount,
+        token_amount_wei: `${reward.token_amount} wei (${aiRaw.reward} tokens)`,
       });
 
       // Log activity for reward issued
@@ -228,7 +262,7 @@ export const commentParseWorker = new Worker(
         organizationId: repository.organization.id,
         activityType: 'REWARD_ISSUED',
         title: `Reward Issued`,
-        description: `Reward of ${reward.token_amount} tokens issued for PR #${reward.pr_number} to ${aiRaw.contributor}`,
+        description: `Reward of ${aiRaw.reward} tokens (${reward.token_amount} wei) issued for PR #${reward.pr_number} to ${aiRaw.contributor}`,
         repositoryId: repository.id,
         rewardId: reward.id,
         actorId: commentorId,
@@ -237,6 +271,7 @@ export const commentParseWorker = new Worker(
         metadata: {
           contributorGithubId: (contributorFromGithub as GitHubUserType).id.toString(),
           contributorLogin: aiRaw.contributor,
+          tokenAmountDecimal: aiRaw.reward.toString(),
         },
       });
 
@@ -258,13 +293,13 @@ export const commentParseWorker = new Worker(
       const secret = newReward.secret;
       console.log(`[Worker] Retrieved secret from reward for PR #${prNumber}`);
 
-      // Convert token amount to 18 decimals (wei) for ERC20 standard
-      const tokenAmount = parseEther(newReward.token_amount);
+      // Token amount is already in wei (18 decimals) from database
+      const tokenAmount = BigInt(newReward.token_amount);
 
-      console.log(`[Worker] Token amount conversion:`, {
-        input: newReward.token_amount,
-        output: tokenAmount.toString(),
-        outputFormatted: `${newReward.token_amount} tokens = ${tokenAmount.toString()} wei (18 decimals)`,
+      console.log(`[Worker] Token amount (already in wei):`, {
+        storedInDatabase: newReward.token_amount,
+        tokenAmount: tokenAmount.toString(),
+        formatted: `${aiRaw.reward} tokens = ${tokenAmount.toString()} wei (18 decimals)`,
       });
 
       // Calculate the voucher hash exactly as the contract does
@@ -367,10 +402,10 @@ export const commentParseWorker = new Worker(
     try {
       console.log('[Worker] Generating AI comment for reward notification...');
       
-      // Generate comment content using AI
+      // Generate comment content using AI with decimal format for human readability
       const commentContent = await generateRewardCommentContent(
         aiRaw.contributor,
-        newReward.token_amount,
+        aiRaw.reward.toString(), // Use decimal format for comment (e.g., "1.5" instead of wei)
         newReward.id,
         prNumber
       );
