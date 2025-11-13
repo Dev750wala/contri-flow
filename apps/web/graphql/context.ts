@@ -6,10 +6,13 @@ import { authOptions } from '@/lib/auth';
 
 export async function createContext({ req, res }: { req: any; res: any }) {
   const token = await getToken({ req, secret: config.AUTH_SECRET });
-  console.log('Token in context:', token);
 
   const session = await getServerSession(authOptions);
-  console.log('Session in context:', session);
+
+  if (process.env.NODE_ENV === 'development') {
+    // console.log('Token in context:', token);
+    // console.log('Session in context:', session);
+  }
 
   return {
     prisma,

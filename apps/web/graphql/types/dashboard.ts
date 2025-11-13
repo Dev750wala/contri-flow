@@ -7,20 +7,40 @@ import { Organization } from '@prisma/client';
 export const OrganizationWithDetailsType = objectType({
   name: 'OrganizationWithDetails',
   definition(t) {
-    t.nonNull.string('id');
-    t.nonNull.string('name');
-    t.nonNull.string('githubOrgId');
-    t.nonNull.string('installationId');
-    t.nonNull.boolean('appInstalled');
-    t.nonNull.boolean('suspended');
-    t.nonNull.string('ownerGithubId');
-    t.nonNull.field('createdAt', { type: 'DateTime' });
-    t.nonNull.field('updatedAt', { type: 'DateTime' });
+    t.nonNull.string('id', {
+      resolve: (parent: any) => parent.id,
+    });
+    t.nonNull.string('name', {
+      resolve: (parent: any) => parent.name,
+    });
+    t.nonNull.string('githubOrgId', {
+      resolve: (parent: any) => parent.github_org_id,
+    });
+    t.nonNull.string('installationId', {
+      resolve: (parent: any) => parent.installation_id,
+    });
+    t.nonNull.boolean('appInstalled', {
+      resolve: (parent: any) => parent.app_installed,
+    });
+    t.nonNull.boolean('suspended', {
+      resolve: (parent: any) => parent.suspended,
+    });
+    t.nonNull.string('ownerGithubId', {
+      resolve: (parent: any) => parent.owner_github_id,
+    });
+    t.nonNull.field('createdAt', {
+      type: 'DateTime',
+      resolve: (parent: any) => parent.created_at,
+    });
+    t.nonNull.field('updatedAt', {
+      type: 'DateTime',
+      resolve: (parent: any) => parent.updated_at,
+    });
 
     t.field('owner', {
       type: 'User',
       description: 'Organization owner',
-      resolve: async (parent: Organization, _args, ctx: Context) => {
+      resolve: async (parent: any, _args, ctx: Context) => {
         if (!parent.owner_id) return null;
         return await ctx.prisma.user.findUnique({
           where: { id: parent.owner_id },
@@ -31,7 +51,7 @@ export const OrganizationWithDetailsType = objectType({
     t.nonNull.list.nonNull.field('repositories', {
       type: 'Repository',
       description: 'All repositories for this organization',
-      resolve: async (parent: Organization, _args, ctx: Context) => {
+      resolve: async (parent: any, _args, ctx: Context) => {
         return await ctx.prisma.repository.findMany({
           where: { organization_id: parent.id },
         });

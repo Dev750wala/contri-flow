@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import {
   Card,
@@ -20,31 +20,57 @@ import {
 import { ImageWithFallback } from './ImageWithFallback';
 import { useFetchOrganizationsForOwner } from '@/hooks/useFetchOrganizationsForOwner';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 export function LandingPage() {
   const { data: organizationsForOwner, loading, error, fetchOrganizations } = useFetchOrganizationsForOwner();
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const [hasOrganizations, setHasOrganizations] = useState<boolean | null>(null);
+  const [isCheckingOrgs, setIsCheckingOrgs] = useState(false);
 
-  const handleFetchOrganizations = async () => {
-    try {
-      const result = await fetchOrganizations();
-
-      console.log('organizationsForOwner:', result.data);
-      
-      
-      if (result.data?.listOrganizationsForOwner && result.data.listOrganizationsForOwner.length > 0) {
-        // User has organizations, redirect to dashboard
-        router.push('/dashboard');
-      } else {
-        // User has no organizations, redirect to new installation setup
-        router.push('/installation-new');
+  // Check if user has organizations on mount (only if logged in)
+  useEffect(() => {
+    const checkUserOrganizations = async () => {
+      if (status === 'authenticated' && !isCheckingOrgs && hasOrganizations === null) {
+        setIsCheckingOrgs(true);
+        try {
+          const result = await fetchOrganizations();
+          const hasOrgs = result.data?.listOrganizationsForOwner && 
+                          result.data.listOrganizationsForOwner.length > 0;
+          setHasOrganizations(hasOrgs);
+        } catch (err) {
+          console.error('Error checking organizations:', err);
+          setHasOrganizations(false);
+        } finally {
+          setIsCheckingOrgs(false);
+        }
       }
-    } catch (err) {
-      console.error('Error fetching organizations:', err);
-      // On error, redirect to new installation setup as fallback
-      router.push('/new-installation-setup');
+    };
+
+    checkUserOrganizations();
+  }, [status, fetchOrganizations, isCheckingOrgs, hasOrganizations]);
+
+  const handleGetStarted = async () => {
+    // If not authenticated, redirect to sign-in
+    if (status !== 'authenticated') {
+      router.push('/auth/sign-in');
+      return;
     }
+
+    // If authenticated, go to role selection page
+    router.push('/get-started');
   };
+
+  // Determine button text based on user status
+  const getButtonText = () => {
+    if (status === 'loading' || isCheckingOrgs) {
+      return 'Loading...';
+    }
+    return 'Get Started';
+  };
+
+  const isButtonDisabled = status === 'loading' || isCheckingOrgs;
 
   return (
     <div className="w-full">
@@ -60,19 +86,18 @@ export function LandingPage() {
           </h1>
 
           <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto leading-relaxed">
-            A decentralized platform that automatically rewards open-source
-            contributors with ETH based on merged pull requests. Transparent,
-            secure, and built on blockchain.
+            A decentralized platform that rewards open-source contributors with MPT tokens.
+            Organizations fund development, contributors earn rewards for merged pull requests.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button
               size="lg"
               className="flex items-center gap-3 px-8 py-4 text-lg font-semibold"
-              onClick={handleFetchOrganizations}
-              disabled={loading}
+              onClick={handleGetStarted}
+              disabled={isButtonDisabled}
             >
-              {loading ? 'Loading...' : 'Get Started as an Organization'}
+              {getButtonText()}
               <ArrowRight className="h-5 w-5" />
             </Button>
           </div>
@@ -308,10 +333,10 @@ export function LandingPage() {
               size="lg"
               variant="secondary"
               className="flex items-center gap-3 px-8 py-4 text-lg font-semibold"
-              onClick={handleFetchOrganizations}
-              disabled={loading}
+              onClick={handleGetStarted}
+              disabled={isButtonDisabled}
             >
-              {loading ? 'Loading...' : 'Start Rewarding Contributors'}
+              Get Started
               <ArrowRight className="h-5 w-5" />
             </Button>
 
@@ -321,7 +346,7 @@ export function LandingPage() {
               className="flex items-center gap-3 px-8 py-4 text-lg font-semibold bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
               onClick={() => router.push('/auth/sign-in')}
             >
-              Start Earning Rewards
+              Learn More
               <ArrowRight className="h-5 w-5" />
             </Button>
           </div>

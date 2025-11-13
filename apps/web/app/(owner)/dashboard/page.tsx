@@ -3,23 +3,38 @@
 import { OwnerDashboard } from '@/components/OwnerDashboard';
 import Navbar from '@/components/navbar';
 import React from 'react';
-
-interface User {
-  id: string;
-  username: string;
-  avatar: string;
-  type: 'owner' | 'contributor';
-  walletConnected: boolean;
-}
+import { useOwnerDashboard } from './useOwnerDashboard';
 
 const DashboardPage = () => {
-  const mockUser: User = {
-    id: 'user_123456789',
-    username: 'johndev',
-    avatar: 'https://github.com/johndev.png',
-    type: 'owner',
-    walletConnected: true,
-  };
+  const {
+    organizations,
+    selectedOrg,
+    selectedOrgId,
+    activities,
+    pendingRewards,
+    orgStats,
+    globalStats,
+    dashboardLoading,
+    orgStatsLoading,
+    allRepositories,
+    selectOrganization,
+  } = useOwnerDashboard();
+
+  if (dashboardLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading dashboard...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,7 +57,18 @@ const DashboardPage = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <OwnerDashboard user={mockUser} />
+        <OwnerDashboard
+          organizations={organizations}
+          selectedOrg={selectedOrg}
+          selectedOrgId={selectedOrgId}
+          activities={activities}
+          pendingRewards={pendingRewards}
+          orgStats={orgStats}
+          globalStats={globalStats}
+          orgStatsLoading={orgStatsLoading}
+          allRepositories={allRepositories}
+          onSelectOrganization={selectOrganization}
+        />
       </div>
     </div>
   );

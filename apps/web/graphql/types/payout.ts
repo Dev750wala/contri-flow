@@ -13,6 +13,7 @@ export const PayoutType = objectType({
     t.field(Payout.platform_fee);
     t.field(Payout.destination_chain);
     t.field(Payout.receiver_address);
+    t.field(Payout.tx_hash);
 
     t.field(Payout.claimed_at);
 
