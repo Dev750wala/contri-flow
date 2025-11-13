@@ -1,6 +1,7 @@
 import { AppInstallationInterface } from '@/interfaces';
 import prisma from '@/lib/prisma';
 import { ControllerReturnType } from '../../../interface';
+import { logActivity, logActivities } from '@/lib/activityLogger';
 
 export async function handleInstallationCreatedEvent(
   body: AppInstallationInterface
@@ -21,8 +22,13 @@ export async function handleInstallationCreatedEvent(
     const githubOrgId = installation.account.id.toString();
     const installationId = installation.id.toString();
 
-    const ownerExists = await prisma.user.findUnique({
+    const owner = await prisma.user.upsert({
       where: { github_id: sender.id.toString() },
+      update: { },
+      create: {
+        github_id: sender.id.toString(),
+        name: sender.login,
+      },
     });
 
     const organization = await prisma.organization.upsert({
@@ -34,7 +40,7 @@ export async function handleInstallationCreatedEvent(
         suspended: false,
         name: installation.account.login,
         owner_github_id: sender.id.toString(),
-        ...ownerExists && { owner: { connect: { id: ownerExists.id } } },
+        ...owner && { owner: { connect: { id: owner.id } } },
       },
       create: {
         github_org_id: githubOrgId,
@@ -42,7 +48,7 @@ export async function handleInstallationCreatedEvent(
         name: installation.account.login,
         app_installed: true,
         owner_github_id: sender.id.toString(),
-        owner: ownerExists ? { connect: { id: ownerExists.id } } : undefined,
+        owner: owner ? { connect: { id: owner.id } } : undefined,
       },
     });
 
@@ -133,6 +139,54 @@ export async function handleInstallationCreatedEvent(
         }
       })
     );
+
+    // Log activity for app installation
+    await logActivity({
+      organizationId: organization.id,
+      activityType: 'APP_INSTALLED',
+      title: 'GitHub App Installed',
+      description: `GitHub App was installed for ${organization.name} by ${sender.login}`,
+      actorId: sender.id.toString(),
+      actorName: sender.login,
+      metadata: {
+        installationId: installationId,
+        repositoriesCount: createdRepositories.length,
+      },
+    });
+
+    // Log activities for repositories added
+    const repoActivities = createdRepositories.map((repo) => ({
+      organizationId: organization.id,
+      activityType: 'REPO_ADDED' as const,
+      title: `Repository Added: ${repo.name}`,
+      description: `Repository ${repo.name} was added to the organization`,
+      repositoryId: repo.id,
+      actorId: sender.id.toString(),
+      actorName: sender.login,
+      metadata: {
+        githubRepoId: repo.github_repo_id,
+        repoName: repo.name,
+      },
+    }));
+
+    // Log activities for maintainers added
+    const maintainerActivities = createdRepositories.map((repo) => ({
+      organizationId: organization.id,
+      activityType: 'MAINTAINER_ADDED' as const,
+      title: `Maintainer Added: ${sender.login}`,
+      description: `${sender.login} was added as ADMIN maintainer for ${repo.name}`,
+      repositoryId: repo.id,
+      actorId: sender.id.toString(),
+      actorName: sender.login,
+      metadata: {
+        role: 'ADMIN',
+        maintainerGithubId: sender.id.toString(),
+        maintainerLogin: sender.login,
+      },
+    }));
+
+    // Log all activities together
+    await logActivities([...repoActivities, ...maintainerActivities]);
 
     return {
       statusCode: 201,

@@ -1,6 +1,7 @@
 import { InstallationRepositories } from '@/interfaces';
 import prisma from '@/lib/prisma';
 import { ControllerReturnType } from '../../../interface';
+import { logActivities } from '@/lib/activityLogger';
 
 export async function handleRepositoriesAddedEvent(
   body: InstallationRepositories
@@ -45,6 +46,21 @@ export async function handleRepositoriesAddedEvent(
 
       return Promise.all(updatePromises);
     });
+
+    // Log activities for repositories added
+    const activities = repositories.map((repo) => ({
+      organizationId: organization.id,
+      activityType: 'REPO_ADDED' as const,
+      title: `Repository Added: ${repo.name}`,
+      description: `Repository ${repo.name} was added to the organization`,
+      repositoryId: repo.id,
+      metadata: {
+        githubRepoId: repo.github_repo_id,
+        repoName: repo.name,
+      },
+    }));
+
+    await logActivities(activities);
 
     return {
       success: true,

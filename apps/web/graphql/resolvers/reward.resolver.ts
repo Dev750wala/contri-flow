@@ -1,6 +1,7 @@
 import { extendType, list, nonNull, stringArg } from 'nexus';
 import { Context } from '../context';
 import { RewardType } from '../types';
+import { logActivity } from '@/lib/activityLogger';
 
 export const RewardQuery = extendType({
   type: 'Query',
@@ -82,15 +83,45 @@ export const RewardMutation = extendType({
         id: nonNull(stringArg()),
       },
       resolve: async (_parent, args, ctx: Context) => {
-        return ctx.prisma.reward.update({
+        const reward = await ctx.prisma.reward.update({
           where: {
             id: args.id,
           },
           data: {
             claimed: true,
-            claimed_at: new Date(),
+          },
+          include: {
+            repository: {
+              include: {
+                organization: true,
+              },
+            },
+            contributor: {
+              include: {
+                user: true,
+              },
+            },
           },
         });
+
+        // Log activity for reward claimed
+        await logActivity({
+          organizationId: reward.repository.organization.id,
+          activityType: 'REWARD_CLAIMED',
+          title: `Reward Claimed`,
+          description: `Reward of ${reward.token_amount} tokens claimed for PR #${reward.pr_number}`,
+          repositoryId: reward.repository_id,
+          rewardId: reward.id,
+          actorId: reward.contributor.user?.id,
+          actorName: reward.contributor.user?.name,
+          amount: reward.token_amount,
+          prNumber: reward.pr_number,
+          metadata: {
+            contributorGithubId: reward.contributor.github_id,
+          },
+        });
+
+        return reward;
       },
     });
   },

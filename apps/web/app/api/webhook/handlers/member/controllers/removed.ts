@@ -1,6 +1,7 @@
 import { MemberEventInterface } from '@/interfaces';
 import prisma from '@/lib/prisma';
 import { ControllerReturnType } from '../../../interface';
+import { logActivity } from '@/lib/activityLogger';
 
 export async function handleMemberRemovedEvent(
   body: MemberEventInterface
@@ -11,6 +12,9 @@ export async function handleMemberRemovedEvent(
     const repositoryFromDB = await prisma.repository.findUnique({
       where: { github_repo_id: repository.id.toString() },
       select: {
+        id: true,
+        name: true,
+        organization_id: true,
         maintainers: true,
       },
     });
@@ -38,6 +42,21 @@ export async function handleMemberRemovedEvent(
     await prisma.repositoryMaintainer.delete({
       where: {
         id: existingMaintainer.id,
+      },
+    });
+
+    // Log activity for maintainer removal
+    await logActivity({
+      organizationId: repositoryFromDB.organization_id,
+      activityType: 'MAINTAINER_REMOVED',
+      title: `Maintainer Removed: ${member.login}`,
+      description: `${member.login} was removed as maintainer from ${repositoryFromDB.name}`,
+      repositoryId: repositoryFromDB.id,
+      actorId: member.id.toString(),
+      actorName: member.login,
+      metadata: {
+        maintainerGithubId: member.id.toString(),
+        maintainerLogin: member.login,
       },
     });
 

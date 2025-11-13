@@ -47,7 +47,11 @@ export function formatPrompt(input: string) {
   `
 }
 
-export async function parseComment(prompt: string): Promise<CommentParsingResponse> {
+/**
+ * Generic function to call Gemini API with any prompt
+ * Returns the raw text response from Gemini
+ */
+export async function callGeminiAPI(prompt: string): Promise<string> {
   try {
     const payload = {
       model: "gemini-2.5-flash",
@@ -55,7 +59,7 @@ export async function parseComment(prompt: string): Promise<CommentParsingRespon
         {
           parts: [
             {
-              text: prompt,  // Use the dynamic prompt
+              text: prompt,
             },
           ],
         },
@@ -72,41 +76,56 @@ export async function parseComment(prompt: string): Promise<CommentParsingRespon
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI extraction failed with status:', response.status, errorText);
-      throw new Error(`AI extraction failed with status: ${response.status}, Error: ${errorText}`);
+      console.error('Gemini API failed with status:', response.status, errorText);
+      throw new Error(`Gemini API failed with status: ${response.status}, Error: ${errorText}`);
     }
 
     const rawResponse = await response.text();
-    console.log('Raw AI response:', rawResponse);
+    console.log('Raw Gemini response:', rawResponse);
 
     let data: GeminiAPIResponse;
     try {
       data = JSON.parse(rawResponse);
     } catch (err) {
-      console.error('Failed to parse AI response as JSON:', rawResponse);
-      throw new Error('AI extraction returned invalid JSON');
+      console.error('Failed to parse Gemini response as JSON:', rawResponse);
+      throw new Error('Gemini API returned invalid JSON');
     }
 
     // Ensure valid response structure
     if (!data.candidates || data.candidates.length === 0) {
-      console.error('No candidates found in the AI response:', data);
-      throw new Error('AI response does not contain valid candidates');
+      console.error('No candidates found in the Gemini response:', data);
+      throw new Error('Gemini response does not contain valid candidates');
     }
 
     // Get the first candidate's content
     const candidateContent = data.candidates[0].content;
     if (candidateContent.parts && candidateContent.parts.length > 0) {
-      // Parse the 'text' field of the first part of the content (which is a JSON string)
-      const parsedContent = JSON.parse(candidateContent.parts[0].text);
-
-      // Return the parsed content in the desired format
-      return {
-        contributor: parsedContent.contributor,
-        reward: parsedContent.reward,
-      };
+      return candidateContent.parts[0].text;
     } else {
-      throw new Error('AI response content is missing expected parts.');
+      throw new Error('Gemini response content is missing expected parts.');
     }
+
+  } catch (err) {
+    console.error('Error in Gemini API call:', err);
+    throw err;
+  }
+}
+
+/**
+ * Parse comment using Gemini AI to extract contributor and reward
+ */
+export async function parseComment(prompt: string): Promise<CommentParsingResponse> {
+  try {
+    const responseText = await callGeminiAPI(prompt);
+    
+    // Parse the JSON response from Gemini
+    const parsedContent = JSON.parse(responseText);
+
+    // Return the parsed content in the desired format
+    return {
+      contributor: parsedContent.contributor,
+      reward: parsedContent.reward,
+    };
 
   } catch (err) {
     console.error('Error in parsing comment:', err);

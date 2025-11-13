@@ -4,3 +4,6 @@ export * from './user';
 export * from './contributor';
 export * from './organization';
 export * from './repository-maintainer';
+export * from './activity';
+export * from './stats';
+export * from './dashboard';

@@ -1,6 +1,7 @@
 import { RepositoryRenamedWebhookPayload } from '@/interfaces';
 import { ControllerReturnType } from '../../../interface';
 import prisma from '@/lib/prisma';
+import { logActivity } from '@/lib/activityLogger';
 
 export async function handleRepositoriesRenamedEvent(
   body: RepositoryRenamedWebhookPayload
@@ -29,6 +30,20 @@ export async function handleRepositoriesRenamedEvent(
       },
       data: {
         name: repository.name,
+      },
+    });
+
+    // Log activity for repository rename
+    await logActivity({
+      organizationId: repositoryInDb.organization_id,
+      activityType: 'REPO_ADDED', // Using REPO_ADDED as there's no REPO_RENAMED type
+      title: `Repository Renamed: ${repository.name}`,
+      description: `Repository was renamed to ${repository.name}`,
+      repositoryId: repositoryInDb.id,
+      metadata: {
+        oldName: repositoryInDb.name,
+        newName: repository.name,
+        githubRepoId: repository.id.toString(),
       },
     });
 

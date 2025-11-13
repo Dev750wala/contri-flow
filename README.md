@@ -8,3 +8,4 @@
 
 
 # Check if the owner organization has enough deposits as greater or equal amount in comment passing you.. Incoming passing you.
+# the owner is not set during installation of github app

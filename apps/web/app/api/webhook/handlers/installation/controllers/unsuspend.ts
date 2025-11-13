@@ -1,6 +1,7 @@
 import { AppInstallationInterface } from '@/interfaces';
 import prisma from '@/lib/prisma';
 import { ControllerReturnType } from '../../../interface';
+import { logActivity } from '@/lib/activityLogger';
 
 export async function handleInstallationUnsuspendedEvent(
   body: AppInstallationInterface
@@ -26,6 +27,18 @@ export async function handleInstallationUnsuspendedEvent(
     await prisma.organization.update({
       where: { id: organization.id },
       data: { suspended: false },
+    });
+
+    // Log activity for organization reactivation
+    await logActivity({
+      organizationId: organization.id,
+      activityType: 'ORG_REACTIVATED',
+      title: 'Organization Reactivated',
+      description: `Organization was reactivated after suspension`,
+      metadata: {
+        installationId: installation.id,
+        reactivatedAt: new Date().toISOString(),
+      },
     });
 
     return {

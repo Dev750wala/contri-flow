@@ -2,6 +2,42 @@
 ### Do not make changes to this file directly
 
 
+"""Activity log entry for organization events"""
+type Activity {
+  activity_type: ActivityType!
+  actor_id: String
+  actor_name: String
+  amount: String
+  created_at: DateTime!
+  description: String
+  id: ID!
+  issue_number: Int
+  organization: Organization
+  pr_number: Int
+  repository_id: String
+  reward_id: String
+  title: String!
+}
+
+enum ActivityType {
+  APP_INSTALLED
+  APP_UNINSTALLED
+  DEPOSIT
+  ISSUE_CLOSED
+  ISSUE_CREATED
+  MAINTAINER_ADDED
+  MAINTAINER_REMOVED
+  ORG_REACTIVATED
+  ORG_SUSPENDED
+  PR_MERGED
+  REPO_ADDED
+  REPO_REMOVED
+  REWARDS_DISABLED
+  REWARDS_ENABLED
+  REWARD_CLAIMED
+  REWARD_ISSUED
+}
+
 type CheckInstallationData {
   organization: Organization
   repositories: [Repository!]!
@@ -22,13 +58,25 @@ type Contributor {
   rewards: [Reward]
   updated_at: DateTime!
   user: User
-  wallet_address: String
 }
 
 """
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
 scalar DateTime
+
+"""
+Global aggregated statistics across all organizations (computed from database)
+"""
+type GlobalStats {
+  totalActiveRepositories: Int!
+  totalBalance: Float!
+  totalContributors: Int!
+  totalOrganizations: Int!
+  totalPendingRewards: Int!
+  totalRepositories: Int!
+  totalRewardsDistributed: Float!
+}
 
 type Mutation {
   addRepositoryMaintainer(github_id: String!, repositoryId: String!, role: RepositoryRole!, userId: String!): RepositoryMaintainer!
@@ -60,12 +108,93 @@ enum OrganizationRole {
   OWNER
 }
 
+"""Aggregated statistics for an organization (computed from database)"""
+type OrganizationStats {
+  activeRepositories: Int!
+  totalBalance: Float!
+  totalPendingAmount: Float!
+  totalRepositories: Int!
+  totalRewardsClaimed: Int!
+  totalRewardsDistributed: Float!
+  totalRewardsPending: Int!
+  uniqueContributors: Int!
+}
+
+type OrganizationWithDetails {
+  appInstalled: Boolean!
+  createdAt: DateTime!
+  githubOrgId: String!
+  id: String!
+  installationId: String!
+  name: String!
+
+  """Organization owner"""
+  owner: User
+  ownerGithubId: String!
+
+  """All repositories for this organization"""
+  repositories: [Repository!]!
+  suspended: Boolean!
+  updatedAt: DateTime!
+}
+
+"""Complete dashboard data for organization owner"""
+type OwnerDashboardData {
+  """List of organizations with basic details (fast)"""
+  organizations: [OrganizationWithDetails!]!
+}
+
+type Payout {
+  claimed_at: DateTime!
+  destination_chain: String!
+  id: ID!
+  platform_fee: String!
+  receiver_address: String!
+  reward: Reward
+  total_amount: String!
+}
+
 type Query {
   allRepositories(token: String!): [Repository]
   allUsers(token: String!): [User]
   checkInstallation(installationId: String!): CheckInstallationResponse
   contributor(id: String!): Contributor
   contributorByGithubId(github_id: String!): Contributor
+
+  """
+  Get aggregated statistics across all organizations owned by user (VERY SLOW query)
+  """
+  getGlobalStats: GlobalStats
+
+  """Get recent activity logs for an organization (FAST query - indexed)"""
+  getOrganizationActivity(limit: Int = 10, offset: Int = 0, organizationId: String!): [Activity!]!
+
+  """Get organization details by ID (FAST query)"""
+  getOrganizationDetails(organizationId: String!): OrganizationWithDetails
+
+  """
+  Get aggregated statistics for an organization (SLOW query - use separately)
+  """
+  getOrganizationStats(organizationId: String!): OrganizationStats
+
+  """Get all organizations owned by the current user (FAST query)"""
+  getOwnerDashboard: OwnerDashboardData
+
+  """
+  Get pending (unclaimed but confirmed) rewards for an organization (FAST query)
+  """
+  getPendingRewards(limit: Int = 10, offset: Int = 0, organizationId: String!): [Reward!]!
+
+  """Get all rewards for a repository (FAST query)"""
+  getRepositoryRewards(limit: Int = 50, offset: Int = 0, repositoryId: String!): [Reward!]!
+
+  """
+  Get aggregated statistics for a repository (SLOW query - use separately)
+  """
+  getRepositoryStats(repositoryId: String!): RepositoryStats
+
+  """Get stats for multiple repositories at once (SLOW query)"""
+  getRepositoryStatsBatch(repositoryIds: [String!]!): [RepositoryStats!]!
   listOrganizationsForOwner: [Organization]
   me: User
   organization(id: String!): Organization
@@ -117,19 +246,27 @@ enum RepositoryRole {
   MAINTAIN
 }
 
+"""Aggregated statistics for a repository (computed from database)"""
+type RepositoryStats {
+  maintainerCount: Int!
+  pendingAmount: Float!
+  totalDistributed: Float!
+  totalPending: Int!
+  totalRewards: Int!
+  uniqueContributors: Int!
+}
+
 type Reward {
   claimed: Boolean!
-  claimed_at: DateTime
   comment: String!
   contributor: Contributor
   created_at: DateTime!
-  destination_address: String
   id: ID!
   issuer: RepositoryMaintainer!
+  payout: Payout
   pr_number: Int!
   repository: Repository
   secret: String!
-  tx_hash: String
   updated_at: DateTime!
 }
 
@@ -143,5 +280,4 @@ type User {
   name: String!
   organizations: [Organization]
   updated_at: DateTime!
-  wallet_address: String
 }

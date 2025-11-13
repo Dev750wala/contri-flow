@@ -20,7 +20,8 @@ export async function handleIssueCommentCreated(
       user: { id: commentor_github_id },
     },
     repository: { id: repository_github_id },
-    sender: { id: sender_github_id },  // The person who comments for issuing reward.
+    sender: { id: sender_github_id }, // The person who comments for issuing reward.
+    installation: { id: installation_id },
   } = body;
 
   if (!merged_at) {
@@ -64,7 +65,7 @@ export async function handleIssueCommentCreated(
         data: rewardExists,
       };
     }
-    console.log(repository.id, contributor_github_id)
+    console.log(repository.id, contributor_github_id);
     issuar = await tx.repositoryMaintainer.findUnique({
       where: {
         repository_id_github_id: {
@@ -105,11 +106,12 @@ export async function handleIssueCommentCreated(
     {
       commentBody,
       prNumber: pr_number,
-      contributorGithubId: contributor_github_id,
-      commentorGithubId: commentor_github_id,
-      repositoryGithubId: repository_github_id,
+      contributorGithubId: contributor_github_id.toString(),
+      commentorGithubId: commentor_github_id.toString(),
+      repositoryGithubId: repository_github_id.toString(),
       repositoryId: repository.id,
       commentorId: issuar.id,
+      installationId: installation_id,
     },
     {
       attempts: 1,

@@ -1,6 +1,7 @@
 import { MemberEventInterface } from '@/interfaces';
 import prisma from '@/lib/prisma';
 import { ControllerReturnType } from '../../../interface';
+import { logActivity } from '@/lib/activityLogger';
 
 export async function handleMemberAddedEvent(
   body: MemberEventInterface
@@ -26,7 +27,31 @@ export async function handleMemberAddedEvent(
         github_id: member.id.toString(),
         role: "MAINTAIN",
       },
+      include: {
+        repository: {
+          include: {
+            organization: true,
+          },
+        },
+      },
     });
+
+    // Log activity for maintainer addition
+    await logActivity({
+      organizationId: newMaintainer.repository.organization.id,
+      activityType: 'MAINTAINER_ADDED',
+      title: `Maintainer Added: ${member.login}`,
+      description: `${member.login} was added as maintainer for ${newMaintainer.repository.name}`,
+      repositoryId: newMaintainer.repository_id,
+      actorId: member.id.toString(),
+      actorName: member.login,
+      metadata: {
+        role: 'MAINTAIN',
+        maintainerGithubId: member.id.toString(),
+        maintainerLogin: member.login,
+      },
+    });
+
     return {
       statusCode: 200,
       message: 'Member added successfully',

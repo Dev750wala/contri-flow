@@ -2,6 +2,7 @@ import { extendType, nonNull, objectType, stringArg } from 'nexus';
 import { Context } from '../context';
 import { OrganizationType, RepositoryMaintainerType, RepositoryType } from '../types';
 import { createAppJWT } from '@/lib/utils';
+import { logActivity } from '@/lib/activityLogger';
 
 export const CheckInstallationData = objectType({
   name: 'CheckInstallationData',
@@ -75,6 +76,8 @@ export const OrganizationQuery = extendType({
             owner_id: ctx.session.user.userId,
           },
         });
+        console.log("HERE ARE THE ORGANIZATION FOR THE CURRENT USER: ", JSON.stringify(orgs));
+        
         return orgs;
       },
     });
@@ -183,10 +186,26 @@ export const OrganizationMutation = extendType({
           throw new Error('User not found');
         }
 
-        return await ctx.prisma.organization.update({
+        const updatedOrg = await ctx.prisma.organization.update({
           where: { id: args.organizationId },
           data: { sync_maintainers: true },
         });
+
+        // Log activity for enabling maintainer sync
+        await logActivity({
+          organizationId: updatedOrg.id,
+          activityType: 'APP_INSTALLED', // Using APP_INSTALLED as there's no specific type for this
+          title: 'Maintainer Sync Enabled',
+          description: `Automatic maintainer synchronization was enabled for the organization`,
+          actorId: currentUser.id,
+          actorName: currentUser.name,
+          metadata: {
+            feature: 'sync_maintainers',
+            enabledBy: currentUser.github_id,
+          },
+        });
+
+        return updatedOrg;
       },
     });
   },

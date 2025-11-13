@@ -39,6 +39,7 @@ model Organization {
   owner           User?   @relation(fields: [owner_id], references: [id])
 
   repositories     Repository[]
+  activities       Activity[]
   sync_maintainers Boolean      @default(false)
   // members            OrganizationMember[]
   created_at       DateTime     @default(now())
@@ -130,6 +131,51 @@ model Payout {
 
   reward_id String @unique
   reward    Reward @relation(fields: [reward_id], references: [id])
+}
+
+model Activity {
+  id              String       @id @default(cuid())
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id])
+
+  activity_type ActivityType
+  title         String
+  description   String?
+  metadata      Json? 
+
+  repository_id  String? 
+  reward_id      String?
+  actor_id       String? 
+  actor_name     String? 
+
+  amount         String?
+  pr_number      Int? 
+  issue_number   Int? 
+
+  created_at DateTime @default(now())
+
+  @@index([organization_id])
+  @@index([activity_type])
+  @@index([created_at])
+}
+
+enum ActivityType {
+  DEPOSIT               // Funds deposited to organization
+  REWARD_ISSUED         // Reward created by maintainer
+  REWARD_CLAIMED        // Reward claimed by contributor
+  PR_MERGED             // Pull request merged
+  ISSUE_CREATED         // Issue created
+  ISSUE_CLOSED          // Issue closed
+  REPO_ADDED            // Repository added to organization
+  REPO_REMOVED          // Repository removed
+  REWARDS_ENABLED       // Rewards enabled for repository
+  REWARDS_DISABLED      // Rewards disabled for repository
+  MAINTAINER_ADDED      // Maintainer added to repository
+  MAINTAINER_REMOVED    // Maintainer removed from repository
+  APP_INSTALLED         // GitHub app installed
+  APP_UNINSTALLED       // GitHub app uninstalled
+  ORG_SUSPENDED         // Organization suspended
+  ORG_REACTIVATED       // Organization reactivated
 }
 
 enum RepositoryRole {

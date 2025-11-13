@@ -2,6 +2,7 @@ import { extendType, list, nonNull, objectType, stringArg } from 'nexus';
 import { Context } from '../context';
 import config from '@/config';
 import { RepositoryType } from '../types/repository';
+import { logActivities } from '@/lib/activityLogger';
 
 export const repositoryMutationResponse = objectType({
   name: 'RepositoryMutationResponse',
@@ -82,6 +83,16 @@ export const RepositoryMutation = extendType({
       resolve: async (_parent, args, ctx: Context) => {
         const { repositoryId } = args;
         try {
+          // Fetch repositories to get organization info for activity logging
+          const repositories = await ctx.prisma.repository.findMany({
+            where: {
+              id: { in: repositoryId },
+            },
+            include: {
+              organization: true,
+            },
+          });
+
           const something = await ctx.prisma.repository.updateMany({
             where: {
               id: { in: repositoryId },
@@ -91,6 +102,21 @@ export const RepositoryMutation = extendType({
             },
           });
           console.log("something", something);
+
+          // Log activities for rewards enabled
+          const activities = repositories.map((repo) => ({
+            organizationId: repo.organization.id,
+            activityType: 'REWARDS_ENABLED' as const,
+            title: `Rewards Enabled: ${repo.name}`,
+            description: `Rewards were enabled for repository ${repo.name}`,
+            repositoryId: repo.id,
+            metadata: {
+              repoName: repo.name,
+              githubRepoId: repo.github_repo_id,
+            },
+          }));
+
+          await logActivities(activities);
           
 
           return something.count > 0 ? { success: true, error: null } : { success: false, error: 'No repositories updated' };

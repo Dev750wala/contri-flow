@@ -1,6 +1,7 @@
 import { AppInstallationInterface } from '@/interfaces';
 import { ControllerReturnType } from '../../../interface';
 import prisma from '@/lib/prisma';
+import { logActivity } from '@/lib/activityLogger';
 
 export async function handleInstallationDeletedEvent(
   body: AppInstallationInterface
@@ -30,6 +31,18 @@ export async function handleInstallationDeletedEvent(
       data: {
         app_uninstalled_at: new Date(),
         app_installed: false,
+      },
+    });
+
+    // Log activity for app uninstallation
+    await logActivity({
+      organizationId: organization.id,
+      activityType: 'APP_UNINSTALLED',
+      title: 'GitHub App Uninstalled',
+      description: `GitHub App was uninstalled from organization`,
+      metadata: {
+        installationId: installation.id,
+        uninstalledAt: new Date().toISOString(),
       },
     });
 

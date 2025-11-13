@@ -32,6 +32,7 @@ export interface NexusGenInputs {
 }
 
 export interface NexusGenEnums {
+  ActivityType: "APP_INSTALLED" | "APP_UNINSTALLED" | "DEPOSIT" | "ISSUE_CLOSED" | "ISSUE_CREATED" | "MAINTAINER_ADDED" | "MAINTAINER_REMOVED" | "ORG_REACTIVATED" | "ORG_SUSPENDED" | "PR_MERGED" | "REPO_ADDED" | "REPO_REMOVED" | "REWARDS_DISABLED" | "REWARDS_ENABLED" | "REWARD_CLAIMED" | "REWARD_ISSUED"
   OrganizationRole: "MEMBER" | "OWNER"
   RepositoryRole: "ADMIN" | "MAINTAIN"
 }
@@ -46,6 +47,20 @@ export interface NexusGenScalars {
 }
 
 export interface NexusGenObjects {
+  Activity: { // root type
+    activity_type: NexusGenEnums['ActivityType']; // ActivityType!
+    actor_id?: string | null; // String
+    actor_name?: string | null; // String
+    amount?: string | null; // String
+    created_at: NexusGenScalars['DateTime']; // DateTime!
+    description?: string | null; // String
+    id: string; // ID!
+    issue_number?: number | null; // Int
+    pr_number?: number | null; // Int
+    repository_id?: string | null; // String
+    reward_id?: string | null; // String
+    title: string; // String!
+  }
   CheckInstallationData: { // root type
     organization?: NexusGenRootTypes['Organization'] | null; // Organization
     repositories: NexusGenRootTypes['Repository'][]; // [Repository!]!
@@ -62,7 +77,15 @@ export interface NexusGenObjects {
     github_id: string; // String!
     id: string; // ID!
     updated_at: NexusGenScalars['DateTime']; // DateTime!
-    wallet_address?: string | null; // String
+  }
+  GlobalStats: { // root type
+    totalActiveRepositories: number; // Int!
+    totalBalance: number; // Float!
+    totalContributors: number; // Int!
+    totalOrganizations: number; // Int!
+    totalPendingRewards: number; // Int!
+    totalRepositories: number; // Int!
+    totalRewardsDistributed: number; // Float!
   }
   Mutation: {};
   Organization: { // root type
@@ -77,6 +100,38 @@ export interface NexusGenObjects {
     suspended: boolean; // Boolean!
     sync_maintainers: boolean; // Boolean!
     updated_at: NexusGenScalars['DateTime']; // DateTime!
+  }
+  OrganizationStats: { // root type
+    activeRepositories: number; // Int!
+    totalBalance: number; // Float!
+    totalPendingAmount: number; // Float!
+    totalRepositories: number; // Int!
+    totalRewardsClaimed: number; // Int!
+    totalRewardsDistributed: number; // Float!
+    totalRewardsPending: number; // Int!
+    uniqueContributors: number; // Int!
+  }
+  OrganizationWithDetails: { // root type
+    appInstalled: boolean; // Boolean!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    githubOrgId: string; // String!
+    id: string; // String!
+    installationId: string; // String!
+    name: string; // String!
+    ownerGithubId: string; // String!
+    suspended: boolean; // Boolean!
+    updatedAt: NexusGenScalars['DateTime']; // DateTime!
+  }
+  OwnerDashboardData: { // root type
+    organizations: NexusGenRootTypes['OrganizationWithDetails'][]; // [OrganizationWithDetails!]!
+  }
+  Payout: { // root type
+    claimed_at: NexusGenScalars['DateTime']; // DateTime!
+    destination_chain: string; // String!
+    id: string; // ID!
+    platform_fee: string; // String!
+    receiver_address: string; // String!
+    total_amount: string; // String!
   }
   Query: {};
   Repository: { // root type
@@ -99,16 +154,21 @@ export interface NexusGenObjects {
     error?: string | null; // String
     success: boolean; // Boolean!
   }
+  RepositoryStats: { // root type
+    maintainerCount: number; // Int!
+    pendingAmount: number; // Float!
+    totalDistributed: number; // Float!
+    totalPending: number; // Int!
+    totalRewards: number; // Int!
+    uniqueContributors: number; // Int!
+  }
   Reward: { // root type
     claimed: boolean; // Boolean!
-    claimed_at?: NexusGenScalars['DateTime'] | null; // DateTime
     comment: string; // String!
     created_at: NexusGenScalars['DateTime']; // DateTime!
-    destination_address?: string | null; // String
     id: string; // ID!
     pr_number: number; // Int!
     secret: string; // String!
-    tx_hash?: string | null; // String
     updated_at: NexusGenScalars['DateTime']; // DateTime!
   }
   User: { // root type
@@ -118,7 +178,6 @@ export interface NexusGenObjects {
     id: string; // ID!
     name: string; // String!
     updated_at: NexusGenScalars['DateTime']; // DateTime!
-    wallet_address?: string | null; // String
   }
 }
 
@@ -133,6 +192,21 @@ export type NexusGenRootTypes = NexusGenObjects
 export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars & NexusGenEnums
 
 export interface NexusGenFieldTypes {
+  Activity: { // field return type
+    activity_type: NexusGenEnums['ActivityType']; // ActivityType!
+    actor_id: string | null; // String
+    actor_name: string | null; // String
+    amount: string | null; // String
+    created_at: NexusGenScalars['DateTime']; // DateTime!
+    description: string | null; // String
+    id: string; // ID!
+    issue_number: number | null; // Int
+    organization: NexusGenRootTypes['Organization'] | null; // Organization
+    pr_number: number | null; // Int
+    repository_id: string | null; // String
+    reward_id: string | null; // String
+    title: string; // String!
+  }
   CheckInstallationData: { // field return type
     organization: NexusGenRootTypes['Organization'] | null; // Organization
     repositories: NexusGenRootTypes['Repository'][]; // [Repository!]!
@@ -151,7 +225,15 @@ export interface NexusGenFieldTypes {
     rewards: Array<NexusGenRootTypes['Reward'] | null> | null; // [Reward]
     updated_at: NexusGenScalars['DateTime']; // DateTime!
     user: NexusGenRootTypes['User'] | null; // User
-    wallet_address: string | null; // String
+  }
+  GlobalStats: { // field return type
+    totalActiveRepositories: number; // Int!
+    totalBalance: number; // Float!
+    totalContributors: number; // Int!
+    totalOrganizations: number; // Int!
+    totalPendingRewards: number; // Int!
+    totalRepositories: number; // Int!
+    totalRewardsDistributed: number; // Float!
   }
   Mutation: { // field return type
     addRepositoryMaintainer: NexusGenRootTypes['RepositoryMaintainer']; // RepositoryMaintainer!
@@ -176,12 +258,56 @@ export interface NexusGenFieldTypes {
     sync_maintainers: boolean; // Boolean!
     updated_at: NexusGenScalars['DateTime']; // DateTime!
   }
+  OrganizationStats: { // field return type
+    activeRepositories: number; // Int!
+    totalBalance: number; // Float!
+    totalPendingAmount: number; // Float!
+    totalRepositories: number; // Int!
+    totalRewardsClaimed: number; // Int!
+    totalRewardsDistributed: number; // Float!
+    totalRewardsPending: number; // Int!
+    uniqueContributors: number; // Int!
+  }
+  OrganizationWithDetails: { // field return type
+    appInstalled: boolean; // Boolean!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    githubOrgId: string; // String!
+    id: string; // String!
+    installationId: string; // String!
+    name: string; // String!
+    owner: NexusGenRootTypes['User'] | null; // User
+    ownerGithubId: string; // String!
+    repositories: NexusGenRootTypes['Repository'][]; // [Repository!]!
+    suspended: boolean; // Boolean!
+    updatedAt: NexusGenScalars['DateTime']; // DateTime!
+  }
+  OwnerDashboardData: { // field return type
+    organizations: NexusGenRootTypes['OrganizationWithDetails'][]; // [OrganizationWithDetails!]!
+  }
+  Payout: { // field return type
+    claimed_at: NexusGenScalars['DateTime']; // DateTime!
+    destination_chain: string; // String!
+    id: string; // ID!
+    platform_fee: string; // String!
+    receiver_address: string; // String!
+    reward: NexusGenRootTypes['Reward'] | null; // Reward
+    total_amount: string; // String!
+  }
   Query: { // field return type
     allRepositories: Array<NexusGenRootTypes['Repository'] | null> | null; // [Repository]
     allUsers: Array<NexusGenRootTypes['User'] | null> | null; // [User]
     checkInstallation: NexusGenRootTypes['CheckInstallationResponse'] | null; // CheckInstallationResponse
     contributor: NexusGenRootTypes['Contributor'] | null; // Contributor
     contributorByGithubId: NexusGenRootTypes['Contributor'] | null; // Contributor
+    getGlobalStats: NexusGenRootTypes['GlobalStats'] | null; // GlobalStats
+    getOrganizationActivity: NexusGenRootTypes['Activity'][]; // [Activity!]!
+    getOrganizationDetails: NexusGenRootTypes['OrganizationWithDetails'] | null; // OrganizationWithDetails
+    getOrganizationStats: NexusGenRootTypes['OrganizationStats'] | null; // OrganizationStats
+    getOwnerDashboard: NexusGenRootTypes['OwnerDashboardData'] | null; // OwnerDashboardData
+    getPendingRewards: NexusGenRootTypes['Reward'][]; // [Reward!]!
+    getRepositoryRewards: NexusGenRootTypes['Reward'][]; // [Reward!]!
+    getRepositoryStats: NexusGenRootTypes['RepositoryStats'] | null; // RepositoryStats
+    getRepositoryStatsBatch: NexusGenRootTypes['RepositoryStats'][]; // [RepositoryStats!]!
     listOrganizationsForOwner: Array<NexusGenRootTypes['Organization'] | null> | null; // [Organization]
     me: NexusGenRootTypes['User'] | null; // User
     organization: NexusGenRootTypes['Organization'] | null; // Organization
@@ -224,19 +350,25 @@ export interface NexusGenFieldTypes {
     error: string | null; // String
     success: boolean; // Boolean!
   }
+  RepositoryStats: { // field return type
+    maintainerCount: number; // Int!
+    pendingAmount: number; // Float!
+    totalDistributed: number; // Float!
+    totalPending: number; // Int!
+    totalRewards: number; // Int!
+    uniqueContributors: number; // Int!
+  }
   Reward: { // field return type
     claimed: boolean; // Boolean!
-    claimed_at: NexusGenScalars['DateTime'] | null; // DateTime
     comment: string; // String!
     contributor: NexusGenRootTypes['Contributor'] | null; // Contributor
     created_at: NexusGenScalars['DateTime']; // DateTime!
-    destination_address: string | null; // String
     id: string; // ID!
     issuer: NexusGenRootTypes['RepositoryMaintainer']; // RepositoryMaintainer!
+    payout: NexusGenRootTypes['Payout'] | null; // Payout
     pr_number: number; // Int!
     repository: NexusGenRootTypes['Repository'] | null; // Repository
     secret: string; // String!
-    tx_hash: string | null; // String
     updated_at: NexusGenScalars['DateTime']; // DateTime!
   }
   User: { // field return type
@@ -249,11 +381,25 @@ export interface NexusGenFieldTypes {
     name: string; // String!
     organizations: Array<NexusGenRootTypes['Organization'] | null> | null; // [Organization]
     updated_at: NexusGenScalars['DateTime']; // DateTime!
-    wallet_address: string | null; // String
   }
 }
 
 export interface NexusGenFieldTypeNames {
+  Activity: { // field return type name
+    activity_type: 'ActivityType'
+    actor_id: 'String'
+    actor_name: 'String'
+    amount: 'String'
+    created_at: 'DateTime'
+    description: 'String'
+    id: 'ID'
+    issue_number: 'Int'
+    organization: 'Organization'
+    pr_number: 'Int'
+    repository_id: 'String'
+    reward_id: 'String'
+    title: 'String'
+  }
   CheckInstallationData: { // field return type name
     organization: 'Organization'
     repositories: 'Repository'
@@ -272,7 +418,15 @@ export interface NexusGenFieldTypeNames {
     rewards: 'Reward'
     updated_at: 'DateTime'
     user: 'User'
-    wallet_address: 'String'
+  }
+  GlobalStats: { // field return type name
+    totalActiveRepositories: 'Int'
+    totalBalance: 'Float'
+    totalContributors: 'Int'
+    totalOrganizations: 'Int'
+    totalPendingRewards: 'Int'
+    totalRepositories: 'Int'
+    totalRewardsDistributed: 'Float'
   }
   Mutation: { // field return type name
     addRepositoryMaintainer: 'RepositoryMaintainer'
@@ -297,12 +451,56 @@ export interface NexusGenFieldTypeNames {
     sync_maintainers: 'Boolean'
     updated_at: 'DateTime'
   }
+  OrganizationStats: { // field return type name
+    activeRepositories: 'Int'
+    totalBalance: 'Float'
+    totalPendingAmount: 'Float'
+    totalRepositories: 'Int'
+    totalRewardsClaimed: 'Int'
+    totalRewardsDistributed: 'Float'
+    totalRewardsPending: 'Int'
+    uniqueContributors: 'Int'
+  }
+  OrganizationWithDetails: { // field return type name
+    appInstalled: 'Boolean'
+    createdAt: 'DateTime'
+    githubOrgId: 'String'
+    id: 'String'
+    installationId: 'String'
+    name: 'String'
+    owner: 'User'
+    ownerGithubId: 'String'
+    repositories: 'Repository'
+    suspended: 'Boolean'
+    updatedAt: 'DateTime'
+  }
+  OwnerDashboardData: { // field return type name
+    organizations: 'OrganizationWithDetails'
+  }
+  Payout: { // field return type name
+    claimed_at: 'DateTime'
+    destination_chain: 'String'
+    id: 'ID'
+    platform_fee: 'String'
+    receiver_address: 'String'
+    reward: 'Reward'
+    total_amount: 'String'
+  }
   Query: { // field return type name
     allRepositories: 'Repository'
     allUsers: 'User'
     checkInstallation: 'CheckInstallationResponse'
     contributor: 'Contributor'
     contributorByGithubId: 'Contributor'
+    getGlobalStats: 'GlobalStats'
+    getOrganizationActivity: 'Activity'
+    getOrganizationDetails: 'OrganizationWithDetails'
+    getOrganizationStats: 'OrganizationStats'
+    getOwnerDashboard: 'OwnerDashboardData'
+    getPendingRewards: 'Reward'
+    getRepositoryRewards: 'Reward'
+    getRepositoryStats: 'RepositoryStats'
+    getRepositoryStatsBatch: 'RepositoryStats'
     listOrganizationsForOwner: 'Organization'
     me: 'User'
     organization: 'Organization'
@@ -345,19 +543,25 @@ export interface NexusGenFieldTypeNames {
     error: 'String'
     success: 'Boolean'
   }
+  RepositoryStats: { // field return type name
+    maintainerCount: 'Int'
+    pendingAmount: 'Float'
+    totalDistributed: 'Float'
+    totalPending: 'Int'
+    totalRewards: 'Int'
+    uniqueContributors: 'Int'
+  }
   Reward: { // field return type name
     claimed: 'Boolean'
-    claimed_at: 'DateTime'
     comment: 'String'
     contributor: 'Contributor'
     created_at: 'DateTime'
-    destination_address: 'String'
     id: 'ID'
     issuer: 'RepositoryMaintainer'
+    payout: 'Payout'
     pr_number: 'Int'
     repository: 'Repository'
     secret: 'String'
-    tx_hash: 'String'
     updated_at: 'DateTime'
   }
   User: { // field return type name
@@ -370,7 +574,6 @@ export interface NexusGenFieldTypeNames {
     name: 'String'
     organizations: 'Organization'
     updated_at: 'DateTime'
-    wallet_address: 'String'
   }
 }
 
@@ -414,6 +617,33 @@ export interface NexusGenArgTypes {
     }
     contributorByGithubId: { // args
       github_id: string; // String!
+    }
+    getOrganizationActivity: { // args
+      limit: number | null; // Int
+      offset?: number | null; // Int
+      organizationId: string; // String!
+    }
+    getOrganizationDetails: { // args
+      organizationId: string; // String!
+    }
+    getOrganizationStats: { // args
+      organizationId: string; // String!
+    }
+    getPendingRewards: { // args
+      limit: number | null; // Int
+      offset?: number | null; // Int
+      organizationId: string; // String!
+    }
+    getRepositoryRewards: { // args
+      limit: number | null; // Int
+      offset?: number | null; // Int
+      repositoryId: string; // String!
+    }
+    getRepositoryStats: { // args
+      repositoryId: string; // String!
+    }
+    getRepositoryStatsBatch: { // args
+      repositoryIds: string[]; // [String!]!
     }
     organization: { // args
       id: string; // String!

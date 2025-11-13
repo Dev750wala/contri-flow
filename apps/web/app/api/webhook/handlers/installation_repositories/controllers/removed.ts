@@ -1,6 +1,7 @@
 import { InstallationRepositories } from '@/interfaces';
 import prisma from '@/lib/prisma';
 import { ControllerReturnType } from '../../../interface';
+import { logActivities } from '@/lib/activityLogger';
 
 export async function handleRepositoriesRemovedEvent(
   body: InstallationRepositories
@@ -22,8 +23,12 @@ export async function handleRepositoriesRemovedEvent(
     }
 
     const removedRepositories = await prisma.$transaction(async (tx) => {
-      const updatePromises = body.repositories_removed.map((repo) =>
-        tx.repository.updateMany({
+      const updatePromises = body.repositories_removed.map(async (repo) => {
+        const repository = await tx.repository.findUnique({
+          where: { github_repo_id: repo.id.toString() },
+        });
+
+        await tx.repository.updateMany({
           where: {
             github_repo_id: repo.id.toString(),
           },
@@ -31,11 +36,31 @@ export async function handleRepositoriesRemovedEvent(
             is_removed: true,
             removed_at: new Date(),
           },
-        })
-      );
+        });
+
+        return repository;
+      });
 
       return Promise.all(updatePromises);
     });
+
+    // Log activities for repositories removed
+    const activities = removedRepositories
+      .filter((repo) => repo !== null)
+      .map((repo) => ({
+        organizationId: organization.id,
+        activityType: 'REPO_REMOVED' as const,
+        title: `Repository Removed: ${repo!.name}`,
+        description: `Repository ${repo!.name} was removed from the organization`,
+        repositoryId: repo!.id,
+        metadata: {
+          githubRepoId: repo!.github_repo_id,
+          repoName: repo!.name,
+          removedAt: new Date().toISOString(),
+        },
+      }));
+
+    await logActivities(activities);
 
     return {
       success: true,
