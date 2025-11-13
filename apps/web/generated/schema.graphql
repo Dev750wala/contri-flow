@@ -152,6 +152,7 @@ type Payout {
   receiver_address: String!
   reward: Reward
   total_amount: String!
+  tx_hash: String!
 }
 
 type Query {
@@ -259,6 +260,7 @@ type RepositoryStats {
 type Reward {
   claimed: Boolean!
   comment: String!
+  confirmed: Boolean!
   contributor: Contributor
   created_at: DateTime!
   id: ID!
@@ -267,6 +269,7 @@ type Reward {
   pr_number: Int!
   repository: Repository
   secret: String!
+  token_amount: String!
   updated_at: DateTime!
 }
 

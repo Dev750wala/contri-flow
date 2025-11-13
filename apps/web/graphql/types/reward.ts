@@ -14,8 +14,10 @@ export const RewardType = objectType({
     t.nonNull.field(Reward.id);
     t.nonNull.field(Reward.pr_number);
     t.nonNull.field(Reward.secret);
+    t.nonNull.field(Reward.token_amount);
     t.nonNull.field(Reward.created_at);
     t.nonNull.field(Reward.claimed);
+    t.nonNull.field(Reward.confirmed);
     t.nonNull.field(Reward.updated_at);
     t.field(Reward.comment);
 
@@ -58,6 +60,6 @@ export const RewardType = objectType({
           where: { reward_id: parent.id },
         });
       },
-    })
+    });
   },
 });

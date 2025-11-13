@@ -30,6 +30,10 @@ export const ContributorType = objectType({
     t.field('user', {
       type: UserType,
       resolve(parent: ContributorPrisma, _args, ctx: Context) {
+        // Return null if contributor is not linked to a user account
+        if (!parent.user_id) {
+          return null;
+        }
         return ctx.prisma.user.findUnique({
           where: {
             id: parent.user_id,

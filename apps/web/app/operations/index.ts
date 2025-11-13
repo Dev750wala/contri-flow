@@ -1,5 +1,8 @@
 import { gql } from "@apollo/client";
 
+export * from './dashboard.operations';
+export * from './contributor.operations';
+
 export const LIST_ORGANIZATIONS_FOR_OWNER = gql`
   query ListOrganizationsForOwner {
       listOrganizationsForOwner {
