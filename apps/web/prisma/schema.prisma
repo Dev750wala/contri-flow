@@ -109,6 +109,8 @@ model Reward {
   comment             String
   payout              Payout?
 
+  confirmed Boolean       @default(false)      // the voucher is stored on blockchain
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
