@@ -9,11 +9,11 @@ const sourceDb = new PrismaClient({
   }
 });
 
-// Target database (Neon)
+// Target database (hosted)
 const targetDb = new PrismaClient({
   datasources: {
     db: {
-      url: "postgresql://contri-flow_owner:npg_CJhlDPn4E0to@ep-tiny-smoke-a1eevaqn-pooler.ap-southeast-1.aws.neon.tech/contri-flow?sslmode=require&channel_binding=require"
+      url: process.env.DATABASE_URL || ''
     }
   }
 });
@@ -27,7 +27,7 @@ async function migrateData() {
     const existingUsers = await targetDb.user.findMany();
     const existingOrgs = await targetDb.organization.findMany();
     const existingRepos = await targetDb.repository.findMany();
-    
+
     console.log(`Found in Neon:`);
     console.log(`   - ${existingUsers.length} existing users`);
     console.log(`   - ${existingOrgs.length} existing organizations`);
@@ -35,7 +35,7 @@ async function migrateData() {
 
     // Step 1: Fetch all data from source database
     console.log('📥 Fetching data from local database...');
-    
+
     const users = await sourceDb.user.findMany();
     const organizations = await sourceDb.organization.findMany();
     const repositories = await sourceDb.repository.findMany();
@@ -66,254 +66,311 @@ async function migrateData() {
 
     // Insert users first (no dependencies)
     console.log('→ Migrating users...');
-    let usersSkipped = 0;
+    let usersUpdated = 0;
     for (const user of users) {
       try {
-        const result = await targetDb.user.upsert({
-          where: { id: user.id },
-          update: user,
-          create: user,
-        });
-        userIdMap.set(user.id, result.id);
-      } catch (error: any) {
-        if (error.code === 'P2002') {
-          // Unique constraint violation - find existing user
-          const existing = await targetDb.user.findFirst({
-            where: {
-              OR: [
-                { email: user.email },
-                { github_id: user.github_id }
-              ]
-            }
-          });
-          if (existing) {
-            console.log(`   ⚠️  Skipping user (already exists): ${user.email || user.github_id}`);
-            userIdMap.set(user.id, existing.id); // Map old ID to new ID
-            usersSkipped++;
+        // First check if user exists by unique fields
+        const existing = await targetDb.user.findFirst({
+          where: {
+            OR: [
+              { github_id: user.github_id },
+              ...(user.email ? [{ email: user.email }] : [])
+            ]
           }
+        });
+
+        if (existing) {
+          console.log(`   🔄 Updating existing user: ${user.github_id}`);
+          await targetDb.user.update({
+            where: { id: existing.id },
+            data: user,
+          });
+          userIdMap.set(user.id, existing.id); // Map old ID to existing ID
+          usersUpdated++;
         } else {
-          throw error;
+          const result = await targetDb.user.create({
+            data: user,
+          });
+          userIdMap.set(user.id, result.id);
         }
+      } catch (error: any) {
+        console.error(`   ❌ Error migrating user ${user.github_id}:`, error.message);
+        throw error;
       }
     }
-    console.log(`✅ ${users.length - usersSkipped} users migrated (${usersSkipped} skipped)`);
+    console.log(`✅ ${users.length} users migrated (${usersUpdated} updated, ${users.length - usersUpdated} created)`);
 
     // Insert organizations
     console.log('→ Migrating organizations...');
-    let orgsSkipped = 0;
+    let orgsUpdated = 0;
     for (const org of organizations) {
       try {
         // Update owner_id if user was remapped
         const mappedOwnerId = org.owner_id ? (userIdMap.get(org.owner_id) || org.owner_id) : null;
         const orgData = { ...org, owner_id: mappedOwnerId };
-        
-        const result = await targetDb.organization.upsert({
-          where: { id: org.id },
-          update: orgData,
-          create: orgData,
-        });
-        orgIdMap.set(org.id, result.id);
-      } catch (error: any) {
-        if (error.code === 'P2002') {
-          // Find existing organization
-          const existing = await targetDb.organization.findFirst({
-            where: {
-              OR: [
-                { github_org_id: org.github_org_id },
-                { installation_id: org.installation_id }
-              ]
-            }
-          });
-          if (existing) {
-            console.log(`   ⚠️  Skipping organization (already exists): ${org.name}`);
-            orgIdMap.set(org.id, existing.id); // Map old ID to new ID
-            orgsSkipped++;
+
+        // First check if organization exists by unique fields
+        const existing = await targetDb.organization.findFirst({
+          where: {
+            OR: [
+              { github_org_id: org.github_org_id },
+              { installation_id: org.installation_id }
+            ]
           }
+        });
+
+        if (existing) {
+          console.log(`   🔄 Updating existing organization: ${org.name}`);
+          await targetDb.organization.update({
+            where: { id: existing.id },
+            data: orgData,
+          });
+          orgIdMap.set(org.id, existing.id); // Map old ID to existing ID
+          orgsUpdated++;
         } else {
-          throw error;
+          const result = await targetDb.organization.create({
+            data: orgData,
+          });
+          orgIdMap.set(org.id, result.id);
         }
+      } catch (error: any) {
+        console.error(`   ❌ Error migrating organization ${org.name}:`, error.message);
+        throw error;
       }
     }
-    console.log(`✅ ${organizations.length - orgsSkipped} organizations migrated (${orgsSkipped} skipped)`);
+    console.log(`✅ ${organizations.length} organizations migrated (${orgsUpdated} updated, ${organizations.length - orgsUpdated} created)`);
 
     // Insert repositories
     console.log('→ Migrating repositories...');
-    let reposSkipped = 0;
+    let reposUpdated = 0;
     for (const repo of repositories) {
       try {
         // Update organization_id if org was remapped
         const mappedOrgId = orgIdMap.get(repo.organization_id) || repo.organization_id;
         const repoData = { ...repo, organization_id: mappedOrgId };
-        
-        const result = await targetDb.repository.upsert({
-          where: { id: repo.id },
-          update: repoData,
-          create: repoData,
+
+        // First check if repository exists by unique field
+        const existing = await targetDb.repository.findUnique({
+          where: { github_repo_id: repo.github_repo_id }
         });
-        repoIdMap.set(repo.id, result.id);
-      } catch (error: any) {
-        if (error.code === 'P2002') {
-          // Find existing repository
-          const existing = await targetDb.repository.findFirst({
-            where: { github_repo_id: repo.github_repo_id }
+
+        if (existing) {
+          console.log(`   🔄 Updating existing repository: ${repo.name}`);
+          await targetDb.repository.update({
+            where: { id: existing.id },
+            data: repoData,
           });
-          if (existing) {
-            console.log(`   ⚠️  Skipping repository (already exists): ${repo.name}`);
-            repoIdMap.set(repo.id, existing.id); // Map old ID to new ID
-            reposSkipped++;
-          }
+          repoIdMap.set(repo.id, existing.id); // Map old ID to existing ID
+          reposUpdated++;
         } else {
-          throw error;
+          const result = await targetDb.repository.create({
+            data: repoData,
+          });
+          repoIdMap.set(repo.id, result.id);
         }
+      } catch (error: any) {
+        console.error(`   ❌ Error migrating repository ${repo.name}:`, error.message);
+        throw error;
       }
     }
-    console.log(`✅ ${repositories.length - reposSkipped} repositories migrated (${reposSkipped} skipped)`);
+    console.log(`✅ ${repositories.length} repositories migrated (${reposUpdated} updated, ${repositories.length - reposUpdated} created)`);
 
     // Insert maintainers
     console.log('→ Migrating repository maintainers...');
-    let maintainersSkipped = 0;
+    let maintainersUpdated = 0;
     for (const maintainer of maintainers) {
       try {
         // Update repository_id and user_id if they were remapped
         const mappedRepoId = repoIdMap.get(maintainer.repository_id) || maintainer.repository_id;
         const mappedUserId = maintainer.user_id ? (userIdMap.get(maintainer.user_id) || maintainer.user_id) : null;
-        const maintainerData = { 
-          ...maintainer, 
+        const maintainerData = {
+          ...maintainer,
           repository_id: mappedRepoId,
           user_id: mappedUserId
         };
-        
-        const result = await targetDb.repositoryMaintainer.upsert({
-          where: { id: maintainer.id },
-          update: maintainerData,
-          create: maintainerData,
-        });
-        maintainerIdMap.set(maintainer.id, result.id);
-      } catch (error: any) {
-        if (error.code === 'P2002') {
-          // Find existing maintainer
-          const existing = await targetDb.repositoryMaintainer.findFirst({
-            where: {
-              repository_id: repoIdMap.get(maintainer.repository_id) || maintainer.repository_id,
+
+        // Check if maintainer exists by composite unique constraint
+        const existing = await targetDb.repositoryMaintainer.findUnique({
+          where: {
+            repository_id_github_id: {
+              repository_id: mappedRepoId,
               github_id: maintainer.github_id
             }
-          });
-          if (existing) {
-            console.log(`   ⚠️  Skipping maintainer (already exists)`);
-            maintainerIdMap.set(maintainer.id, existing.id); // Map old ID to new ID
-            maintainersSkipped++;
           }
+        });
+
+        if (existing) {
+          console.log(`   🔄 Updating existing maintainer: ${maintainer.github_id}`);
+          await targetDb.repositoryMaintainer.update({
+            where: { id: existing.id },
+            data: maintainerData,
+          });
+          maintainerIdMap.set(maintainer.id, existing.id); // Map old ID to existing ID
+          maintainersUpdated++;
         } else {
-          throw error;
+          const result = await targetDb.repositoryMaintainer.create({
+            data: maintainerData,
+          });
+          maintainerIdMap.set(maintainer.id, result.id);
         }
+      } catch (error: any) {
+        console.error(`   ❌ Error migrating maintainer ${maintainer.github_id}:`, error.message);
+        throw error;
       }
     }
-    console.log(`✅ ${maintainers.length - maintainersSkipped} maintainers migrated (${maintainersSkipped} skipped)`);
+    console.log(`✅ ${maintainers.length} maintainers migrated (${maintainersUpdated} updated, ${maintainers.length - maintainersUpdated} created)`);
 
     // Insert contributors
     console.log('→ Migrating contributors...');
-    let contributorsSkipped = 0;
+    let contributorsUpdated = 0;
     for (const contributor of contributors) {
       try {
         // Update user_id if user was remapped
         const mappedUserId = contributor.user_id ? (userIdMap.get(contributor.user_id) || contributor.user_id) : null;
         const contributorData = { ...contributor, user_id: mappedUserId };
-        
-        await targetDb.contributor.upsert({
-          where: { id: contributor.id },
-          update: contributorData,
-          create: contributorData,
+
+        // Check if contributor exists by unique fields
+        const existing = await targetDb.contributor.findFirst({
+          where: {
+            OR: [
+              { github_id: contributor.github_id },
+              ...(contributor.email ? [{ email: contributor.email }] : [])
+            ]
+          }
         });
-      } catch (error: any) {
-        if (error.code === 'P2002') {
-          console.log(`   ⚠️  Skipping contributor (already exists): ${contributor.github_id}`);
-          contributorsSkipped++;
+
+        if (existing) {
+          console.log(`   🔄 Updating existing contributor: ${contributor.github_id}`);
+          await targetDb.contributor.update({
+            where: { id: existing.id },
+            data: contributorData,
+          });
+          contributorsUpdated++;
         } else {
-          throw error;
+          await targetDb.contributor.create({
+            data: contributorData,
+          });
         }
+      } catch (error: any) {
+        console.error(`   ❌ Error migrating contributor ${contributor.github_id}:`, error.message);
+        throw error;
       }
     }
-    console.log(`✅ ${contributors.length - contributorsSkipped} contributors migrated (${contributorsSkipped} skipped)`);
+    console.log(`✅ ${contributors.length} contributors migrated (${contributorsUpdated} updated, ${contributors.length - contributorsUpdated} created)`);
 
     // Insert rewards
     console.log('→ Migrating rewards...');
-    let rewardsSkipped = 0;
+    let rewardsUpdated = 0;
     for (const reward of rewards) {
       try {
         // Update all foreign key references if they were remapped
         const mappedRepoId = repoIdMap.get(reward.repository_id) || reward.repository_id;
         const mappedIssuerId = maintainerIdMap.get(reward.issuer_id) || reward.issuer_id;
-        const rewardData = { 
-          ...reward, 
+        const rewardData = {
+          ...reward,
           repository_id: mappedRepoId,
           issuer_id: mappedIssuerId
         };
-        
-        await targetDb.reward.upsert({
-          where: { id: reward.id },
-          update: rewardData,
-          create: rewardData,
+
+        // Check if reward exists by composite unique constraint
+        const existing = await targetDb.reward.findUnique({
+          where: {
+            repository_id_pr_number: {
+              repository_id: mappedRepoId,
+              pr_number: reward.pr_number
+            }
+          }
         });
-      } catch (error: any) {
-        if (error.code === 'P2002') {
-          console.log(`   ⚠️  Skipping reward (already exists)`);
-          rewardsSkipped++;
+
+        if (existing) {
+          console.log(`   🔄 Updating existing reward for PR #${reward.pr_number}`);
+          await targetDb.reward.update({
+            where: { id: existing.id },
+            data: rewardData,
+          });
+          rewardsUpdated++;
         } else {
-          throw error;
+          await targetDb.reward.create({
+            data: rewardData,
+          });
         }
+      } catch (error: any) {
+        console.error(`   ❌ Error migrating reward for PR #${reward.pr_number}:`, error.message);
+        throw error;
       }
     }
-    console.log(`✅ ${rewards.length - rewardsSkipped} rewards migrated (${rewardsSkipped} skipped)`);
+    console.log(`✅ ${rewards.length} rewards migrated (${rewardsUpdated} updated, ${rewards.length - rewardsUpdated} created)`);
 
     // Insert payouts
     console.log('→ Migrating payouts...');
-    let payoutsSkipped = 0;
+    let payoutsUpdated = 0;
     for (const payout of payouts) {
       try {
-        await targetDb.payout.upsert({
-          where: { id: payout.id },
-          update: payout,
-          create: payout,
+        // Check if payout exists by unique fields
+        const existing = await targetDb.payout.findFirst({
+          where: {
+            OR: [
+              { tx_hash: payout.tx_hash },
+              { reward_id: payout.reward_id }
+            ]
+          }
         });
-      } catch (error: any) {
-        if (error.code === 'P2002') {
-          console.log(`   ⚠️  Skipping payout (already exists)`);
-          payoutsSkipped++;
+
+        if (existing) {
+          console.log(`   🔄 Updating existing payout: ${payout.tx_hash}`);
+          await targetDb.payout.update({
+            where: { id: existing.id },
+            data: payout,
+          });
+          payoutsUpdated++;
         } else {
-          throw error;
+          await targetDb.payout.create({
+            data: payout,
+          });
         }
+      } catch (error: any) {
+        console.error(`   ❌ Error migrating payout ${payout.tx_hash}:`, error.message);
+        throw error;
       }
     }
-    console.log(`✅ ${payouts.length - payoutsSkipped} payouts migrated (${payoutsSkipped} skipped)`);
+    console.log(`✅ ${payouts.length} payouts migrated (${payoutsUpdated} updated, ${payouts.length - payoutsUpdated} created)`);
 
     // Insert activities
     console.log('→ Migrating activities...');
-    let activitiesSkipped = 0;
+    let activitiesUpdated = 0;
     for (const activity of activities) {
       try {
         // Update organization_id if org was remapped
         const mappedOrgId = orgIdMap.get(activity.organization_id) || activity.organization_id;
         const activityData = { ...activity, organization_id: mappedOrgId };
-        
-        await targetDb.activity.upsert({
-          where: { id: activity.id },
-          update: activityData,
-          create: activityData,
+
+        // Check if this exact activity already exists (by ID or similar criteria)
+        const existing = await targetDb.activity.findUnique({
+          where: { id: activity.id }
         });
-      } catch (error: any) {
-        if (error.code === 'P2002') {
-          console.log(`   ⚠️  Skipping activity (already exists)`);
-          activitiesSkipped++;
+
+        if (existing) {
+          console.log(`   🔄 Updating existing activity`);
+          await targetDb.activity.update({
+            where: { id: existing.id },
+            data: activityData,
+          });
+          activitiesUpdated++;
         } else {
-          throw error;
+          await targetDb.activity.create({
+            data: activityData,
+          });
         }
+      } catch (error: any) {
+        console.error(`   ❌ Error migrating activity:`, error.message);
+        // Continue on error
       }
     }
-    console.log(`✅ ${activities.length - activitiesSkipped} activities migrated (${activitiesSkipped} skipped)`);
+    console.log(`✅ ${activities.length} activities migrated (${activitiesUpdated} updated, ${activities.length - activitiesUpdated} created)`);
 
     console.log('\n🎉 Migration completed successfully!');
-    console.log('✅ All data has been migrated to your Neon database.');
-    
+    console.log('✅ All data has been synced to your Neon database (source is the source of truth).');
+
   } catch (error) {
     console.error('❌ Migration failed:', error);
     throw error;
@@ -323,12 +380,18 @@ async function migrateData() {
   }
 }
 
-migrateData()
-  .then(() => {
-    console.log('\n✅ Database migration script finished.');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('\n❌ Migration script failed:', error);
-    process.exit(1);
-  });
+setTimeout(() => {
+  migrateData()
+    .then(() => {
+      console.log('\n✅ Database migration script finished.');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('\n❌ Migration script failed:', error);
+      process.exit(1);
+    });
+
+}, 30 * 1000);
+
+console.log("THIS WILL OVERWRITE data in your Neon database with data from your local database.");
+console.log('⏳ Waiting 30 seconds before starting migration to ensure you\'re ready...');
