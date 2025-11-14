@@ -6,7 +6,6 @@ import type {
   MemberEventInterface,
   RepositoryRenamedWebhookPayload,
 } from '@/interfaces';
-import WebHooks from '@octokit/webhooks-examples/api.github.com/index.json';
 import {
   handleInstallationEvent,
   handleInstallationRespositoriesEvent,

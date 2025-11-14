@@ -1,35 +1,29 @@
 import { NextResponse } from 'next/server';
-import { getCommentParseWorker } from '@/services/commentParserQueue';
-import { getCommentParseQueue } from '@/services/commentParserQueue';
-import { isBullMQRedisHealthy } from '@/lib/redisClient';
+import { commentParseWorker, commentParseQueue } from '@/services/commentParserQueue';
+import { bullMQRedisClient } from '@/lib/redisClient';
 
 export async function GET() {
   try {
-    const redisHealthy = isBullMQRedisHealthy();
+    const redisHealthy = bullMQRedisClient.status === 'ready';
 
     let workerStatus = null;
     let queueStatus = null;
 
     if (redisHealthy) {
       try {
-        const worker = getCommentParseWorker();
-        const queue = getCommentParseQueue();
-
         workerStatus = {
-          isRunning: worker.isRunning(),
-          name: worker.name,
-          isPaused: worker.isPaused(),
+          isRunning: commentParseWorker.isRunning(),
+          name: commentParseWorker.name,
+          isPaused: commentParseWorker.isPaused(),
         };
 
-        const [waiting, active, completed, failed, delayed] = await Promise.all(
-          [
-            queue.getWaitingCount(),
-            queue.getActiveCount(),
-            queue.getCompletedCount(),
-            queue.getFailedCount(),
-            queue.getDelayedCount(),
-          ]
-        );
+        const [waiting, active, completed, failed, delayed] = await Promise.all([
+          commentParseQueue.getWaitingCount(),
+          commentParseQueue.getActiveCount(),
+          commentParseQueue.getCompletedCount(),
+          commentParseQueue.getFailedCount(),
+          commentParseQueue.getDelayedCount(),
+        ]);
 
         queueStatus = {
           waiting,

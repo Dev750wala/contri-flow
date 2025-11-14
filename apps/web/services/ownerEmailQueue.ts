@@ -4,17 +4,14 @@ import prisma from '@/lib/prisma';
 import { formatEther } from 'viem';
 import nodemailer from 'nodemailer';
 
-/**
- * Job data structure for owner email notifications
- */
 interface OwnerEmailJobData {
   organizationId: string;
   organizationName: string;
   organizationGithubId: string;
   ownerGithubId: string;
   ownerEmail?: string;
-  availableFunds: string; // in wei
-  requiredAmount: string; // in wei
+  availableFunds: string;
+  requiredAmount: string;
   prNumber: number;
   repositoryName: string;
   contributorLogin: string;
@@ -25,74 +22,41 @@ interface OwnerEmailJobData {
   };
 }
 
-/**
- * Queue for sending email notifications to organization owners
- * Optimized for performance with:
- * - Job deduplication to prevent spam
- * - Rate limiting per organization
- * - Batch processing capability
- * - Automatic retry with exponential backoff
- * - Lazy initialization to prevent startup failures
- */
-let _ownerEmailQueue: Queue<OwnerEmailJobData, boolean, string> | null = null;
-let _ownerEmailWorker: Worker<OwnerEmailJobData, boolean, string> | null = null;
-
-export function getOwnerEmailQueue(): Queue<OwnerEmailJobData, boolean, string> {
-  if (!_ownerEmailQueue) {
-    console.log('[OwnerEmailQueue] Initializing queue...');
-    _ownerEmailQueue = new Queue<OwnerEmailJobData, boolean, string>(
-      'OWNER-EMAIL-QUEUE',
-      {
-        connection: bullMQRedisClient,
-        defaultJobOptions: {
-          attempts: 3,
-          backoff: {
-            type: 'exponential',
-            delay: 2000, // Start with 2 seconds
-          },
-          removeOnComplete: {
-            age: 24 * 3600, // Keep completed jobs for 24 hours
-            count: 1000, // Keep max 1000 completed jobs
-          },
-          removeOnFail: {
-            age: 7 * 24 * 3600, // Keep failed jobs for 7 days for debugging
-          },
-        },
-      }
-    );
+// Create queue - simple and direct
+export const ownerEmailQueue = new Queue<OwnerEmailJobData, boolean, string>(
+  'OWNER-EMAIL-QUEUE',
+  {
+    connection: bullMQRedisClient,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 2000,
+      },
+      removeOnComplete: {
+        age: 24 * 3600,
+        count: 1000,
+      },
+      removeOnFail: {
+        age: 7 * 24 * 3600,
+      },
+    },
   }
-  return _ownerEmailQueue;
-}
+);
 
-/**
- * Add a job to the email queue with deduplication
- * @param data - Email job data
- * @param priority - Job priority (1-10, lower is higher priority)
- * @returns Job instance or null if deduplicated
- */
+// Add job helper with deduplication
 export async function addOwnerEmailJob(
   data: OwnerEmailJobData,
   priority: number = 5
 ): Promise<Job<OwnerEmailJobData, boolean, string> | null> {
-  // Create a unique job ID based on organization and reason to prevent duplicate emails
   const jobId = `${data.organizationId}-${data.reason}-${Date.now()}`;
-  
-  // Check for recent similar jobs (within last 1 hour) to prevent spam
   const recentJobId = `${data.organizationId}-${data.reason}`;
   const rateLimitKey = `email-ratelimit:${recentJobId}`;
-  
-  try {
-    // Check if Redis is available before attempting to add job
-    const { isBullMQRedisHealthy } = await import('@/lib/redisClient');
-    if (!isBullMQRedisHealthy()) {
-      console.error('[OwnerEmailQueue] Redis not available, cannot add job');
-      return null;
-    }
 
-    // Use Redis to implement rate limiting (1 email per hour per org per reason)
-    const redisClient = bullMQRedisClient;
-    const exists = await redisClient.get(rateLimitKey);
-    
+  try {
+    // Rate limiting (1 email per hour per org per reason)
+    const exists = await bullMQRedisClient.get(rateLimitKey);
+
     if (exists) {
       console.log(
         `[OwnerEmailQueue] Rate limit hit for ${recentJobId}, skipping email`
@@ -100,28 +64,15 @@ export async function addOwnerEmailJob(
       return null;
     }
 
-    // Set rate limit key with 1 hour expiry
-    await redisClient.set(rateLimitKey, '1', 'EX', 3600);
+    await bullMQRedisClient.set(rateLimitKey, '1', 'EX', 3600);
 
-    // Add job to queue using lazy getter
-    const queue = getOwnerEmailQueue();
-    const job = await queue.add(
-      data.reason,
-      data,
-      {
-        jobId,
-        priority,
-        // Delay email slightly to batch similar notifications
-        delay: 60000, // 1 minute delay
-      }
-    );
-
-    console.log(`[OwnerEmailQueue] Job ${job.id} added to queue`, {
-      organizationId: data.organizationId,
-      reason: data.reason,
+    const job = await ownerEmailQueue.add(data.reason, data, {
+      jobId,
       priority,
+      delay: 60000,
     });
 
+    console.log(`[OwnerEmailQueue] Job ${job.id} added to queue`);
     return job;
   } catch (error) {
     console.error('[OwnerEmailQueue] Error adding job to queue:', error);
@@ -129,249 +80,228 @@ export async function addOwnerEmailJob(
   }
 }
 
-/**
- * Worker to process email notifications
- * Optimized with:
- * - Concurrency for parallel processing
- * - Batch email sending capability
- * - Comprehensive error handling
- * - Lazy initialization
- */
-export function getOwnerEmailWorker(): Worker<OwnerEmailJobData, boolean, string> {
-  if (!_ownerEmailWorker) {
-    console.log('[OwnerEmailWorker] Initializing worker...');
-    _ownerEmailWorker = new Worker(
-      'OWNER-EMAIL-QUEUE',
-      async (job: Job<OwnerEmailJobData, boolean, string>) => {
-    console.log(`[OwnerEmailWorker] Job ${job.id} started processing`);
-    console.log(
-      '[OwnerEmailWorker] Job data:',
-      JSON.stringify(job.data, null, 2)
-    );
-
-    const {
-      organizationId,
-      organizationName,
-      organizationGithubId,
-      ownerGithubId,
-      ownerEmail,
-      availableFunds,
-      requiredAmount,
-      prNumber,
-      repositoryName,
-      contributorLogin,
-      reason,
-      metadata,
-    } = job.data;
-
-    try {
-      // Fetch owner details from database
-      let owner = await prisma.user.findUnique({
-        where: { github_id: ownerGithubId },
-        select: { id: true, name: true, email: true, github_id: true },
-      });
-
-      // If owner not found in DB, fetch from GitHub API
-      if (!owner) {
+// Create worker - simple and direct
+export const ownerEmailWorker = new Worker<OwnerEmailJobData, boolean, string>(
+  'OWNER-EMAIL-QUEUE',
+  async (job: Job<OwnerEmailJobData, boolean, string>) => {
+        console.log(`[OwnerEmailWorker] Job ${job.id} started processing`);
         console.log(
-          '[OwnerEmailWorker] Owner not found in DB, fetching from GitHub...'
+          '[OwnerEmailWorker] Job data:',
+          JSON.stringify(job.data, null, 2)
         );
-        const githubUser = await fetch(
-          `https://api.github.com/user/${ownerGithubId}`,
-          {
-            headers: {
-              Accept: 'application/vnd.github+json',
-              Authorization: `Bearer ${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}`,
-            },
-          }
-        ).then((res) => res.json());
 
-        if (githubUser && !githubUser.message) {
-          owner = {
-            id: '',
-            name: githubUser.name || githubUser.login,
-            email: githubUser.email || ownerEmail || null,
-            github_id: ownerGithubId,
-          };
-        }
-      }
-
-      if (!owner || !owner.email) {
-        console.warn(
-          '[OwnerEmailWorker] Owner email not available, cannot send notification',
-          { organizationId, ownerGithubId }
-        );
-        // Log this event for tracking
-        await prisma.activity.create({
-          data: {
-            organization_id: organizationId,
-            activity_type: 'ORG_SUSPENDED', // Reuse or create new type
-            title: 'Email Notification Failed',
-            description: `Could not notify owner about ${reason} - email not available`,
-            metadata: {
-              reason,
-              ownerGithubId,
-              prNumber,
-              repositoryName,
-            },
-          },
-        });
-        return false;
-      }
-
-      // Convert wei to ETH for human-readable amounts
-      const availableFundsEth = formatEther(BigInt(availableFunds));
-      const requiredAmountEth = formatEther(BigInt(requiredAmount));
-      const shortfallEth = formatEther(
-        BigInt(requiredAmount) - BigInt(availableFunds)
-      );
-
-      // Prepare email content based on reason
-      let emailSubject: string;
-      let emailBody: string;
-
-      if (reason === 'INSUFFICIENT_FUNDS') {
-        emailSubject = `🚨 Insufficient Funds - ${organizationName} on ContriFlow`;
-        emailBody = generateInsufficientFundsEmail({
-          ownerName: owner.name,
+        const {
+          organizationId,
           organizationName,
-          repositoryName,
+          organizationGithubId,
+          ownerGithubId,
+          ownerEmail,
+          availableFunds,
+          requiredAmount,
           prNumber,
+          repositoryName,
           contributorLogin,
-          availableFunds: availableFundsEth,
-          requiredAmount: requiredAmountEth,
-          shortfall: shortfallEth,
-          organizationGithubId,
-        });
-      } else {
-        // LOW_BALANCE_WARNING
-        emailSubject = `⚠️ Low Balance Warning - ${organizationName} on ContriFlow`;
-        emailBody = generateLowBalanceWarningEmail({
-          ownerName: owner.name,
-          organizationName,
-          availableFunds: availableFundsEth,
-          organizationGithubId,
-        });
-      }
+          reason,
+          metadata,
+        } = job.data;
 
-      // Send email using your email service
-      // TODO: Implement actual email sending with your preferred service
-      // Examples: Resend, SendGrid, NodeMailer, AWS SES, etc.
-      const emailSent = await sendEmail({
-        to: owner.email,
-        subject: emailSubject,
-        html: emailBody,
-      });
+        try {
+          // Fetch owner details from database
+          let owner = await prisma.user.findUnique({
+            where: { github_id: ownerGithubId },
+            select: { id: true, name: true, email: true, github_id: true },
+          });
 
-      if (emailSent) {
-        console.log(
-          `[OwnerEmailWorker] ✅ Email sent successfully to ${owner.email}`,
-          { jobId: job.id, organizationId, reason }
-        );
+          // If owner not found in DB, fetch from GitHub API
+          if (!owner) {
+            console.log(
+              '[OwnerEmailWorker] Owner not found in DB, fetching from GitHub...'
+            );
+            const githubUser = await fetch(
+              `https://api.github.com/user/${ownerGithubId}`,
+              {
+                headers: {
+                  Accept: 'application/vnd.github+json',
+                  Authorization: `Bearer ${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}`,
+                },
+              }
+            ).then((res) => res.json());
 
-        // Log activity
-        await prisma.activity.create({
-          data: {
-            organization_id: organizationId,
-            activity_type: 'ORG_SUSPENDED', // Consider adding EMAIL_SENT type
-            title: `${reason === 'INSUFFICIENT_FUNDS' ? 'Insufficient Funds' : 'Low Balance'} Notification Sent`,
-            description: `Owner notified about ${reason.toLowerCase().replace('_', ' ')} for PR #${prNumber}`,
-            metadata: {
-              reason,
-              prNumber,
+            if (githubUser && !githubUser.message) {
+              owner = {
+                id: '',
+                name: githubUser.name || githubUser.login,
+                email: githubUser.email || ownerEmail || null,
+                github_id: ownerGithubId,
+              };
+            }
+          }
+
+          if (!owner || !owner.email) {
+            console.warn(
+              '[OwnerEmailWorker] Owner email not available, cannot send notification',
+              { organizationId, ownerGithubId }
+            );
+            // Log this event for tracking
+            await prisma.activity.create({
+              data: {
+                organization_id: organizationId,
+                activity_type: 'ORG_SUSPENDED', // Reuse or create new type
+                title: 'Email Notification Failed',
+                description: `Could not notify owner about ${reason} - email not available`,
+                metadata: {
+                  reason,
+                  ownerGithubId,
+                  prNumber,
+                  repositoryName,
+                },
+              },
+            });
+            return false;
+          }
+
+          // Convert wei to ETH for human-readable amounts
+          const availableFundsEth = formatEther(BigInt(availableFunds));
+          const requiredAmountEth = formatEther(BigInt(requiredAmount));
+          const shortfallEth = formatEther(
+            BigInt(requiredAmount) - BigInt(availableFunds)
+          );
+
+          // Prepare email content based on reason
+          let emailSubject: string;
+          let emailBody: string;
+
+          if (reason === 'INSUFFICIENT_FUNDS') {
+            emailSubject = `🚨 Insufficient Funds - ${organizationName} on ContriFlow`;
+            emailBody = generateInsufficientFundsEmail({
+              ownerName: owner.name,
+              organizationName,
               repositoryName,
+              prNumber,
+              contributorLogin,
               availableFunds: availableFundsEth,
               requiredAmount: requiredAmountEth,
-              emailSent: true,
+              shortfall: shortfallEth,
+              organizationGithubId,
+            });
+          } else {
+            // LOW_BALANCE_WARNING
+            emailSubject = `⚠️ Low Balance Warning - ${organizationName} on ContriFlow`;
+            emailBody = generateLowBalanceWarningEmail({
+              ownerName: owner.name,
+              organizationName,
+              availableFunds: availableFundsEth,
+              organizationGithubId,
+            });
+          }
+
+          // Send email using your email service
+          // TODO: Implement actual email sending with your preferred service
+          // Examples: Resend, SendGrid, NodeMailer, AWS SES, etc.
+          const emailSent = await sendEmail({
+            to: owner.email,
+            subject: emailSubject,
+            html: emailBody,
+          });
+
+          if (emailSent) {
+            console.log(
+              `[OwnerEmailWorker] ✅ Email sent successfully to ${owner.email}`,
+              { jobId: job.id, organizationId, reason }
+            );
+
+            // Log activity
+            await prisma.activity.create({
+              data: {
+                organization_id: organizationId,
+                activity_type: 'ORG_SUSPENDED', // Consider adding EMAIL_SENT type
+                title: `${reason === 'INSUFFICIENT_FUNDS' ? 'Insufficient Funds' : 'Low Balance'} Notification Sent`,
+                description: `Owner notified about ${reason.toLowerCase().replace('_', ' ')} for PR #${prNumber}`,
+                metadata: {
+                  reason,
+                  prNumber,
+                  repositoryName,
+                  availableFunds: availableFundsEth,
+                  requiredAmount: requiredAmountEth,
+                  emailSent: true,
+                },
+                pr_number: prNumber,
+              },
+            });
+
+            return true;
+          } else {
+            throw new Error('Email sending failed');
+          }
+        } catch (error) {
+          console.error('[OwnerEmailWorker] Error processing job:', error);
+
+          if (error instanceof Error) {
+            console.error(`[OwnerEmailWorker] Error message: ${error.message}`);
+            console.error(`[OwnerEmailWorker] Error stack: ${error.stack}`);
+          }
+
+          // Log failed attempt
+          await prisma.activity.create({
+            data: {
+              organization_id: organizationId,
+              activity_type: 'ORG_SUSPENDED',
+              title: 'Email Notification Failed',
+              description: `Failed to notify owner about ${reason}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              metadata: {
+                reason,
+                prNumber,
+                repositoryName,
+                error: error instanceof Error ? error.message : 'Unknown error',
+              },
+              pr_number: prNumber,
             },
-            pr_number: prNumber,
-          },
-        });
+          });
 
-        return true;
-      } else {
-        throw new Error('Email sending failed');
-      }
-    } catch (error) {
-      console.error('[OwnerEmailWorker] Error processing job:', error);
-
-      if (error instanceof Error) {
-        console.error(`[OwnerEmailWorker] Error message: ${error.message}`);
-        console.error(`[OwnerEmailWorker] Error stack: ${error.stack}`);
-      }
-
-      // Log failed attempt
-      await prisma.activity.create({
-        data: {
-          organization_id: organizationId,
-          activity_type: 'ORG_SUSPENDED',
-          title: 'Email Notification Failed',
-          description: `Failed to notify owner about ${reason}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          metadata: {
-            reason,
-            prNumber,
-            repositoryName,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          },
-          pr_number: prNumber,
-        },
-      });
-
-      throw error;
-    }
+          throw error;
+        }
       },
       {
         connection: bullMQRedisClient,
         autorun: true,
         concurrency: 3, // Process 3 emails in parallel
-        limiter: {
-          max: 10, // Max 10 jobs
-          duration: 60000, // per 60 seconds (to respect email service rate limits)
-        },
-      }
-    );
+        lockDuration: 120000, // 2 minutes - email sending and DB operations
+        lockRenewTime: 60000, // Renew lock every 1 minute
+      limiter: {
+        max: 10,
+        duration: 60000,
+      },
+    }
+  );
 
-    // Worker event listeners
-    _ownerEmailWorker.on('completed', (job) => {
-      console.log(`[OwnerEmailWorker] Job ${job.id} completed successfully`);
-    });
+// Worker event listeners
+ownerEmailWorker.on('completed', (job) => {
+  console.log(`[OwnerEmailWorker] Job ${job.id} completed successfully`);
+});
 
-    _ownerEmailWorker.on('failed', (job, err) => {
-      console.error(`[OwnerEmailWorker] Job ${job?.id} failed:`, err);
-    });
+ownerEmailWorker.on('failed', (job, err) => {
+  console.error(`[OwnerEmailWorker] Job ${job?.id} failed:`, err);
+});
 
-    _ownerEmailWorker.on('error', (err) => {
-      console.error('[OwnerEmailWorker] Worker error:', err);
-    });
+ownerEmailWorker.on('error', (err) => {
+  console.error('[OwnerEmailWorker] Worker error:', err);
+});
 
-    _ownerEmailWorker.on('ready', () => {
-      console.log('[OwnerEmailWorker] Owner email worker is ready');
-    });
+ownerEmailWorker.on('ready', () => {
+  console.log('[OwnerEmailWorker] Owner email worker is ready');
+});
 
-    _ownerEmailWorker.on('active', (job) => {
-      console.log(`[OwnerEmailWorker] Job ${job.id} is now active`);
-    });
-  }
-  return _ownerEmailWorker;
+ownerEmailWorker.on('active', (job) => {
+  console.log(`[OwnerEmailWorker] Job ${job.id} is now active`);
+});
+
+// For backward compatibility
+export function getOwnerEmailQueue() {
+  return ownerEmailQueue;
 }
 
-// Initialize worker only when Redis is available (background process)
-if (typeof window === 'undefined') {
-  // Server-side only - use setImmediate to avoid blocking module loading
-  setImmediate(() => {
-    import('@/lib/redisClient').then(({ isBullMQRedisHealthy }) => {
-      const checkAndInitialize = () => {
-        if (isBullMQRedisHealthy()) {
-          console.log('[OwnerEmailQueue] Redis is healthy, initializing worker...');
-          getOwnerEmailWorker();
-        } else {
-          console.log('[OwnerEmailQueue] Redis not ready, will retry...');
-          setTimeout(checkAndInitialize, 5000);
-        }
-      };
-      setTimeout(checkAndInitialize, 2000);
-    });
-  });
+export function getOwnerEmailWorker() {
+  return ownerEmailWorker;
 }
 
 /**
@@ -576,7 +506,7 @@ async function sendEmail(params: {
     return true;
   } catch (error) {
     console.error('[Email Service] ❌ Error sending email:', error);
-    
+
     if (error instanceof Error) {
       console.error('[Email Service] Error details:', {
         message: error.message,

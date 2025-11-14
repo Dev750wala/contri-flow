@@ -23,6 +23,7 @@ import {
 import { logActivity } from '@/lib/activityLogger';
 import { getOrganizationBalance } from '@/lib/contractBalance';
 import { addOwnerEmailJob } from './ownerEmailQueue';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 interface CommentParseJobData {
   commentBody: string;
@@ -35,13 +36,9 @@ interface CommentParseJobData {
   installationId: number;
 }
 
-// Lazy initialization of viem clients for on-chain operations
+// Viem clients for on-chain operations
 let publicClient: any;
 let walletClient: any;
-let _commentParseQueue: Queue<CommentParseJobData, boolean, string> | null =
-  null;
-let _commentParseWorker: Worker<CommentParseJobData, boolean, string> | null =
-  null;
 
 function getClients() {
   if (!publicClient || !walletClient) {
@@ -65,54 +62,19 @@ function getClients() {
   return { publicClient, walletClient };
 }
 
-// Lazy initialization of queue and worker to prevent startup failures
-export function getCommentParseQueue(): Queue<
-  CommentParseJobData,
-  boolean,
-  string
-> {
-  if (!_commentParseQueue) {
-    console.log('[CommentParseQueue] Initializing queue...');
-    _commentParseQueue = new Queue<CommentParseJobData, boolean, string>(
-      'COMMENT-PARSE-QUEUE',
-      {
-        connection: bullMQRedisClient,
-        defaultJobOptions: { attempts: 3 },
-      }
-    );
-
-    // Ensure worker is initialized when queue is accessed
-    // This ensures worker is ready to process jobs
-    if (typeof window === 'undefined') {
-      setImmediate(() => {
-        import('@/lib/redisClient').then(({ isBullMQRedisHealthy }) => {
-          if (isBullMQRedisHealthy()) {
-            console.log(
-              '[CommentParseQueue] Queue initialized, ensuring worker is running...'
-            );
-            getCommentParseWorker();
-          } else {
-            console.log(
-              '[CommentParseQueue] Redis not ready yet, worker will initialize when Redis is healthy'
-            );
-          }
-        });
-      });
-    }
+// Create queue - simple and direct
+export const commentParseQueue = new Queue<CommentParseJobData, boolean, string>(
+  'COMMENT-PARSE-QUEUE',
+  {
+    connection: bullMQRedisClient,
+    defaultJobOptions: { attempts: 3 },
   }
-  return _commentParseQueue;
-}
+);
 
-export function getCommentParseWorker(): Worker<
-  CommentParseJobData,
-  boolean,
-  string
-> {
-  if (!_commentParseWorker) {
-    console.log('[CommentParseWorker] Initializing worker...');
-    _commentParseWorker = new Worker(
-      'COMMENT-PARSE-QUEUE',
-      async (job: Job<CommentParseJobData, boolean, string>) => {
+// Create worker - simple and direct
+export const commentParseWorker = new Worker<CommentParseJobData, boolean, string>(
+  'COMMENT-PARSE-QUEUE',
+  async (job: Job<CommentParseJobData, boolean, string>) => {
         console.log(`[Worker] Job ${job.id} started processing`);
         console.log(
           '[Worker] Job data received:',
@@ -194,10 +156,33 @@ export function getCommentParseWorker(): Worker<
         ).then((res) => res.json())) as unknown;
 
         // Fetch repository with organization info early to check funds and use throughout
-        const repository = await prisma.repository.findUnique({
-          where: { id: repositoryId },
-          include: { organization: true },
-        });
+        let repository;
+        try {
+          repository = await prisma.repository.findUnique({
+            where: { id: repositoryId },
+            include: { organization: true },
+          });
+        } catch (error) {
+          // Handle connection pool timeout errors
+          if (
+            error instanceof PrismaClientKnownRequestError &&
+            error.code === 'P2024'
+          ) {
+            console.error(
+              '[Worker] Database connection pool timeout. This may indicate too many concurrent operations.',
+              {
+                jobId: job.id,
+                repositoryId,
+                error: error.message,
+              }
+            );
+            // Re-throw to let BullMQ retry the job
+            throw new Error(
+              'DATABASE_CONNECTION_POOL_TIMEOUT: Please retry the job'
+            );
+          }
+          throw error;
+        }
 
         if (!repository || !repository.organization) {
           console.error('[Worker] Repository or organization not found:', {
@@ -288,78 +273,100 @@ export function getCommentParseWorker(): Worker<
           formatted: `${aiRaw.reward} tokens = ${tokenAmountInWei.toString()} wei`,
         });
 
-        newReward = await prisma.$transaction(async (tx) => {
-          const existingUser = await tx.user.findUnique({
-            where: {
-              github_id: (
-                contributorFromGithub as GitHubUserType
-              ).id.toString(),
-            },
+        try {
+          newReward = await prisma.$transaction(async (tx) => {
+            const existingUser = await tx.user.findUnique({
+              where: {
+                github_id: (
+                  contributorFromGithub as GitHubUserType
+                ).id.toString(),
+              },
+            });
+
+            console.log(
+              '[Worker] Existing user found:',
+              existingUser ? existingUser.id : 'none'
+            );
+
+            const contributor = await tx.contributor.upsert({
+              where: {
+                github_id: (
+                  contributorFromGithub as GitHubUserType
+                ).id.toString(),
+              },
+              update: {},
+              create: {
+                github_id: (
+                  contributorFromGithub as GitHubUserType
+                ).id.toString(),
+                ...(existingUser && { user_id: existingUser.id }),
+              },
+            });
+
+            console.log('[Worker] Contributor upserted:', contributor.id);
+
+            const reward = await tx.reward.create({
+              data: {
+                pr_number: prNumber,
+                secret,
+                token_amount: tokenAmountInWei.toString(), // Store as wei (18 decimals)
+                contributor: { connect: { id: contributor.id } },
+                repository: { connect: { id: repositoryId } },
+                issuer: { connect: { id: commentorId } },
+                comment: commentBody,
+              },
+            });
+
+            console.log('[Worker] Reward created successfully:', {
+              id: reward.id,
+              pr_number: reward.pr_number,
+              token_amount: reward.token_amount,
+              token_amount_wei: `${reward.token_amount} wei (${aiRaw.reward} tokens)`,
+            });
+
+            // Log activity for reward issued
+            await logActivity({
+              organizationId: repository.organization.id,
+              activityType: 'REWARD_ISSUED',
+              title: `Reward Issued`,
+              description: `Reward of ${aiRaw.reward} tokens (${reward.token_amount} wei) issued for PR #${reward.pr_number} to ${aiRaw.contributor}`,
+              repositoryId: repository.id,
+              rewardId: reward.id,
+              actorId: commentorId,
+              amount: reward.token_amount,
+              prNumber: reward.pr_number,
+              metadata: {
+                contributorGithubId: (
+                  contributorFromGithub as GitHubUserType
+                ).id.toString(),
+                contributorLogin: aiRaw.contributor,
+                tokenAmountDecimal: aiRaw.reward.toString(),
+              },
+            });
+
+            return reward;
           });
-
-          console.log(
-            '[Worker] Existing user found:',
-            existingUser ? existingUser.id : 'none'
-          );
-
-          const contributor = await tx.contributor.upsert({
-            where: {
-              github_id: (
-                contributorFromGithub as GitHubUserType
-              ).id.toString(),
-            },
-            update: {},
-            create: {
-              github_id: (
-                contributorFromGithub as GitHubUserType
-              ).id.toString(),
-              ...(existingUser && { user_id: existingUser.id }),
-            },
-          });
-
-          console.log('[Worker] Contributor upserted:', contributor.id);
-
-          const reward = await tx.reward.create({
-            data: {
-              pr_number: prNumber,
-              secret,
-              token_amount: tokenAmountInWei.toString(), // Store as wei (18 decimals)
-              contributor: { connect: { id: contributor.id } },
-              repository: { connect: { id: repositoryId } },
-              issuer: { connect: { id: commentorId } },
-              comment: commentBody,
-            },
-          });
-
-          console.log('[Worker] Reward created successfully:', {
-            id: reward.id,
-            pr_number: reward.pr_number,
-            token_amount: reward.token_amount,
-            token_amount_wei: `${reward.token_amount} wei (${aiRaw.reward} tokens)`,
-          });
-
-          // Log activity for reward issued
-          await logActivity({
-            organizationId: repository.organization.id,
-            activityType: 'REWARD_ISSUED',
-            title: `Reward Issued`,
-            description: `Reward of ${aiRaw.reward} tokens (${reward.token_amount} wei) issued for PR #${reward.pr_number} to ${aiRaw.contributor}`,
-            repositoryId: repository.id,
-            rewardId: reward.id,
-            actorId: commentorId,
-            amount: reward.token_amount,
-            prNumber: reward.pr_number,
-            metadata: {
-              contributorGithubId: (
-                contributorFromGithub as GitHubUserType
-              ).id.toString(),
-              contributorLogin: aiRaw.contributor,
-              tokenAmountDecimal: aiRaw.reward.toString(),
-            },
-          });
-
-          return reward;
-        });
+        } catch (error) {
+          if (
+            error instanceof PrismaClientKnownRequestError &&
+            error.code === 'P2024'
+          ) {
+            console.error(
+              '[Worker] Database connection pool timeout during transaction. This may indicate too many concurrent operations.',
+              {
+                jobId: job.id,
+                repositoryId,
+                prNumber,
+                error: error.message,
+              }
+            );
+            // Re-throw to let BullMQ retry the job
+            throw new Error(
+              'DATABASE_CONNECTION_POOL_TIMEOUT: Transaction failed, job will be retried'
+            );
+          }
+          throw error;
+        }
 
         console.log('[Worker] Starting on-chain voucher storage:', {
           prNumber: newReward.pr_number,
@@ -526,62 +533,55 @@ export function getCommentParseWorker(): Worker<
           );
         }
 
-        return true;
-      },
-      { connection: bullMQRedisClient, autorun: true, concurrency: 5 }
-    );
-
-    // Worker event listeners
-    _commentParseWorker.on('completed', (job) => {
-      console.log(`[Worker] Job ${job.id} completed successfully`);
-    });
-
-    _commentParseWorker.on('failed', (job, err) => {
-      console.error(`[Worker] Job ${job?.id} failed:`, err);
-    });
-
-    _commentParseWorker.on('error', (err) => {
-      console.error('[Worker] Worker error:', err);
-    });
-
-    _commentParseWorker.on('ready', () => {
-      console.log('[Worker] Comment parse worker is ready');
-    });
-
-    _commentParseWorker.on('active', (job) => {
-      console.log(`[Worker] Job ${job.id} is now active`);
-    });
-
-    _commentParseWorker.on('stalled', (jobId) => {
-      console.warn(`[Worker] Job ${jobId} stalled - may need attention`);
-    });
-
-    _commentParseWorker.on('progress', (job, progress) => {
-      console.log(`[Worker] Job ${job.id} progress:`, progress);
-    });
+    return true;
+  },
+  {
+    connection: bullMQRedisClient,
+    autorun: true,
+    concurrency: 4,
+    lockDuration: 300000,
+    lockRenewTime: 150000,
   }
-  return _commentParseWorker;
+);
+
+// Worker event listeners
+commentParseWorker.on('completed', (job) => {
+  console.log(`[Worker] Job ${job.id} completed successfully`);
+});
+
+commentParseWorker.on('failed', (job, err) => {
+  console.error(`[Worker] Job ${job?.id} failed:`, err);
+});
+
+commentParseWorker.on('error', (err) => {
+  console.error('[Worker] Worker error:', err);
+});
+
+commentParseWorker.on('ready', () => {
+  console.log('[Worker] Comment parse worker is ready');
+});
+
+commentParseWorker.on('active', (job) => {
+  console.log(`[Worker] Job ${job.id} is now active`);
+});
+
+commentParseWorker.on('stalled', (jobId) => {
+  console.warn(`[Worker] Job ${jobId} stalled - may need attention`);
+});
+
+commentParseWorker.on('progress', (job, progress) => {
+  console.log(`[Worker] Job ${job.id} progress:`, progress);
+});
+
+// For backward compatibility
+export function getCommentParseQueue() {
+  return commentParseQueue;
 }
 
-// Initialize worker only when Redis is available (background process)
-if (typeof window === 'undefined') {
-  // Server-side only - use setImmediate to avoid blocking module loading
-  setImmediate(() => {
-    import('@/lib/redisClient').then(({ isBullMQRedisHealthy }) => {
-      // Check Redis health before initializing worker
-      const checkAndInitialize = () => {
-        if (isBullMQRedisHealthy()) {
-          console.log(
-            '[CommentParseQueue] Redis is healthy, initializing worker...'
-          );
-          getCommentParseWorker();
-        } else {
-          console.log('[CommentParseQueue] Redis not ready, will retry...');
-          setTimeout(checkAndInitialize, 5000); // Retry every 5 seconds
-        }
-      };
-      // Start with a delay to allow Redis to connect
-      setTimeout(checkAndInitialize, 2000);
-    });
-  });
+export function getCommentParseWorker() {
+  return commentParseWorker;
+}
+
+export function addCommentParseJob(data: CommentParseJobData) {
+  return commentParseQueue.add('parse-comment', data);
 }

@@ -14,6 +14,7 @@
     "nexus:gen": "ts-node --transpile-only --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" graphql/schema",
     "tunnel": "cloudflared tunnel --url http://localhost:3000",
     "seed": "tsx helpers/seed.ts",
+    "migrate:db": "tsx scripts/migrate-database.ts",
     "codegen": "graphql-codegen --config codegen.ts",
     "codegen:watch": "graphql-codegen --config src/graphql/codegen.ts --watch",
     "codegen:init": "graphql-codegen init"
