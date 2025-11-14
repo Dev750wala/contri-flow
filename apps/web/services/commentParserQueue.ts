@@ -129,8 +129,27 @@ export function getCommentParseWorker(): Worker<
           installationId,
         } = job.data;
 
+        // Validate required fields
+        if (
+          !commentBody ||
+          !prNumber ||
+          !repositoryId ||
+          !contributorGithubId
+        ) {
+          console.error('[Worker] Job data is missing required fields:', {
+            hasCommentBody: !!commentBody,
+            hasPrNumber: !!prNumber,
+            hasRepositoryId: !!repositoryId,
+            hasContributorGithubId: !!contributorGithubId,
+            jobData: job.data,
+          });
+          throw new Error('INVALID_JOB_DATA: Missing required fields');
+        }
+
         console.log('[Worker] Extracted data:', {
-          commentBody: commentBody.substring(0, 50) + '...',
+          commentBody: commentBody
+            ? commentBody.substring(0, 50) + '...'
+            : 'N/A',
           prNumber,
           repositoryId,
           commentorId,
