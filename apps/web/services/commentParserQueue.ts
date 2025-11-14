@@ -35,20 +35,31 @@ interface CommentParseJobData {
   installationId: number;
 }
 
-// Initialize viem clients for on-chain operations
-const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
-const account = privateKeyToAccount(PRIVATE_KEY);
+// Lazy initialization of viem clients for on-chain operations
+let publicClient: any;
+let walletClient: any;
 
-const publicClient = createPublicClient({
-  chain: sepolia,
-  transport: http(),
-});
+function getClients() {
+  if (!publicClient || !walletClient) {
+    const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
+    if (!PRIVATE_KEY) {
+      throw new Error('PRIVATE_KEY environment variable is not set');
+    }
+    const account = privateKeyToAccount(PRIVATE_KEY);
 
-const walletClient = createWalletClient({
-  account,
-  chain: sepolia,
-  transport: http(),
-});
+    publicClient = createPublicClient({
+      chain: sepolia,
+      transport: http(),
+    });
+
+    walletClient = createWalletClient({
+      account,
+      chain: sepolia,
+      transport: http(),
+    });
+  }
+  return { publicClient, walletClient };
+}
 
 export const commentParseQueue = new Queue<
   CommentParseJobData,
@@ -340,6 +351,9 @@ export const commentParseWorker = new Worker(
         secret: '***hidden***',
       });
 
+      // Get clients for on-chain operations
+      const { publicClient, walletClient } = getClients();
+
       // Simulate the contract call to check if it will succeed
       const { request } = await publicClient.simulateContract({
         address: CONTRIFLOW_ADDRESS as `0x${string}`,
@@ -353,7 +367,7 @@ export const commentParseWorker = new Worker(
           tokenAmount, // tokenAmountIn18dec: uint256
           voucherHash, // hash: bytes32
         ] as const,
-        account,
+        account: walletClient.account,
       });
 
       // Write the transaction to the blockchain

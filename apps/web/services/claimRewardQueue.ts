@@ -32,15 +32,14 @@ export interface ClaimRewardJobData {
   signature: string;
 }
 
-// Initialize viem clients for on-chain operations (only if PRIVATE_KEY is available)
-const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}` | undefined;
-
-// Lazy initialization to avoid errors during schema generation
+// Lazy initialization to avoid errors during build time
 let account: ReturnType<typeof privateKeyToAccount> | undefined;
 let publicClient: PublicClientLike | undefined;
 let walletClient: WalletClientLike | undefined;
 
 const getClients = () => {
+  const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}` | undefined;
+  
   if (!PRIVATE_KEY) {
     throw new Error('PRIVATE_KEY environment variable is not set');
   }
