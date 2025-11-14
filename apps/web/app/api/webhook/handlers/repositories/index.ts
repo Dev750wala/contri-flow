@@ -8,5 +8,14 @@ export async function handleRepositoriesEvent(
   switch (body.action) {
     case 'renamed':
       return await handleRepositoriesRenamedEvent(body);
+    
+    default:
+      // Return success for unhandled actions to prevent GitHub from retrying
+      return {
+        statusCode: 200,
+        success: true,
+        message: `Repository action '${body.action}' is not handled, but webhook received successfully`,
+        data: null,
+      };
   }
 }

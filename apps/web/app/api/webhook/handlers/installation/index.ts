@@ -1,4 +1,5 @@
 import { AppInstallationInterface } from '@/interfaces';
+import { ControllerReturnType } from '../../interface';
 import {
   handleInstallationCreatedEvent,
   handleInstallationDeletedEvent,
@@ -6,7 +7,9 @@ import {
   handleInstallationUnsuspendedEvent,
 } from './controllers';
 
-export async function handleInstallationEvent(body: AppInstallationInterface) {
+export async function handleInstallationEvent(
+  body: AppInstallationInterface
+): Promise<ControllerReturnType> {
   switch (body.action) {
     case 'created':
       return await handleInstallationCreatedEvent(body);
@@ -19,5 +22,14 @@ export async function handleInstallationEvent(body: AppInstallationInterface) {
 
     case 'unsuspend':
       return await handleInstallationUnsuspendedEvent(body);
+
+    default:
+      // Return success for unhandled actions to prevent GitHub from retrying
+      return {
+        statusCode: 200,
+        success: true,
+        message: `Installation action '${body.action}' is not handled, but webhook received successfully`,
+        data: null,
+      };
   }
 }
