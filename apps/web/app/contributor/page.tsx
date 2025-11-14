@@ -23,6 +23,10 @@ import Navbar from '@/components/navbar';
 import { useContributorDashboard } from '@/app/hooks/useContributorDashboard';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatDistanceToNow } from 'date-fns';
+import { useAccount } from 'wagmi';
+import { useLazyQuery, useMutation } from '@apollo/client';
+import { GET_CLAIM_MESSAGE, CLAIM_REWARD } from '@/app/operations/contributor.operations';
+import { toast } from 'sonner';
 
 // Helper function to convert wei (18 decimals) to token units
 const fromWei = (amount: string): number => {
@@ -32,9 +36,17 @@ const fromWei = (amount: string): number => {
 export default function ContributorDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const [claimingRewardId, setClaimingRewardId] = React.useState<string | null>(null);
 
   // Get GitHub ID from session (numeric string like "117472132")
   const githubId = session?.user?.github_id;
+
+  // Lazy query for fetching claim message
+  const [getClaimMessage] = useLazyQuery(GET_CLAIM_MESSAGE);
+  
+  // Mutation for claiming reward
+  const [claimRewardMutation] = useMutation(CLAIM_REWARD);
   
   // Fetch contributor dashboard data
   const {
@@ -48,6 +60,93 @@ export default function ContributorDashboard() {
     isNotContributor,
     refetchRewards,
   } = useContributorDashboard(githubId);
+
+  // Handle claim button click
+  const handleClaim = async (rewardId: string) => {
+    if (!isConnected || !address) {
+      toast.error('Please connect your wallet to claim rewards.');
+      return;
+    }
+
+    setClaimingRewardId(rewardId);
+
+    try {
+      // Fetch claim message from backend
+      const { data, error } = await getClaimMessage({
+        variables: {
+          rewardId,
+          walletAddress: address,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data?.getClaimMessage) {
+        throw new Error('Failed to get claim message');
+      }
+
+      // Parse the JSON response to get the message object
+      const messageData = JSON.parse(data.getClaimMessage);
+
+      // Request user to sign the message using EIP-712
+      // @ts-ignore - ethereum is injected by wallet
+      if (!window.ethereum) {
+        throw new Error('No wallet provider found');
+      }
+
+      // Request signature using eth_signTypedData_v4
+      // @ts-ignore
+      const signature = await window.ethereum.request({
+        method: 'eth_signTypedData_v4',
+        params: [address, JSON.stringify(messageData)],
+      });
+
+      console.log('Signature:', signature);
+      console.log('Message Data:', messageData);
+
+      // Send signature to backend for claim processing
+      const { data: claimData, errors: claimErrors } = await claimRewardMutation({
+        variables: {
+          rewardId,
+          signature,
+          walletAddress: address,
+        },
+      });
+
+      if (claimErrors) {
+        throw new Error(claimErrors[0]?.message || 'Failed to submit claim');
+      }
+
+      toast.success('Claim request submitted! Processing on blockchain...');
+      
+      // Refetch rewards to update UI
+      await refetchRewards();
+
+    } catch (error: any) {
+      console.error('Claim error:', error);
+      
+      // Extract specific error messages
+      let errorMessage = 'Failed to process claim. Please try again.';
+      
+      if (error.message?.includes('InvalidVoucher') || error.message?.includes('invalid voucher')) {
+        errorMessage = 'Claim failed: Invalid voucher. This reward may have been created before a system update. Please contact support.';
+      } else if (error.message?.includes('AlreadyClaimed') || error.message?.includes('already claimed')) {
+        errorMessage = 'This reward has already been claimed.';
+      } else if (error.message?.includes('InsufficientBalance') || error.message?.includes('insufficient')) {
+        errorMessage = 'Claim failed: Insufficient contract balance. Please contact the organization.';
+      } else if (error.message?.includes('User rejected') || error.message?.includes('rejected')) {
+        errorMessage = 'Transaction cancelled by user.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setClaimingRewardId(null);
+    }
+  };
 
   // Redirect if not authenticated
   React.useEffect(() => {
@@ -348,9 +447,14 @@ export default function ContributorDashboard() {
                                 {fromWei(claim.token_amount).toFixed(2)} MPT
                               </p>
                             </div>
-                            <Button size="sm" variant="default">
+                            <Button 
+                              size="sm" 
+                              variant="default"
+                              disabled={!isConnected || claimingRewardId === claim.id}
+                              onClick={() => handleClaim(claim.id)}
+                            >
                               <Wallet className="h-3 w-3 mr-1" />
-                              Claim
+                              {claimingRewardId === claim.id ? 'Processing...' : 'Claim'}
                             </Button>
                           </div>
                         </div>
@@ -445,7 +549,7 @@ export default function ContributorDashboard() {
                             </p>
                             {contribution.payout && (
                               <a
-                                href={`https://etherscan.io/tx/${contribution.payout.tx_hash}`}
+                                href={`https://sepolia.etherscan.io/tx/${contribution.payout.tx_hash}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-xs text-blue-500 hover:underline inline-flex items-center mt-1"
@@ -512,7 +616,7 @@ export default function ContributorDashboard() {
                             </div>
                             {claim.payout && (
                               <a
-                                href={`https://etherscan.io/tx/${claim.payout.tx_hash}`}
+                                href={`https://sepolia.etherscan.io/tx/${claim.payout.tx_hash}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-xs text-blue-500 hover:underline inline-flex items-center mt-1"

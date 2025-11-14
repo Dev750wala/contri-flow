@@ -12,6 +12,10 @@ declare global {
      * A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
      */
     date<FieldName extends string>(fieldName: FieldName, opts?: core.CommonInputFieldConfig<TypeName, FieldName>): void // "DateTime";
+    /**
+     * The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+     */
+    json<FieldName extends string>(fieldName: FieldName, opts?: core.CommonInputFieldConfig<TypeName, FieldName>): void // "JSON";
   }
 }
 declare global {
@@ -20,6 +24,10 @@ declare global {
      * A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
      */
     date<FieldName extends string>(fieldName: FieldName, ...opts: core.ScalarOutSpread<TypeName, FieldName>): void // "DateTime";
+    /**
+     * The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+     */
+    json<FieldName extends string>(fieldName: FieldName, ...opts: core.ScalarOutSpread<TypeName, FieldName>): void // "JSON";
   }
 }
 
@@ -32,7 +40,7 @@ export interface NexusGenInputs {
 }
 
 export interface NexusGenEnums {
-  ActivityType: "APP_INSTALLED" | "APP_UNINSTALLED" | "DEPOSIT" | "ISSUE_CLOSED" | "ISSUE_CREATED" | "MAINTAINER_ADDED" | "MAINTAINER_REMOVED" | "ORG_REACTIVATED" | "ORG_SUSPENDED" | "PR_MERGED" | "REPO_ADDED" | "REPO_REMOVED" | "REWARDS_DISABLED" | "REWARDS_ENABLED" | "REWARD_CLAIMED" | "REWARD_ISSUED"
+  ActivityType: "APP_INSTALLED" | "APP_UNINSTALLED" | "DEPOSIT" | "ISSUE_CLOSED" | "ISSUE_CREATED" | "MAINTAINER_ADDED" | "MAINTAINER_REMOVED" | "ORG_REACTIVATED" | "ORG_SUSPENDED" | "PR_MERGED" | "REPO_ADDED" | "REPO_REMOVED" | "REWARDS_DISABLED" | "REWARDS_ENABLED" | "REWARD_CLAIMED" | "REWARD_CLAIM_FAILED" | "REWARD_ISSUED"
   OrganizationRole: "MEMBER" | "OWNER"
   RepositoryRole: "ADMIN" | "MAINTAIN"
 }
@@ -44,6 +52,7 @@ export interface NexusGenScalars {
   Boolean: boolean
   ID: string
   DateTime: any
+  JSON: any
 }
 
 export interface NexusGenObjects {
@@ -121,6 +130,7 @@ export interface NexusGenObjects {
     id: string; // ID!
     platform_fee: string; // String!
     receiver_address: string; // String!
+    signature_hash: string; // String!
     total_amount: string; // String!
     tx_hash: string; // String!
   }
@@ -284,6 +294,7 @@ export interface NexusGenFieldTypes {
     platform_fee: string; // String!
     receiver_address: string; // String!
     reward: NexusGenRootTypes['Reward'] | null; // Reward
+    signature_hash: string; // String!
     total_amount: string; // String!
     tx_hash: string; // String!
   }
@@ -293,6 +304,7 @@ export interface NexusGenFieldTypes {
     checkInstallation: NexusGenRootTypes['CheckInstallationResponse'] | null; // CheckInstallationResponse
     contributor: NexusGenRootTypes['Contributor'] | null; // Contributor
     contributorByGithubId: NexusGenRootTypes['Contributor'] | null; // Contributor
+    getClaimMessage: string; // String!
     getGlobalStats: NexusGenRootTypes['GlobalStats'] | null; // GlobalStats
     getOrganizationActivity: NexusGenRootTypes['Activity'][]; // [Activity!]!
     getOrganizationDetails: NexusGenRootTypes['OrganizationWithDetails'] | null; // OrganizationWithDetails
@@ -480,6 +492,7 @@ export interface NexusGenFieldTypeNames {
     platform_fee: 'String'
     receiver_address: 'String'
     reward: 'Reward'
+    signature_hash: 'String'
     total_amount: 'String'
     tx_hash: 'String'
   }
@@ -489,6 +502,7 @@ export interface NexusGenFieldTypeNames {
     checkInstallation: 'CheckInstallationResponse'
     contributor: 'Contributor'
     contributorByGithubId: 'Contributor'
+    getClaimMessage: 'String'
     getGlobalStats: 'GlobalStats'
     getOrganizationActivity: 'Activity'
     getOrganizationDetails: 'OrganizationWithDetails'
@@ -585,7 +599,9 @@ export interface NexusGenArgTypes {
       userId: string; // String!
     }
     claimReward: { // args
-      id: string; // String!
+      rewardId: string; // String!
+      signature: string; // String!
+      walletAddress: string; // String!
     }
     enableRewardsOnRepository: { // args
       repositoryId: string[]; // [String!]!
@@ -616,6 +632,10 @@ export interface NexusGenArgTypes {
     }
     contributorByGithubId: { // args
       github_id: string; // String!
+    }
+    getClaimMessage: { // args
+      rewardId: string; // String!
+      walletAddress: string; // String!
     }
     getOrganizationActivity: { // args
       limit: number | null; // Int

@@ -16,7 +16,10 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
 import { CONTRIFLOW_ADDRESS } from '@/web3/constants';
 import CONTRIFLOW_ABI from '@/web3/ContriFlowABI.json';
-import { postPRComment, generateRewardCommentContent } from '@/lib/githubComment';
+import {
+  postPRComment,
+  generateRewardCommentContent,
+} from '@/lib/githubComment';
 import { logActivity } from '@/lib/activityLogger';
 import { getOrganizationBalance } from '@/lib/contractBalance';
 import { addOwnerEmailJob } from './ownerEmailQueue';
@@ -269,7 +272,9 @@ export const commentParseWorker = new Worker(
         amount: reward.token_amount,
         prNumber: reward.pr_number,
         metadata: {
-          contributorGithubId: (contributorFromGithub as GitHubUserType).id.toString(),
+          contributorGithubId: (
+            contributorFromGithub as GitHubUserType
+          ).id.toString(),
           contributorLogin: aiRaw.contributor,
           tokenAmountDecimal: aiRaw.reward.toString(),
         },
@@ -303,14 +308,15 @@ export const commentParseWorker = new Worker(
       });
 
       // Calculate the voucher hash exactly as the contract does
+      // Contract uses abi.encode (padded), so we must match that layout
       const encodedData = encodeAbiParameters(
         [
-          { name: 'secret', type: 'string' },
-          { name: 'orgGithubId', type: 'uint64' },
-          { name: 'repoGithubId', type: 'uint32' },
-          { name: 'prNumber', type: 'uint32' },
-          { name: 'contributorGithubId', type: 'uint64' },
-          { name: 'tokenAmountIn18dec', type: 'uint256' },
+          { type: 'string' },
+          { type: 'uint64' },
+          { type: 'uint32' },
+          { type: 'uint32' },
+          { type: 'uint64' },
+          { type: 'uint256' },
         ],
         [
           secret,
@@ -401,7 +407,7 @@ export const commentParseWorker = new Worker(
     // Post reward notification comment on GitHub PR
     try {
       console.log('[Worker] Generating AI comment for reward notification...');
-      
+
       // Generate comment content using AI with decimal format for human readability
       const commentContent = await generateRewardCommentContent(
         aiRaw.contributor,
@@ -421,12 +427,18 @@ export const commentParseWorker = new Worker(
         installationId,
       });
 
-      console.log(`[Worker] ✅ Reward notification comment posted on PR #${prNumber}`);
-      
+      console.log(
+        `[Worker] ✅ Reward notification comment posted on PR #${prNumber}`
+      );
     } catch (error) {
       // Don't fail the entire job if comment posting fails
-      console.error('[Worker] ⚠️ Failed to post reward notification comment:', error);
-      console.error('[Worker] Job will continue despite comment posting failure');
+      console.error(
+        '[Worker] ⚠️ Failed to post reward notification comment:',
+        error
+      );
+      console.error(
+        '[Worker] Job will continue despite comment posting failure'
+      );
     }
 
     return true;

@@ -35,6 +35,7 @@ enum ActivityType {
   REWARDS_DISABLED
   REWARDS_ENABLED
   REWARD_CLAIMED
+  REWARD_CLAIM_FAILED
   REWARD_ISSUED
 }
 
@@ -78,9 +79,14 @@ type GlobalStats {
   totalRewardsDistributed: Float!
 }
 
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
 type Mutation {
   addRepositoryMaintainer(github_id: String!, repositoryId: String!, role: RepositoryRole!, userId: String!): RepositoryMaintainer!
-  claimReward(id: String!): Reward
+  claimReward(rewardId: String!, signature: String!, walletAddress: String!): Reward
   enableRewardsOnRepository(repositoryId: [String!]!): RepositoryMutationResponse
   enableSyncMaintainers(organizationId: String!): Organization
   linkContributorToUser(github_id: String!, userId: String!): Contributor
@@ -151,6 +157,7 @@ type Payout {
   platform_fee: String!
   receiver_address: String!
   reward: Reward
+  signature_hash: String!
   total_amount: String!
   tx_hash: String!
 }
@@ -161,6 +168,7 @@ type Query {
   checkInstallation(installationId: String!): CheckInstallationResponse
   contributor(id: String!): Contributor
   contributorByGithubId(github_id: String!): Contributor
+  getClaimMessage(rewardId: String!, walletAddress: String!): String!
 
   """
   Get aggregated statistics across all organizations owned by user (VERY SLOW query)

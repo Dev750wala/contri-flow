@@ -182,12 +182,22 @@ export const GET_REWARD_DETAILS = gql`
 // ========================================
 
 /**
+ * Get claim message for EIP-712 signature
+ * This returns the message that needs to be signed by the wallet
+ */
+export const GET_CLAIM_MESSAGE = gql`
+  query GetClaimMessage($rewardId: String!, $walletAddress: String!) {
+    getClaimMessage(rewardId: $rewardId, walletAddress: $walletAddress)
+  }
+`;
+
+/**
  * Claim a reward
  * This will trigger the on-chain payout process
  */
 export const CLAIM_REWARD = gql`
-  mutation ClaimReward($rewardId: String!) {
-    claimReward(id: $rewardId) {
+  mutation ClaimReward($rewardId: String!, $signature: String!, $walletAddress: String!) {
+    claimReward(rewardId: $rewardId, signature: $signature, walletAddress: $walletAddress) {
       id
       claimed
       payout {

@@ -56,6 +56,7 @@ import type {
   GetOrganizationStatsQuery,
   GetGlobalStatsQuery,
   GetPendingRewardsQuery,
+  ActivityType,
 } from '@/codegen/generated/graphql';
 import { useAccount } from 'wagmi';
 import { useContriFlowContract } from '@/hooks/useContriFlowContract';
@@ -265,6 +266,8 @@ export function OwnerDashboard({
     return [];
   });
 
+  type ExtendedActivityType = ActivityType | 'REWARD_CLAIM_FAILED';
+
   const recentTransactions = activities.slice(0, 5).map((activity) => {
     // Try to find repository name from the activity's repository_id
     let repoName = 'Unknown';
@@ -275,7 +278,7 @@ export function OwnerDashboard({
     
     return {
       id: activity.id,
-      type: activity.activity_type,
+      type: activity.activity_type as ExtendedActivityType,
       amount: activity.amount ? fromWei(activity.amount) : 0,
       pr_number: activity.pr_number,
       repo_name: repoName,
@@ -939,6 +942,9 @@ export function OwnerDashboard({
                   if (tx.type === 'REWARD_CLAIMED') {
                     icon = <DollarSign className="h-3 w-3 text-green-500" />;
                     bgColor = 'bg-green-500/20';
+                  } else if (tx.type === 'REWARD_CLAIM_FAILED') {
+                    icon = <AlertCircle className="h-3 w-3 text-red-500" />;
+                    bgColor = 'bg-red-500/20';
                   } else if (tx.type === 'REWARD_ISSUED') {
                     icon = <CheckCircle className="h-3 w-3 text-cyan-500" />;
                     bgColor = 'bg-cyan-500/20';

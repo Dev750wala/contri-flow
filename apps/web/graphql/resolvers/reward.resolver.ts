@@ -4,6 +4,10 @@ import { RewardType } from '../types';
 import { logActivity } from '@/lib/activityLogger';
 import { randomBytes } from 'crypto';
 import { CONTRIFLOW_ADDRESS } from '@/web3/constants';
+import {
+  getClaimRewardQueue,
+  getClaimRewardWorker,
+} from '@/services/claimRewardQueue';
 
 export const RewardQuery = extendType({
   type: 'Query',
@@ -168,16 +172,14 @@ export const RewardMutation = extendType({
     t.field('claimReward', {
       type: RewardType,
       args: {
-        id: nonNull(stringArg()),
+        rewardId: nonNull(stringArg()),
+        signature: nonNull(stringArg()),
+        walletAddress: nonNull(stringArg()),
       },
-      resolve: async (_parent, args, ctx: Context) => {
-        const reward = await ctx.prisma.reward.update({
-          where: {
-            id: args.id,
-          },
-          data: {
-            claimed: true,
-          },
+      resolve: async (_parent, args: any, ctx: Context) => {
+        // Fetch reward to validate
+        const reward = await ctx.prisma.reward.findUnique({
+          where: { id: args.rewardId },
           include: {
             repository: {
               include: {
@@ -192,23 +194,40 @@ export const RewardMutation = extendType({
           },
         });
 
-        // Log activity for reward claimed
-        await logActivity({
-          organizationId: reward.repository.organization.id,
-          activityType: 'REWARD_CLAIMED',
-          title: `Reward Claimed`,
-          description: `Reward of ${reward.token_amount} tokens claimed for PR #${reward.pr_number}`,
-          repositoryId: reward.repository_id,
-          rewardId: reward.id,
-          actorId: reward.contributor.user?.id,
-          actorName: reward.contributor.user?.name,
-          amount: reward.token_amount,
-          prNumber: reward.pr_number,
-          metadata: {
-            contributorGithubId: reward.contributor.github_id,
-          },
-        });
+        if (!reward) {
+          throw new Error('Reward not found');
+        }
 
+        if (reward.claimed) {
+          throw new Error('Reward has already been claimed');
+        }
+
+        if (!reward.confirmed) {
+          throw new Error('Reward is not confirmed on blockchain yet');
+        }
+
+        // Ensure queue/worker are initialized lazily (avoids Redis usage during schema generation)
+        const claimRewardQueue = getClaimRewardQueue();
+        getClaimRewardWorker();
+
+        // Add job to the claim queue
+        await claimRewardQueue.add(
+          `claim-reward-${args.rewardId}`,
+          {
+            rewardId: args.rewardId,
+            walletAddress: args.walletAddress,
+            signature: args.signature,
+          },
+          {
+            jobId: `claim-${args.rewardId}-${Date.now()}`,
+          }
+        );
+
+        console.log(
+          `[ClaimReward] Job added to queue for reward ${args.rewardId}`
+        );
+
+        // Return the reward (it will be updated by the worker)
         return reward;
       },
     });

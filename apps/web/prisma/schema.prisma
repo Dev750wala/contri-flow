@@ -12,54 +12,32 @@ datasource db {
 }
 
 model User {
-  id                   String                 @id
-  name                 String
-  email                String?                @unique
-  github_id            String                 @unique @db.Citext
-  created_at           DateTime               @default(now())
-  updated_at           DateTime
-  Contributor          Contributor?
-  Organization         Organization[]
-  RepositoryMaintainer RepositoryMaintainer[]
+  id                    String                 @id @default(cuid())
+  name                  String
+  email                 String?                @unique
+  github_id             String                 @unique @db.Citext
+  created_at            DateTime               @default(now())
+  updated_at            DateTime               @updatedAt
+  contributor           Contributor?
+  organizations         Organization[]
+  repositoryMaintainers RepositoryMaintainer[]
 
   @@index([github_id])
 }
 
-model Activity {
-  id              String       @id
-  organization_id String
-  activity_type   ActivityType
-  title           String
-  description     String?
-  metadata        Json?
-  repository_id   String?
-  reward_id       String?
-  actor_id        String?
-  actor_name      String?
-  amount          String?
-  pr_number       Int?
-  issue_number    Int?
-  created_at      DateTime     @default(now())
-  Organization    Organization @relation(fields: [organization_id], references: [id])
-
-  @@index([activity_type])
-  @@index([created_at])
-  @@index([organization_id])
-}
-
 model Contributor {
-  id         String   @id
+  id         String   @id @default(cuid())
   github_id  String   @unique
   email      String?  @unique
   created_at DateTime @default(now())
-  updated_at DateTime
+  updated_at DateTime @updatedAt
   user_id    String?  @unique
-  User       User?    @relation(fields: [user_id], references: [id])
-  Reward     Reward[]
+  user       User?    @relation(fields: [user_id], references: [id])
+  reward     Reward[]
 }
 
 model Organization {
-  id                 String       @id
+  id                 String       @id @default(cuid())
   name               String
   github_org_id      String       @unique
   installation_id    String       @unique
@@ -67,92 +45,80 @@ model Organization {
   app_uninstalled_at DateTime?
   suspended          Boolean      @default(false)
   created_at         DateTime     @default(now())
-  updated_at         DateTime
+  updated_at         DateTime     @updatedAt
   sync_maintainers   Boolean      @default(false)
   owner_id           String?
+  owner              User?        @relation(fields: [owner_id], references: [id])
   owner_github_id    String
-  Activity           Activity[]
-  User               User?        @relation(fields: [owner_id], references: [id])
-  Repository         Repository[]
+  activity           Activity[]
+  repositories       Repository[]
 
   @@index([github_org_id])
   @@index([installation_id])
 }
 
-model Payout {
-  id                String   @id
-  tx_hash           String   @unique
-  destination_chain String
-  total_amount      String
-  receiver_address  String
-  claimed_at        DateTime @default(now())
-  reward_id         String   @unique
-  platform_fee      String
-  Reward            Reward   @relation(fields: [reward_id], references: [id])
-}
-
 model Repository {
-  id                   String                 @id
-  name                 String
-  github_repo_id       String                 @unique
-  is_removed           Boolean                @default(false)
-  removed_at           DateTime?
-  created_at           DateTime               @default(now())
-  updated_at           DateTime
-  organization_id      String
-  enabled_rewards      Boolean                @default(false)
-  Organization         Organization           @relation(fields: [organization_id], references: [id])
-  RepositoryMaintainer RepositoryMaintainer[]
-  Reward               Reward[]
+  id              String                 @id @default(cuid())
+  name            String
+  github_repo_id  String                 @unique
+  is_removed      Boolean                @default(false)
+  removed_at      DateTime?
+  created_at      DateTime               @default(now())
+  updated_at      DateTime               @updatedAt
+  organization_id String
+  enabled_rewards Boolean                @default(false)
+  organization    Organization           @relation(fields: [organization_id], references: [id])
+  maintainers     RepositoryMaintainer[]
+  reward          Reward[]
 
   @@index([github_repo_id])
 }
 
 model RepositoryMaintainer {
-  id            String         @id
-  repository_id String
-  user_id       String?
-  created_at    DateTime       @default(now())
-  role          RepositoryRole @default(MAINTAIN)
-  github_id     String
-  Repository    Repository     @relation(fields: [repository_id], references: [id])
-  User          User?          @relation(fields: [user_id], references: [id])
-  Reward        Reward[]
+  id             String         @id @default(cuid())
+  repository_id  String
+  user_id        String?
+  created_at     DateTime       @default(now())
+  role           RepositoryRole @default(MAINTAIN)
+  github_id      String
+  Repository     Repository     @relation(fields: [repository_id], references: [id])
+  user           User?          @relation(fields: [user_id], references: [id])
+  issued_rewards Reward[]
 
   @@unique([repository_id, github_id])
 }
 
 model Reward {
-  id                   String               @id
-  pr_number            Int
-  secret               String
-  contributor_id       String
-  claimed              Boolean              @default(false)
-  created_at           DateTime             @default(now())
-  updated_at           DateTime
-  repository_id        String
-  issuer_id            String
-  comment              String
-  token_amount         String
-  confirmed            Boolean              @default(false)
-  Payout               Payout?
-  Contributor          Contributor          @relation(fields: [contributor_id], references: [id])
-  RepositoryMaintainer RepositoryMaintainer @relation(fields: [issuer_id], references: [id])
-  Repository           Repository           @relation(fields: [repository_id], references: [id])
+  id             String               @id @default(cuid())
+  pr_number      Int
+  secret         String
+  contributor_id String
+  claimed        Boolean              @default(false)
+  created_at     DateTime             @default(now())
+  updated_at     DateTime             @updatedAt
+  repository_id  String
+  issuer_id      String
+  issuer         RepositoryMaintainer @relation(fields: [issuer_id], references: [id])
+  comment        String
+  token_amount   String
+  confirmed      Boolean              @default(false)
+  payout         Payout?
+  contributor    Contributor          @relation(fields: [contributor_id], references: [id])
+  repository     Repository           @relation(fields: [repository_id], references: [id])
 
   @@unique([repository_id, pr_number])
 }
 
 model Payout {
-  id                String @id @default(cuid())
-  tx_hash           String @unique
+  id      String @id @default(cuid())
+  tx_hash String @unique
 
   destination_chain String
   total_amount      String
   platform_fee      String
   receiver_address  String
 
-  signature_hash  String
+  signature_hash String
 
   claimed_at DateTime @default(now())
 
@@ -168,23 +134,29 @@ model Activity {
   activity_type ActivityType
   title         String
   description   String?
-  metadata      Json? 
+  metadata      Json?
 
-  repository_id  String? 
-  reward_id      String?
-  actor_id       String? 
-  actor_name     String? 
+  repository_id String?
+  reward_id     String?
+  actor_id      String?
+  actor_name    String?
 
-  amount         String?
-  pr_number      Int? 
-  issue_number   Int? 
+  amount       String?
+  pr_number    Int?
+  issue_number Int?
 
   created_at DateTime @default(now())
+
+  @@index([organization_id])
+  @@index([created_at])
+  @@index([activity_type])
+}
 
 enum ActivityType {
   DEPOSIT
   REWARD_ISSUED
   REWARD_CLAIMED
+  REWARD_CLAIM_FAILED
   PR_MERGED
   ISSUE_CREATED
   ISSUE_CLOSED

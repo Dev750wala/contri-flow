@@ -9,6 +9,7 @@ export const ActivityTypeEnum = enumType({
     'DEPOSIT',
     'REWARD_ISSUED',
     'REWARD_CLAIMED',
+    'REWARD_CLAIM_FAILED',
     'PR_MERGED',
     'ISSUE_CREATED',
     'ISSUE_CLOSED',

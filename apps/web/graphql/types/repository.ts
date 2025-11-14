@@ -27,13 +27,13 @@ export const RepositoryType = objectType({
         return ctx.prisma.repositoryMaintainer.findMany({
           where: {
             repository_id: parent.id,
-          }
-        })
-      }
-    })
+          },
+        });
+      },
+    });
 
-    t.nonNull.field(Repository.enabled_rewards)
-    
+    t.nonNull.field(Repository.enabled_rewards);
+
     t.field('organization', {
       type: OrganizationType,
       resolve(parent: RepositoryPrisma, _args, ctx: Context) {

@@ -43,7 +43,7 @@ export const RepositoryMaintainerMutation = extendType({
             github_id: args.github_id,
           },
           include: {
-            repository: {
+            Repository: {
               include: {
                 organization: true,
               },
@@ -54,10 +54,10 @@ export const RepositoryMaintainerMutation = extendType({
 
         // Log activity for maintainer addition
         await logActivity({
-          organizationId: newMaintainer.repository.organization.id,
+          organizationId: newMaintainer.Repository.organization.id,
           activityType: 'MAINTAINER_ADDED',
           title: `Maintainer Added: ${newMaintainer.user?.name || args.github_id}`,
-          description: `${newMaintainer.user?.name || args.github_id} was added as ${role} maintainer for ${newMaintainer.repository.name}`,
+          description: `${newMaintainer.user?.name || args.github_id} was added as ${role} maintainer for ${newMaintainer.Repository.name}`,
           repositoryId: newMaintainer.repository_id,
           actorId: userId,
           actorName: newMaintainer.user?.name,
@@ -83,7 +83,7 @@ export const RepositoryMaintainerMutation = extendType({
         const maintainer = await ctx.prisma.repositoryMaintainer.findUnique({
           where: { id },
           include: {
-            repository: {
+            Repository: {
               include: {
                 organization: true,
               },
@@ -102,10 +102,10 @@ export const RepositoryMaintainerMutation = extendType({
 
         // Log activity for maintainer removal
         await logActivity({
-          organizationId: maintainer.repository.organization.id,
+          organizationId: maintainer.Repository.organization.id,
           activityType: 'MAINTAINER_REMOVED',
           title: `Maintainer Removed: ${maintainer.user?.name || maintainer.github_id}`,
-          description: `${maintainer.user?.name || maintainer.github_id} was removed as maintainer from ${maintainer.repository.name}`,
+          description: `${maintainer.user?.name || maintainer.github_id} was removed as maintainer from ${maintainer.Repository.name}`,
           repositoryId: maintainer.repository_id,
           actorId: maintainer.user_id || undefined,
           actorName: maintainer.user?.name || undefined,

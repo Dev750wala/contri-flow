@@ -16,7 +16,7 @@ export async function handleMemberAddedEvent(
 
     const newMaintainer = await prisma.repositoryMaintainer.create({
       data: {
-        repository: {
+        Repository: {
           connect: { github_repo_id: repository.id.toString() },
         },
         ...(user && {
@@ -25,10 +25,10 @@ export async function handleMemberAddedEvent(
           },
         }),
         github_id: member.id.toString(),
-        role: "MAINTAIN",
+        role: 'MAINTAIN',
       },
       include: {
-        repository: {
+        Repository: {
           include: {
             organization: true,
           },
@@ -38,10 +38,10 @@ export async function handleMemberAddedEvent(
 
     // Log activity for maintainer addition
     await logActivity({
-      organizationId: newMaintainer.repository.organization.id,
+      organizationId: newMaintainer.Repository.organization.id,
       activityType: 'MAINTAINER_ADDED',
       title: `Maintainer Added: ${member.login}`,
-      description: `${member.login} was added as maintainer for ${newMaintainer.repository.name}`,
+      description: `${member.login} was added as maintainer for ${newMaintainer.Repository.name}`,
       repositoryId: newMaintainer.repository_id,
       actorId: member.id.toString(),
       actorName: member.login,

@@ -1,23 +1,38 @@
-import config from '@/config';
 import Redis, { RedisOptions } from 'ioredis';
 
-const redisConfig: RedisOptions = {
-  host: config.REDIS_HOST_URL,
-  port: Number(config.REDIS_HOST_PORT),
-  password: config.REDIS_HOST_PASSWORD,
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
-  lazyConnect: true,
-  keepAlive: 30000,
-  connectTimeout: 10000,
-  commandTimeout: 5000,
-  reconnectOnError: function (err: Error) {
-    const targetError = 'READONLY';
-    return err.message.includes(targetError);
-  },
-  // Enable TLS if using cloud Redis
-  tls: config.REDIS_HOST_URL?.includes('aivencloud.com') ? {} : undefined,
+const getRedisConfig = (): RedisOptions => {
+  // Skip Redis initialization if we're in schema generation mode (missing env vars)
+  if (!process.env.REDIS_HOST_URL || !process.env.REDIS_HOST_PORT || process.env.REDIS_HOST_PORT === '') {
+    console.warn('Redis configuration missing, creating stub connection');
+    return {
+      host: 'localhost',
+      port: 6379,
+      lazyConnect: true, // Don't connect immediately
+      enableReadyCheck: false,
+      maxRetriesPerRequest: null, // Disable retries for stub
+    };
+  }
+
+  return {
+    host: process.env.REDIS_HOST_URL,
+    port: Number(process.env.REDIS_HOST_PORT),
+    password: process.env.REDIS_HOST_PASSWORD,
+    maxRetriesPerRequest: 3,
+    enableReadyCheck: true,
+    lazyConnect: true,
+    keepAlive: 30000,
+    connectTimeout: 10000,
+    commandTimeout: 5000,
+    reconnectOnError: function (err: Error) {
+      const targetError = 'READONLY';
+      return err.message.includes(targetError);
+    },
+    // Enable TLS if using cloud Redis
+    tls: process.env.REDIS_HOST_URL?.includes('aivencloud.com') ? {} : undefined,
+  };
 };
+
+const redisConfig = getRedisConfig();
 
 export const redisClient = new Redis(redisConfig);
 
