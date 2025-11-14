@@ -106,6 +106,14 @@ export async function handleIssueCommentCreated(
     // Use lazy getter to avoid blocking on Redis connection
     const queue = getCommentParseQueue();
     
+    // Ensure worker is initialized
+    const { getCommentParseWorker } = await import('@/services/commentParserQueue');
+    const worker = getCommentParseWorker();
+    console.log('[Controller] Worker status:', {
+      isRunning: worker.isRunning(),
+      name: worker.name,
+    });
+    
     const job = await queue.add(
       'parse-comment',
       {
@@ -123,6 +131,15 @@ export async function handleIssueCommentCreated(
       }
     );
     console.log(`[Controller] Job ${job.id} added to queue successfully`);
+    console.log(`[Controller] Job details:`, {
+      id: job.id,
+      name: job.name,
+      data: {
+        prNumber: pr_number,
+        repositoryId: repository.id,
+        contributorGithubId: contributor_github_id.toString(),
+      },
+    });
 
     return {
       message: 'Comment parsing job added to queue',
