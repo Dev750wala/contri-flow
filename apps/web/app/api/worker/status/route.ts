@@ -6,29 +6,31 @@ import { isBullMQRedisHealthy } from '@/lib/redisClient';
 export async function GET() {
   try {
     const redisHealthy = isBullMQRedisHealthy();
-    
+
     let workerStatus = null;
     let queueStatus = null;
-    
+
     if (redisHealthy) {
       try {
         const worker = getCommentParseWorker();
         const queue = getCommentParseQueue();
-        
+
         workerStatus = {
           isRunning: worker.isRunning(),
           name: worker.name,
           isPaused: worker.isPaused(),
         };
-        
-        const [waiting, active, completed, failed, delayed] = await Promise.all([
-          queue.getWaitingCount(),
-          queue.getActiveCount(),
-          queue.getCompletedCount(),
-          queue.getFailedCount(),
-          queue.getDelayedCount(),
-        ]);
-        
+
+        const [waiting, active, completed, failed, delayed] = await Promise.all(
+          [
+            queue.getWaitingCount(),
+            queue.getActiveCount(),
+            queue.getCompletedCount(),
+            queue.getFailedCount(),
+            queue.getDelayedCount(),
+          ]
+        );
+
         queueStatus = {
           waiting,
           active,
@@ -43,7 +45,7 @@ export async function GET() {
         };
       }
     }
-    
+
     return NextResponse.json({
       redis: {
         healthy: redisHealthy,
@@ -62,4 +64,3 @@ export async function GET() {
     );
   }
 }
-

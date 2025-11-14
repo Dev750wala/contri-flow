@@ -101,19 +101,21 @@ export async function handleIssueCommentCreated(
   }
 
   console.log('[Controller] Adding job to commentParseQueue');
-  
+
   try {
     // Use lazy getter to avoid blocking on Redis connection
     const queue = getCommentParseQueue();
-    
+
     // Ensure worker is initialized
-    const { getCommentParseWorker } = await import('@/services/commentParserQueue');
+    const { getCommentParseWorker } = await import(
+      '@/services/commentParserQueue'
+    );
     const worker = getCommentParseWorker();
     console.log('[Controller] Worker status:', {
       isRunning: worker.isRunning(),
       name: worker.name,
     });
-    
+
     const job = await queue.add(
       'parse-comment',
       {
@@ -149,7 +151,7 @@ export async function handleIssueCommentCreated(
     };
   } catch (error) {
     console.error('[Controller] Failed to add job to queue:', error);
-    
+
     // Return success to GitHub even if queue fails
     // This prevents webhook retries and allows manual processing later
     return {
