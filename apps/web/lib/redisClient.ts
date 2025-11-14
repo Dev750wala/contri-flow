@@ -1,6 +1,9 @@
 import Redis, { RedisOptions } from 'ioredis';
 
 const getRedisConfig = (): RedisOptions => {
+  console.log("XXXXXX HERE ARE THE REDIS CONFIGS.........");
+  console.log(process.env.REDIS_HOST_URL, process.env.REDIS_HOST_PORT);
+  
   // Skip Redis initialization if we're in schema generation mode (missing env vars)
   if (!process.env.REDIS_HOST_URL || !process.env.REDIS_HOST_PORT || process.env.REDIS_HOST_PORT === '') {
     console.warn('Redis configuration missing, creating stub connection');
