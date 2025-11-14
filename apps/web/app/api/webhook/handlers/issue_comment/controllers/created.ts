@@ -1,7 +1,7 @@
 import { IssueCommentEventInterface } from '@/interfaces';
 import { ControllerReturnType } from '../../../interface';
 import prisma from '@/lib/prisma';
-import { commentParseQueue } from '@/services/commentParserQueue';
+import { getCommentParseQueue } from '@/services/commentParserQueue';
 import { Repository, RepositoryMaintainer } from '@prisma/client';
 
 export async function handleIssueCommentCreated(
@@ -101,28 +101,45 @@ export async function handleIssueCommentCreated(
   }
 
   console.log('[Controller] Adding job to commentParseQueue');
-  const job = await commentParseQueue.add(
-    'parse-comment',
-    {
-      commentBody,
-      prNumber: pr_number,
-      contributorGithubId: contributor_github_id.toString(),
-      commentorGithubId: commentor_github_id.toString(),
-      repositoryGithubId: repository_github_id.toString(),
-      repositoryId: repository.id,
-      commentorId: issuar.id,
-      installationId: installation_id,
-    },
-    {
-      attempts: 1,
-    }
-  );
-  console.log(`[Controller] Job ${job.id} added to queue successfully`);
+  
+  try {
+    // Use lazy getter to avoid blocking on Redis connection
+    const queue = getCommentParseQueue();
+    
+    const job = await queue.add(
+      'parse-comment',
+      {
+        commentBody,
+        prNumber: pr_number,
+        contributorGithubId: contributor_github_id.toString(),
+        commentorGithubId: commentor_github_id.toString(),
+        repositoryGithubId: repository_github_id.toString(),
+        repositoryId: repository.id,
+        commentorId: issuar.id,
+        installationId: installation_id,
+      },
+      {
+        attempts: 1,
+      }
+    );
+    console.log(`[Controller] Job ${job.id} added to queue successfully`);
 
-  return {
-    message: 'Comment parsing job added to queue',
-    statusCode: 200,
-    success: true,
-    data: null,
-  };
+    return {
+      message: 'Comment parsing job added to queue',
+      statusCode: 200,
+      success: true,
+      data: null,
+    };
+  } catch (error) {
+    console.error('[Controller] Failed to add job to queue:', error);
+    
+    // Return success to GitHub even if queue fails
+    // This prevents webhook retries and allows manual processing later
+    return {
+      message: 'Webhook received, job queuing failed but will be retried',
+      statusCode: 200,
+      success: true,
+      data: null,
+    };
+  }
 }

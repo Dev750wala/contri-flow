@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       response = await handleIssueCommentEvent(
         body as IssueCommentEventInterface
       );
+      break;
 
     default:
       break;

@@ -32,27 +32,37 @@ interface OwnerEmailJobData {
  * - Rate limiting per organization
  * - Batch processing capability
  * - Automatic retry with exponential backoff
+ * - Lazy initialization to prevent startup failures
  */
-export const ownerEmailQueue = new Queue<OwnerEmailJobData, boolean, string>(
-  'OWNER-EMAIL-QUEUE',
-  {
-    connection: bullMQRedisClient,
-    defaultJobOptions: {
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 2000, // Start with 2 seconds
-      },
-      removeOnComplete: {
-        age: 24 * 3600, // Keep completed jobs for 24 hours
-        count: 1000, // Keep max 1000 completed jobs
-      },
-      removeOnFail: {
-        age: 7 * 24 * 3600, // Keep failed jobs for 7 days for debugging
-      },
-    },
+let _ownerEmailQueue: Queue<OwnerEmailJobData, boolean, string> | null = null;
+let _ownerEmailWorker: Worker<OwnerEmailJobData, boolean, string> | null = null;
+
+export function getOwnerEmailQueue(): Queue<OwnerEmailJobData, boolean, string> {
+  if (!_ownerEmailQueue) {
+    console.log('[OwnerEmailQueue] Initializing queue...');
+    _ownerEmailQueue = new Queue<OwnerEmailJobData, boolean, string>(
+      'OWNER-EMAIL-QUEUE',
+      {
+        connection: bullMQRedisClient,
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 2000, // Start with 2 seconds
+          },
+          removeOnComplete: {
+            age: 24 * 3600, // Keep completed jobs for 24 hours
+            count: 1000, // Keep max 1000 completed jobs
+          },
+          removeOnFail: {
+            age: 7 * 24 * 3600, // Keep failed jobs for 7 days for debugging
+          },
+        },
+      }
+    );
   }
-);
+  return _ownerEmailQueue;
+}
 
 /**
  * Add a job to the email queue with deduplication
@@ -72,6 +82,13 @@ export async function addOwnerEmailJob(
   const rateLimitKey = `email-ratelimit:${recentJobId}`;
   
   try {
+    // Check if Redis is available before attempting to add job
+    const { isBullMQRedisHealthy } = await import('@/lib/redisClient');
+    if (!isBullMQRedisHealthy()) {
+      console.error('[OwnerEmailQueue] Redis not available, cannot add job');
+      return null;
+    }
+
     // Use Redis to implement rate limiting (1 email per hour per org per reason)
     const redisClient = bullMQRedisClient;
     const exists = await redisClient.get(rateLimitKey);
@@ -86,8 +103,9 @@ export async function addOwnerEmailJob(
     // Set rate limit key with 1 hour expiry
     await redisClient.set(rateLimitKey, '1', 'EX', 3600);
 
-    // Add job to queue
-    const job = await ownerEmailQueue.add(
+    // Add job to queue using lazy getter
+    const queue = getOwnerEmailQueue();
+    const job = await queue.add(
       data.reason,
       data,
       {
@@ -117,10 +135,14 @@ export async function addOwnerEmailJob(
  * - Concurrency for parallel processing
  * - Batch email sending capability
  * - Comprehensive error handling
+ * - Lazy initialization
  */
-export const ownerEmailWorker = new Worker(
-  'OWNER-EMAIL-QUEUE',
-  async (job: Job<OwnerEmailJobData, boolean, string>) => {
+export function getOwnerEmailWorker(): Worker<OwnerEmailJobData, boolean, string> {
+  if (!_ownerEmailWorker) {
+    console.log('[OwnerEmailWorker] Initializing worker...');
+    _ownerEmailWorker = new Worker(
+      'OWNER-EMAIL-QUEUE',
+      async (job: Job<OwnerEmailJobData, boolean, string>) => {
     console.log(`[OwnerEmailWorker] Job ${job.id} started processing`);
     console.log(
       '[OwnerEmailWorker] Job data:',
@@ -297,17 +319,60 @@ export const ownerEmailWorker = new Worker(
 
       throw error;
     }
-  },
-  {
-    connection: bullMQRedisClient,
-    autorun: true,
-    concurrency: 3, // Process 3 emails in parallel
-    limiter: {
-      max: 10, // Max 10 jobs
-      duration: 60000, // per 60 seconds (to respect email service rate limits)
-    },
+      },
+      {
+        connection: bullMQRedisClient,
+        autorun: true,
+        concurrency: 3, // Process 3 emails in parallel
+        limiter: {
+          max: 10, // Max 10 jobs
+          duration: 60000, // per 60 seconds (to respect email service rate limits)
+        },
+      }
+    );
+
+    // Worker event listeners
+    _ownerEmailWorker.on('completed', (job) => {
+      console.log(`[OwnerEmailWorker] Job ${job.id} completed successfully`);
+    });
+
+    _ownerEmailWorker.on('failed', (job, err) => {
+      console.error(`[OwnerEmailWorker] Job ${job?.id} failed:`, err);
+    });
+
+    _ownerEmailWorker.on('error', (err) => {
+      console.error('[OwnerEmailWorker] Worker error:', err);
+    });
+
+    _ownerEmailWorker.on('ready', () => {
+      console.log('[OwnerEmailWorker] Owner email worker is ready');
+    });
+
+    _ownerEmailWorker.on('active', (job) => {
+      console.log(`[OwnerEmailWorker] Job ${job.id} is now active`);
+    });
   }
-);
+  return _ownerEmailWorker;
+}
+
+// Initialize worker only when Redis is available (background process)
+if (typeof window === 'undefined') {
+  // Server-side only - use setImmediate to avoid blocking module loading
+  setImmediate(() => {
+    import('@/lib/redisClient').then(({ isBullMQRedisHealthy }) => {
+      const checkAndInitialize = () => {
+        if (isBullMQRedisHealthy()) {
+          console.log('[OwnerEmailQueue] Redis is healthy, initializing worker...');
+          getOwnerEmailWorker();
+        } else {
+          console.log('[OwnerEmailQueue] Redis not ready, will retry...');
+          setTimeout(checkAndInitialize, 5000);
+        }
+      };
+      setTimeout(checkAndInitialize, 2000);
+    });
+  });
+}
 
 /**
  * Generate HTML email for insufficient funds notification
@@ -523,24 +588,3 @@ async function sendEmail(params: {
     return false;
   }
 }
-
-// Worker event listeners
-ownerEmailWorker.on('completed', (job) => {
-  console.log(`[OwnerEmailWorker] Job ${job.id} completed successfully`);
-});
-
-ownerEmailWorker.on('failed', (job, err) => {
-  console.error(`[OwnerEmailWorker] Job ${job?.id} failed:`, err);
-});
-
-ownerEmailWorker.on('error', (err) => {
-  console.error('[OwnerEmailWorker] Worker error:', err);
-});
-
-ownerEmailWorker.on('ready', () => {
-  console.log('[OwnerEmailWorker] Owner email worker is ready');
-});
-
-ownerEmailWorker.on('active', (job) => {
-  console.log(`[OwnerEmailWorker] Job ${job.id} is now active`);
-});

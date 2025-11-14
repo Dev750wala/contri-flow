@@ -62,13 +62,13 @@ export const DashboardStatsQueries = extendType({
 
         const claimedRewards = allRewards.filter((r) => r.claimed);
         const totalRewardsDistributed = claimedRewards.reduce(
-          (sum, r) => sum + parseFloat(r.token_amount),
+          (sum, r) => sum + parseFloat(formatEther(BigInt(r.token_amount))),
           0
         );
 
         const pendingRewards = allRewards.filter((r) => !r.claimed && r.confirmed);
         const totalPendingAmount = pendingRewards.reduce(
-          (sum, r) => sum + parseFloat(r.token_amount),
+          (sum, r) => sum + parseFloat(formatEther(BigInt(r.token_amount))),
           0
         );
 
@@ -125,13 +125,13 @@ export const DashboardStatsQueries = extendType({
 
         const claimedRewards = allRewards.filter((r) => r.claimed);
         const totalDistributed = claimedRewards.reduce(
-          (sum, r) => sum + parseFloat(r.token_amount),
+          (sum, r) => sum + parseFloat(formatEther(BigInt(r.token_amount))),
           0
         );
 
         const pendingRewards = allRewards.filter((r) => !r.claimed && r.confirmed);
         const pendingAmount = pendingRewards.reduce(
-          (sum, r) => sum + parseFloat(r.token_amount),
+          (sum, r) => sum + parseFloat(formatEther(BigInt(r.token_amount))),
           0
         );
 
@@ -205,7 +205,7 @@ export const DashboardStatsQueries = extendType({
 
         const claimedRewards = allRewards.filter((r) => r.claimed);
         const totalRewardsDistributed = claimedRewards.reduce(
-          (sum, r) => sum + parseFloat(r.token_amount),
+          (sum, r) => sum + parseFloat(formatEther(BigInt(r.token_amount))),
           0
         );
 
@@ -273,13 +273,13 @@ export const DashboardStatsQueries = extendType({
 
           const claimedRewards = allRewards.filter((r) => r.claimed);
           const totalDistributed = claimedRewards.reduce(
-            (sum, r) => sum + parseFloat(r.token_amount),
+            (sum, r) => sum + parseFloat(formatEther(BigInt(r.token_amount))),
             0
           );
 
           const pendingRewards = allRewards.filter((r) => !r.claimed && r.confirmed);
           const pendingAmount = pendingRewards.reduce(
-            (sum, r) => sum + parseFloat(r.token_amount),
+            (sum, r) => sum + parseFloat(formatEther(BigInt(r.token_amount))),
             0
           );
 

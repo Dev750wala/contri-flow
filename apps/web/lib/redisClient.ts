@@ -21,14 +21,26 @@ const getRedisConfig = (): RedisOptions => {
     enableReadyCheck: true,
     lazyConnect: true,
     keepAlive: 30000,
-    connectTimeout: 10000,
-    commandTimeout: 5000,
+    connectTimeout: 30000, // Increased from 10s to 30s for slow networks
+    commandTimeout: 10000, // Increased from 5s to 10s
+    retryStrategy: (times: number) => {
+      // Exponential backoff with max delay of 30 seconds
+      const delay = Math.min(times * 1000, 30000);
+      console.log(`[Redis] Retry attempt ${times}, waiting ${delay}ms`);
+      return delay;
+    },
     reconnectOnError: function (err: Error) {
-      const targetError = 'READONLY';
-      return err.message.includes(targetError);
+      const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND'];
+      const shouldReconnect = targetErrors.some(e => err.message.includes(e) || (err as any).code === e);
+      if (shouldReconnect) {
+        console.log(`[Redis] Reconnecting due to error: ${err.message}`);
+      }
+      return shouldReconnect;
     },
     // Enable TLS if using cloud Redis
-    tls: process.env.REDIS_HOST_URL?.includes('aivencloud.com') ? {} : undefined,
+    tls: process.env.REDIS_HOST_URL?.includes('aivencloud.com') ? {
+      rejectUnauthorized: false // Allow self-signed certificates in production
+    } : undefined,
   };
 };
 
@@ -46,54 +58,96 @@ const bullMQRedisConfig: RedisOptions = {
 
 export const bullMQRedisClient = new Redis(bullMQRedisConfig);
 
-// Improved error handling with less verbose logging
+// Track connection state
+let isRedisConnected = false;
+let isBullMQRedisConnected = false;
+
+export const isRedisHealthy = () => isRedisConnected;
+export const isBullMQRedisHealthy = () => isBullMQRedisConnected;
+
+// Helper function to safely execute Redis commands
+export async function safeRedisCommand<T>(
+  command: () => Promise<T>,
+  fallback?: T
+): Promise<T | null> {
+  if (!isRedisConnected) {
+    console.warn('[Redis] Connection not ready, skipping command');
+    return fallback ?? null;
+  }
+  try {
+    return await command();
+  } catch (error) {
+    console.error('[Redis] Command execution failed:', error);
+    return fallback ?? null;
+  }
+}
+
+// Improved error handling with connection state tracking
 redisClient.on('error', (error: any) => {
-  if (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND') {
-    console.log('Redis connection lost, attempting to reconnect...');
+  isRedisConnected = false;
+  if (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
+    console.log('[Redis] Connection lost, attempting to reconnect...', error.code);
   } else {
-    console.error('Redis connection error:', error.message);
+    console.error('[Redis] Connection error:', error.message);
   }
 });
 
 redisClient.on('connect', () => {
-  console.log('Redis connected successfully');
+  console.log('[Redis] Connected successfully');
 });
 
 redisClient.on('ready', () => {
-  console.log('Redis is ready to receive commands');
+  isRedisConnected = true;
+  console.log('[Redis] Ready to receive commands');
 });
 
 redisClient.on('close', () => {
-  console.log('Redis connection closed');
+  isRedisConnected = false;
+  console.log('[Redis] Connection closed');
 });
 
-redisClient.on('reconnecting', () => {
-  console.log('Redis reconnecting...');
+redisClient.on('reconnecting', (delay: number) => {
+  isRedisConnected = false;
+  console.log(`[Redis] Reconnecting in ${delay}ms...`);
+});
+
+redisClient.on('end', () => {
+  isRedisConnected = false;
+  console.log('[Redis] Connection ended');
 });
 
 // Error handling for BullMQ Redis client
 bullMQRedisClient.on('error', (error: any) => {
-  if (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND') {
-    console.log('BullMQ Redis connection lost, attempting to reconnect...');
+  isBullMQRedisConnected = false;
+  if (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
+    console.log('[BullMQ Redis] Connection lost, attempting to reconnect...', error.code);
   } else {
-    console.error('BullMQ Redis connection error:', error.message);
+    console.error('[BullMQ Redis] Connection error:', error.message);
   }
 });
 
 bullMQRedisClient.on('connect', () => {
-  console.log('BullMQ Redis connected successfully');
+  console.log('[BullMQ Redis] Connected successfully');
 });
 
 bullMQRedisClient.on('ready', () => {
-  console.log('BullMQ Redis is ready to receive commands');
+  isBullMQRedisConnected = true;
+  console.log('[BullMQ Redis] Ready to receive commands');
 });
 
 bullMQRedisClient.on('close', () => {
-  console.log('BullMQ Redis connection closed');
+  isBullMQRedisConnected = false;
+  console.log('[BullMQ Redis] Connection closed');
 });
 
-bullMQRedisClient.on('reconnecting', () => {
-  console.log('BullMQ Redis reconnecting...');
+bullMQRedisClient.on('reconnecting', (delay: number) => {
+  isBullMQRedisConnected = false;
+  console.log(`[BullMQ Redis] Reconnecting in ${delay}ms...`);
+});
+
+bullMQRedisClient.on('end', () => {
+  isBullMQRedisConnected = false;
+  console.log('[BullMQ Redis] Connection ended');
 });
 
 // Graceful shutdown handling

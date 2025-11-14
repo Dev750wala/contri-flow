@@ -38,6 +38,8 @@ interface CommentParseJobData {
 // Lazy initialization of viem clients for on-chain operations
 let publicClient: any;
 let walletClient: any;
+let _commentParseQueue: Queue<CommentParseJobData, boolean, string> | null = null;
+let _commentParseWorker: Worker<CommentParseJobData, boolean, string> | null = null;
 
 function getClients() {
   if (!publicClient || !walletClient) {
@@ -61,18 +63,27 @@ function getClients() {
   return { publicClient, walletClient };
 }
 
-export const commentParseQueue = new Queue<
-  CommentParseJobData,
-  boolean,
-  string
->('COMMENT-PARSE-QUEUE', {
-  connection: bullMQRedisClient,
-  defaultJobOptions: { attempts: 3 },
-});
+// Lazy initialization of queue and worker to prevent startup failures
+export function getCommentParseQueue(): Queue<CommentParseJobData, boolean, string> {
+  if (!_commentParseQueue) {
+    console.log('[CommentParseQueue] Initializing queue...');
+    _commentParseQueue = new Queue<CommentParseJobData, boolean, string>(
+      'COMMENT-PARSE-QUEUE',
+      {
+        connection: bullMQRedisClient,
+        defaultJobOptions: { attempts: 3 },
+      }
+    );
+  }
+  return _commentParseQueue;
+}
 
-export const commentParseWorker = new Worker(
-  'COMMENT-PARSE-QUEUE',
-  async (job: Job<CommentParseJobData, boolean, string>) => {
+export function getCommentParseWorker(): Worker<CommentParseJobData, boolean, string> {
+  if (!_commentParseWorker) {
+    console.log('[CommentParseWorker] Initializing worker...');
+    _commentParseWorker = new Worker(
+      'COMMENT-PARSE-QUEUE',
+      async (job: Job<CommentParseJobData, boolean, string>) => {
     console.log(`[Worker] Job ${job.id} started processing`);
     console.log(
       '[Worker] Job data received:',
@@ -456,26 +467,51 @@ export const commentParseWorker = new Worker(
     }
 
     return true;
-  },
-  { connection: bullMQRedisClient, autorun: true, concurrency: 5 }
-);
+      },
+      { connection: bullMQRedisClient, autorun: true, concurrency: 5 }
+    );
 
-commentParseWorker.on('completed', (job) => {
-  console.log(`[Worker] Job ${job.id} completed successfully`);
-});
+    // Worker event listeners
+    _commentParseWorker.on('completed', (job) => {
+      console.log(`[Worker] Job ${job.id} completed successfully`);
+    });
 
-commentParseWorker.on('failed', (job, err) => {
-  console.error(`[Worker] Job ${job?.id} failed:`, err);
-});
+    _commentParseWorker.on('failed', (job, err) => {
+      console.error(`[Worker] Job ${job?.id} failed:`, err);
+    });
 
-commentParseWorker.on('error', (err) => {
-  console.error('[Worker] Worker error:', err);
-});
+    _commentParseWorker.on('error', (err) => {
+      console.error('[Worker] Worker error:', err);
+    });
 
-commentParseWorker.on('ready', () => {
-  console.log('[Worker] Comment parse worker is ready');
-});
+    _commentParseWorker.on('ready', () => {
+      console.log('[Worker] Comment parse worker is ready');
+    });
 
-commentParseWorker.on('active', (job) => {
-  console.log(`[Worker] Job ${job.id} is now active`);
-});
+    _commentParseWorker.on('active', (job) => {
+      console.log(`[Worker] Job ${job.id} is now active`);
+    });
+  }
+  return _commentParseWorker;
+}
+
+// Initialize worker only when Redis is available (background process)
+if (typeof window === 'undefined') {
+  // Server-side only - use setImmediate to avoid blocking module loading
+  setImmediate(() => {
+    import('@/lib/redisClient').then(({ isBullMQRedisHealthy }) => {
+      // Check Redis health before initializing worker
+      const checkAndInitialize = () => {
+        if (isBullMQRedisHealthy()) {
+          console.log('[CommentParseQueue] Redis is healthy, initializing worker...');
+          getCommentParseWorker();
+        } else {
+          console.log('[CommentParseQueue] Redis not ready, will retry...');
+          setTimeout(checkAndInitialize, 5000); // Retry every 5 seconds
+        }
+      };
+      // Start with a delay to allow Redis to connect
+      setTimeout(checkAndInitialize, 2000);
+    });
+  });
+}
