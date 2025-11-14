@@ -1,11 +1,38 @@
 import Redis, { RedisOptions } from 'ioredis';
 
+// Check if we're in a build context (Next.js build, schema generation, etc.)
+const isBuildTime = () => {
+  return (
+    process.env.NEXT_PHASE === 'phase-production-build' ||
+    (process.env.NODE_ENV === 'production' && process.argv.includes('build')) ||
+    process.argv.some(
+      (arg) => arg.includes('schema') || arg.includes('codegen')
+    )
+  );
+};
+
 const getRedisConfig = (): RedisOptions => {
-  console.log("XXXXXX HERE ARE THE REDIS CONFIGS.........");
+  // During build time, always return stub config
+  if (isBuildTime()) {
+    console.warn('[Redis] Build time detected, using stub connection');
+    return {
+      host: 'localhost',
+      port: 6379,
+      lazyConnect: true,
+      enableReadyCheck: false,
+      maxRetriesPerRequest: null,
+    };
+  }
+
+  console.log('XXXXXX HERE ARE THE REDIS CONFIGS.........');
   console.log(process.env.REDIS_HOST_URL, process.env.REDIS_HOST_PORT);
-  
+
   // Skip Redis initialization if we're in schema generation mode (missing env vars)
-  if (!process.env.REDIS_HOST_URL || !process.env.REDIS_HOST_PORT || process.env.REDIS_HOST_PORT === '') {
+  if (
+    !process.env.REDIS_HOST_URL ||
+    !process.env.REDIS_HOST_PORT ||
+    process.env.REDIS_HOST_PORT === ''
+  ) {
     console.warn('Redis configuration missing, creating stub connection');
     return {
       host: 'localhost',
@@ -15,6 +42,13 @@ const getRedisConfig = (): RedisOptions => {
       maxRetriesPerRequest: null, // Disable retries for stub
     };
   }
+
+  console.log('XXXXXX HERE ARE THE REDIS CONFIGS.........');
+  console.log(
+    process.env.REDIS_HOST_URL,
+    process.env.REDIS_HOST_PORT,
+    process.env.REDIS_HOST_PASSWORD
+  );
 
   return {
     host: process.env.REDIS_HOST_URL,
@@ -34,36 +68,174 @@ const getRedisConfig = (): RedisOptions => {
     },
     reconnectOnError: function (err: Error) {
       const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND'];
-      const shouldReconnect = targetErrors.some(e => err.message.includes(e) || (err as any).code === e);
+      const shouldReconnect = targetErrors.some(
+        (e) => err.message.includes(e) || (err as any).code === e
+      );
       if (shouldReconnect) {
         console.log(`[Redis] Reconnecting due to error: ${err.message}`);
       }
       return shouldReconnect;
     },
     // Enable TLS if using cloud Redis
-    tls: process.env.REDIS_HOST_URL?.includes('aivencloud.com') ? {
-      rejectUnauthorized: false // Allow self-signed certificates in production
-    } : undefined,
+    tls: process.env.REDIS_HOST_URL?.includes('aivencloud.com')
+      ? {
+          rejectUnauthorized: false, // Allow self-signed certificates in production
+        }
+      : undefined,
   };
 };
-
-const redisConfig = getRedisConfig();
-
-export const redisClient = new Redis(redisConfig);
-
-// BullMQ requires maxRetriesPerRequest to be null
-// Also remove commandTimeout for BullMQ as it can cause issues with long-running operations
-const bullMQRedisConfig: RedisOptions = {
-  ...redisConfig,
-  maxRetriesPerRequest: null,
-  commandTimeout: undefined, // Remove timeout for BullMQ operations
-};
-
-export const bullMQRedisClient = new Redis(bullMQRedisConfig);
 
 // Track connection state
 let isRedisConnected = false;
 let isBullMQRedisConnected = false;
+
+// Lazy initialization - only create clients when actually needed (not at module load time)
+let _redisClient: Redis | null = null;
+let _bullMQRedisClient: Redis | null = null;
+
+const setupRedisEventHandlers = (
+  client: Redis,
+  name: string,
+  isBullMQ: boolean = false
+) => {
+  client.on('error', (error: any) => {
+    if (isBullMQ) {
+      isBullMQRedisConnected = false;
+    } else {
+      isRedisConnected = false;
+    }
+    if (
+      error.code === 'ECONNRESET' ||
+      error.code === 'ENOTFOUND' ||
+      error.code === 'ETIMEDOUT'
+    ) {
+      console.log(
+        `[${name}] Connection lost, attempting to reconnect...`,
+        error.code
+      );
+    } else {
+      console.error(`[${name}] Connection error:`, error.message);
+    }
+  });
+
+  client.on('connect', () => {
+    console.log(`[${name}] Connected successfully`);
+  });
+
+  client.on('ready', () => {
+    if (isBullMQ) {
+      isBullMQRedisConnected = true;
+    } else {
+      isRedisConnected = true;
+    }
+    console.log(`[${name}] Ready to receive commands`);
+  });
+
+  client.on('close', () => {
+    if (isBullMQ) {
+      isBullMQRedisConnected = false;
+    } else {
+      isRedisConnected = false;
+    }
+    console.log(`[${name}] Connection closed`);
+  });
+
+  client.on('reconnecting', (delay: number) => {
+    if (isBullMQ) {
+      isBullMQRedisConnected = false;
+    } else {
+      isRedisConnected = false;
+    }
+    console.log(`[${name}] Reconnecting in ${delay}ms...`);
+  });
+
+  client.on('end', () => {
+    if (isBullMQ) {
+      isBullMQRedisConnected = false;
+    } else {
+      isRedisConnected = false;
+    }
+    console.log(`[${name}] Connection ended`);
+  });
+};
+
+const getRedisClient = (): Redis => {
+  if (!_redisClient) {
+    const redisConfig = getRedisConfig();
+    _redisClient = new Redis(redisConfig);
+    setupRedisEventHandlers(_redisClient, 'Redis', false);
+  }
+  return _redisClient;
+};
+
+const getBullMQRedisClient = (): Redis => {
+  if (!_bullMQRedisClient) {
+    const redisConfig = getRedisConfig();
+    // BullMQ requires maxRetriesPerRequest to be null
+    // Also remove commandTimeout for BullMQ as it can cause issues with long-running operations
+    const bullMQRedisConfig: RedisOptions = {
+      ...redisConfig,
+      maxRetriesPerRequest: null,
+      commandTimeout: undefined, // Remove timeout for BullMQ operations
+    };
+    _bullMQRedisClient = new Redis(bullMQRedisConfig);
+    setupRedisEventHandlers(_bullMQRedisClient, 'BullMQ Redis', true);
+  }
+  return _bullMQRedisClient;
+};
+
+// Export clients that initialize lazily on first access (runtime, not build time)
+// Using Proxy to intercept property access and initialize only when needed
+// This ensures the Redis clients are only created at runtime, not during build
+export const redisClient = new Proxy({} as Redis, {
+  get(target, prop) {
+    const client = getRedisClient();
+    const value = client[prop as keyof Redis];
+    // If it's a function, bind it to maintain 'this' context
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+  // Support for 'instanceof' checks
+  has(target, prop) {
+    const client = getRedisClient();
+    return prop in client;
+  },
+  ownKeys(target) {
+    const client = getRedisClient();
+    return Reflect.ownKeys(client);
+  },
+  getOwnPropertyDescriptor(target, prop) {
+    const client = getRedisClient();
+    return Reflect.getOwnPropertyDescriptor(client, prop);
+  },
+});
+
+export const bullMQRedisClient = new Proxy({} as Redis, {
+  get(target, prop) {
+    const client = getBullMQRedisClient();
+    const value = client[prop as keyof Redis];
+    // If it's a function, bind it to maintain 'this' context
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+  // Support for 'instanceof' checks
+  has(target, prop) {
+    const client = getBullMQRedisClient();
+    return prop in client;
+  },
+  ownKeys(target) {
+    const client = getBullMQRedisClient();
+    return Reflect.ownKeys(client);
+  },
+  getOwnPropertyDescriptor(target, prop) {
+    const client = getBullMQRedisClient();
+    return Reflect.getOwnPropertyDescriptor(client, prop);
+  },
+});
 
 export const isRedisHealthy = () => isRedisConnected;
 export const isBullMQRedisHealthy = () => isBullMQRedisConnected;
@@ -85,79 +257,20 @@ export async function safeRedisCommand<T>(
   }
 }
 
-// Improved error handling with connection state tracking
-redisClient.on('error', (error: any) => {
-  isRedisConnected = false;
-  if (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
-    console.log('[Redis] Connection lost, attempting to reconnect...', error.code);
-  } else {
-    console.error('[Redis] Connection error:', error.message);
-  }
-});
-
-redisClient.on('connect', () => {
-  console.log('[Redis] Connected successfully');
-});
-
-redisClient.on('ready', () => {
-  isRedisConnected = true;
-  console.log('[Redis] Ready to receive commands');
-});
-
-redisClient.on('close', () => {
-  isRedisConnected = false;
-  console.log('[Redis] Connection closed');
-});
-
-redisClient.on('reconnecting', (delay: number) => {
-  isRedisConnected = false;
-  console.log(`[Redis] Reconnecting in ${delay}ms...`);
-});
-
-redisClient.on('end', () => {
-  isRedisConnected = false;
-  console.log('[Redis] Connection ended');
-});
-
-// Error handling for BullMQ Redis client
-bullMQRedisClient.on('error', (error: any) => {
-  isBullMQRedisConnected = false;
-  if (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
-    console.log('[BullMQ Redis] Connection lost, attempting to reconnect...', error.code);
-  } else {
-    console.error('[BullMQ Redis] Connection error:', error.message);
-  }
-});
-
-bullMQRedisClient.on('connect', () => {
-  console.log('[BullMQ Redis] Connected successfully');
-});
-
-bullMQRedisClient.on('ready', () => {
-  isBullMQRedisConnected = true;
-  console.log('[BullMQ Redis] Ready to receive commands');
-});
-
-bullMQRedisClient.on('close', () => {
-  isBullMQRedisConnected = false;
-  console.log('[BullMQ Redis] Connection closed');
-});
-
-bullMQRedisClient.on('reconnecting', (delay: number) => {
-  isBullMQRedisConnected = false;
-  console.log(`[BullMQ Redis] Reconnecting in ${delay}ms...`);
-});
-
-bullMQRedisClient.on('end', () => {
-  isBullMQRedisConnected = false;
-  console.log('[BullMQ Redis] Connection ended');
-});
-
 // Graceful shutdown handling
 const gracefulShutdown = async (signal: string) => {
   console.log(`Received ${signal}, closing Redis connection...`);
   try {
-    await Promise.all([redisClient.quit(), bullMQRedisClient.quit()]);
+    const promises: Promise<string>[] = [];
+    if (_redisClient) {
+      promises.push(_redisClient.quit());
+    }
+    if (_bullMQRedisClient) {
+      promises.push(_bullMQRedisClient.quit());
+    }
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
     console.log('Redis connection closed successfully');
   } catch (error) {
     console.error('Error closing Redis connection:', error);

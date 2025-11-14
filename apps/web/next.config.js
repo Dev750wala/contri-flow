@@ -5,12 +5,7 @@ const nextConfig = {
     images: {
         domains: ['avatars.githubusercontent.com']
     },
-    env: {
-        REDIS_HOST_URL: process.env.REDIS_HOST_URL,
-        REDIS_HOST_PORT: process.env.REDIS_HOST_PORT,
-        REDIS_HOST_PASSWORD: process.env.REDIS_HOST_PASSWORD,
-        REDIS_HOST_USER: process.env.REDIS_HOST_USER,
-    },
+    env: {},
     webpack: (config, { isServer }) => {
         // Ignore optional dependencies that aren't needed for web
         config.resolve.fallback = {
