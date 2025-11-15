@@ -21,24 +21,41 @@ const getRedisConfig = () => {
   };
 };
 
-export const bullMQRedisClient = new Redis(getRedisConfig());
+// Lazy initialization - only connect when actually used
+let _bullMQRedisClient: Redis | null = null;
 
-// Event handlers for visibility
-bullMQRedisClient.on('error', (err) => {
-  console.error('[Redis] Error:', err.message);
+const getBullMQRedisClient = () => {
+  if (!_bullMQRedisClient) {
+    _bullMQRedisClient = new Redis(getRedisConfig());
+    
+    _bullMQRedisClient.on('error', (err) => {
+      console.error('[Redis] Error:', err.message);
+    });
+  }
+  return _bullMQRedisClient;
+};
+
+export const bullMQRedisClient = new Proxy({} as Redis, {
+  get: (_, prop) => {
+    const client = getBullMQRedisClient();
+    const value = (client as any)[prop];
+    return typeof value === 'function' ? value.bind(client) : value;
+  }
 });
 
 // For backward compatibility
 export const redisClient = bullMQRedisClient;
-export const isRedisHealthy = () => bullMQRedisClient.status === 'ready';
-export const isBullMQRedisHealthy = () => bullMQRedisClient.status === 'ready';
+export const isRedisHealthy = () => getBullMQRedisClient().status === 'ready';
+export const isBullMQRedisHealthy = () => getBullMQRedisClient().status === 'ready';
 
 // Graceful shutdown
 const gracefulShutdown = async (signal: string) => {
   console.log(`[Redis] Received ${signal}, closing connection...`);
   try {
-    await bullMQRedisClient.quit();
-    console.log('[Redis] Connection closed successfully');
+    if (_bullMQRedisClient) {
+      await _bullMQRedisClient.quit();
+      console.log('[Redis] Connection closed successfully');
+    }
   } catch (error) {
     console.error('[Redis] Error closing connection:', error);
   }
