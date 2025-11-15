@@ -338,30 +338,33 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
               token_amount_wei: `${reward.token_amount} wei (${aiRaw.reward} tokens)`,
             });
 
-            // Log activity for reward issued
-            await logActivity({
-              organizationId: repository.organization.id,
-              activityType: 'REWARD_ISSUED',
-              title: `Reward Issued`,
-              description: `Reward of ${aiRaw.reward} tokens (${reward.token_amount} wei) issued for PR #${reward.pr_number} to ${aiRaw.contributor}`,
-              repositoryId: repository.id,
-              rewardId: reward.id,
-              actorId: commentorId,
-              amount: reward.token_amount,
-              prNumber: reward.pr_number,
-              metadata: {
-                contributorGithubId: (
-                  contributorFromGithub as GitHubUserType
-                ).id.toString(),
-                contributorLogin: aiRaw.contributor,
-                tokenAmountDecimal: aiRaw.reward.toString(),
-              },
-            });
-
             return reward;
           }, {
-            maxWait: 10000, // Max wait time to get connection (10s)
-            timeout: 60000, // Max transaction execution time (60s)
+            maxWait: 15000, // Max wait time to get connection (15s)
+            timeout: 60000, // Max transaction execution time (60s) - reduced since we moved logActivity out
+          });
+
+          // Log activity after transaction completes (non-critical operation)
+          await logActivity({
+            organizationId: repository.organization.id,
+            activityType: 'REWARD_ISSUED',
+            title: `Reward Issued`,
+            description: `Reward of ${aiRaw.reward} tokens (${newReward.token_amount} wei) issued for PR #${newReward.pr_number} to ${aiRaw.contributor}`,
+            repositoryId: repository.id,
+            rewardId: newReward.id,
+            actorId: commentorId,
+            amount: newReward.token_amount,
+            prNumber: newReward.pr_number,
+            metadata: {
+              contributorGithubId: (
+                contributorFromGithub as GitHubUserType
+              ).id.toString(),
+              contributorLogin: aiRaw.contributor,
+              tokenAmountDecimal: aiRaw.reward.toString(),
+            },
+          }).catch(err => {
+            // Don't fail the job if activity logging fails
+            console.error('[Worker] Failed to log activity (non-critical):', err);
           });
         } catch (error) {
           if (
