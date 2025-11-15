@@ -345,6 +345,9 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
             });
 
             return reward;
+          }, {
+            maxWait: 10000, // Max wait time to get connection (10s)
+            timeout: 60000, // Max transaction execution time (60s)
           });
         } catch (error) {
           if (
@@ -538,7 +541,7 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
   {
     connection: bullMQRedisClient,
     autorun: true,
-    concurrency: 2,
+    concurrency: 1, // Reduced to prevent connection pool exhaustion
     lockDuration: 600000, // 10 minutes for blockchain + AI operations
     lockRenewTime: 120000, // Renew every 2 minutes
   }

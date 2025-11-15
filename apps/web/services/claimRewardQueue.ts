@@ -293,7 +293,7 @@ export const getClaimRewardWorker = () => {
       {
         connection: bullMQRedisClient,
         autorun: true,
-        concurrency: 2, // Further reduced to prevent lock renewal issues
+        concurrency: 1, // Reduced to prevent connection pool exhaustion
         lockDuration: 300000, // 5 minutes - blockchain operations can take time
         lockRenewTime: 120000, // Renew lock every 2 minutes
       }
