@@ -38,17 +38,15 @@ export default function ContributorDashboard() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const [claimingRewardId, setClaimingRewardId] = React.useState<string | null>(null);
+  const [showAllClaims, setShowAllClaims] = React.useState(false);
 
-  // Get GitHub ID from session (numeric string like "117472132")
   const githubId = session?.user?.github_id;
 
   // Lazy query for fetching claim message
   const [getClaimMessage] = useLazyQuery(GET_CLAIM_MESSAGE);
   
-  // Mutation for claiming reward
   const [claimRewardMutation] = useMutation(CLAIM_REWARD);
   
-  // Fetch contributor dashboard data
   const {
     contributor,
     stats,
@@ -416,7 +414,7 @@ export default function ContributorDashboard() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {pendingClaims.slice(0, 5).map((claim: any) => (
+                      {(showAllClaims ? pendingClaims : pendingClaims.slice(0, 5)).map((claim: any) => (
                         <div
                           key={claim.id}
                           className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -460,8 +458,13 @@ export default function ContributorDashboard() {
                         </div>
                       ))}
                       {pendingClaims.length > 5 && (
-                        <Button variant="outline" className="w-full" size="sm">
-                          View All {pendingClaims.length} Claims
+                        <Button 
+                          variant="outline" 
+                          className="w-full" 
+                          size="sm"
+                          onClick={() => setShowAllClaims(!showAllClaims)}
+                        >
+                          {showAllClaims ? 'Show Less' : `View All ${pendingClaims.length} Claims`}
                         </Button>
                       )}
                     </div>

@@ -96,9 +96,11 @@ export function useContributorDashboard(githubId: string | null | undefined) {
   // Get pending claims details
   const pendingClaims = useMemo(() => {
     if (!rewardsData?.rewardsByContributor) return [];
-    return rewardsData.rewardsByContributor.filter(
-      (r: any) => r.confirmed && !r.claimed
-    );
+    return rewardsData.rewardsByContributor
+      .filter((r: any) => r.confirmed && !r.claimed)
+      .sort((a: any, b: any) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
   }, [rewardsData]);
 
   // Get recent contributions (last 10)
