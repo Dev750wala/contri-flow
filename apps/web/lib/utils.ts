@@ -39,6 +39,67 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Fetch with timeout and retry logic for resilient HTTP requests
+ * Handles network errors, timeouts, and socket errors with exponential backoff
+ */
+export async function fetchWithRetry(
+  url: string,
+  options: RequestInit = {},
+  maxRetries: number = 3,
+  timeoutMs: number = 30000
+): Promise<Response> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        // @ts-ignore - Node.js fetch options
+        keepalive: true,
+      });
+      
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      const isLastAttempt = attempt === maxRetries;
+      const isAbortError = lastError.name === 'AbortError';
+      const isNetworkError = 
+        lastError.message.includes('fetch failed') || 
+        lastError.message.includes('socket') ||
+        lastError.message.includes('ECONNRESET') ||
+        lastError.message.includes('ETIMEDOUT') ||
+        lastError.message.includes('closed');
+
+      if (isLastAttempt) {
+        console.error(`[FetchRetry] Failed after ${maxRetries} attempts for ${url}:`, lastError);
+        throw lastError;
+      }
+
+      if (isAbortError || isNetworkError) {
+        const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+        console.warn(
+          `[FetchRetry] Attempt ${attempt}/${maxRetries} failed for ${url}, retrying in ${backoffMs}ms...`,
+          { error: lastError.message }
+        );
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+      } else {
+        // Non-retryable error
+        throw lastError;
+      }
+    }
+  }
+
+  throw lastError || new Error('Fetch failed: max retries exceeded');
+}
+
 export function formatPrompt(input: string) {
   return `
     ${PROMPT_FOR_JSON_IN_SINGLE_LINE_FORMAT}
@@ -66,13 +127,18 @@ export async function callGeminiAPI(prompt: string): Promise<string> {
       ],
     };
 
-    const response = await fetch(`${config.GEMINI_API_URL}?key=${config.GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetchWithRetry(
+      `${config.GEMINI_API_URL}?key=${config.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    });
+      3,
+      30000
+    );
 
     if (!response.ok) {
       const errorText = await response.text();

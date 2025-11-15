@@ -23,14 +23,71 @@ interface PostCommentParams {
 }
 
 /**
+ * Fetch with timeout and retry logic
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries: number = 3,
+  timeoutMs: number = 30000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        // @ts-ignore - Node.js fetch options
+        keepalive: true,
+      });
+      
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      const isLastAttempt = attempt === maxRetries;
+      const isAbortError = error instanceof Error && error.name === 'AbortError';
+      const isNetworkError = error instanceof Error && 
+        (error.message.includes('fetch failed') || 
+         error.message.includes('socket') ||
+         error.message.includes('ECONNRESET'));
+
+      if (isLastAttempt) {
+        console.error(`[GitHub] Fetch failed after ${maxRetries} attempts:`, error);
+        throw error;
+      }
+
+      if (isAbortError || isNetworkError) {
+        const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+        console.warn(`[GitHub] Attempt ${attempt}/${maxRetries} failed, retrying in ${backoffMs}ms...`, error);
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+        
+        // Recreate abort controller for next attempt
+        const newController = new AbortController();
+        const newTimeoutId = setTimeout(() => newController.abort(), timeoutMs);
+        controller.abort = newController.abort.bind(newController);
+        clearTimeout(timeoutId);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error('Fetch failed: max retries exceeded');
+}
+
+/**
  * Get an installation access token for the GitHub App
  */
 async function getInstallationToken(installationId: number): Promise<string> {
   // Create JWT for the GitHub App
   const jwt = createAppJWT();
 
-  // Exchange JWT for an installation access token
-  const response = await fetch(
+  // Exchange JWT for an installation access token with retry logic
+  const response = await fetchWithRetry(
     `https://api.github.com/app/installations/${installationId}/access_tokens`,
     {
       method: 'POST',
@@ -38,6 +95,7 @@ async function getInstallationToken(installationId: number): Promise<string> {
         'Accept': 'application/vnd.github+json',
         'Authorization': `Bearer ${jwt}`,
         'X-GitHub-Api-Version': '2022-11-28',
+        'Connection': 'keep-alive',
       },
     }
   );
@@ -68,20 +126,26 @@ export async function postPRComment({
     // Get installation access token
     const token = await getInstallationToken(installationId);
 
-    // Post the comment using the installation token
+    // Post the comment using the installation token with retry logic
     const url = `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/vnd.github+json',
-        'Authorization': `Bearer ${token}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-        'Content-Type': 'application/json',
-        'User-Agent': 'ContriFlow-Bot',
+    const response = await fetchWithRetry(
+      url,
+      {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': `Bearer ${token}`,
+          'X-GitHub-Api-Version': '2022-11-28',
+          'Content-Type': 'application/json',
+          'User-Agent': 'ContriFlow-Bot',
+          'Connection': 'keep-alive',
+        },
+        body: JSON.stringify({ body: commentBody }),
       },
-      body: JSON.stringify({ body: commentBody }),
-    });
+      3, // maxRetries
+      30000 // 30 second timeout
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: response.statusText }));

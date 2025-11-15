@@ -1,7 +1,7 @@
 import { bullMQRedisClient } from '@/lib/redisClient';
 import { Job, Queue, Worker } from 'bullmq';
 import prisma from '@/lib/prisma';
-import { parseComment, formatPrompt, generateSecret } from '@/lib/utils';
+import { parseComment, formatPrompt, generateSecret, fetchWithRetry } from '@/lib/utils';
 import { CommentParsingResponse, Sender as GitHubUserType } from '@/interfaces';
 import { Reward } from '@prisma/client';
 import {
@@ -146,14 +146,28 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
           '[Worker] Fetching contributor info from GitHub:',
           aiRaw.contributor
         );
-        const contributorFromGithub = (await fetch(
+        const contributorResponse = await fetchWithRetry(
           `https://api.github.com/users/${aiRaw.contributor}`,
           {
             headers: {
               Accept: 'application/vnd.github+json',
+              'User-Agent': 'ContriFlow-Bot',
             },
-          }
-        ).then((res) => res.json())) as unknown;
+          },
+          3,
+          10000
+        );
+        
+        if (!contributorResponse.ok) {
+          console.error(
+            '[Worker] Failed to fetch contributor from GitHub:',
+            contributorResponse.status,
+            contributorResponse.statusText
+          );
+          throw new Error(`CONTRIBUTOR_FETCH_FAILED: ${contributorResponse.statusText}`);
+        }
+        
+        const contributorFromGithub = (await contributorResponse.json()) as unknown;
 
         // Fetch repository with organization info early to check funds and use throughout
         let repository;
@@ -512,9 +526,16 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
           );
 
           console.log('[Worker] AI comment generated, posting to GitHub...');
+          console.log('[Worker] Comment posting details:', {
+            owner: repository.organization.name,
+            repo: repository.name,
+            prNumber,
+            installationId,
+            commentLength: commentContent.length,
+          });
 
-          // Post the comment on the PR
-          await postPRComment({
+          // Post the comment on the PR with improved error handling
+          const commentResult = await postPRComment({
             owner: repository.organization.name,
             repo: repository.name,
             prNumber,
@@ -523,16 +544,50 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
           });
 
           console.log(
-            `[Worker] ✅ Reward notification comment posted on PR #${prNumber}`
+            `[Worker] ✅ Reward notification comment posted successfully on PR #${prNumber}`,
+            {
+              commentId: commentResult.id,
+              commentUrl: commentResult.html_url,
+            }
           );
+
         } catch (error) {
           // Don't fail the entire job if comment posting fails
+          // But log detailed error information for debugging
           console.error(
             '[Worker] ⚠️ Failed to post reward notification comment:',
-            error
+            {
+              error: error instanceof Error ? {
+                message: error.message,
+                name: error.name,
+                stack: error.stack,
+                cause: (error as any).cause,
+              } : error,
+              prNumber,
+              repository: `${repository.organization.name}/${repository.name}`,
+              installationId,
+            }
           );
-          console.error(
-            '[Worker] Job will continue despite comment posting failure'
+
+          // Log activity for failed comment
+          await logActivity({
+            organizationId: repository.organization.id,
+            activityType: 'REWARD_ISSUED',
+            title: `Reward Comment Failed`,
+            description: `Failed to post reward notification comment on PR #${prNumber}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            repositoryId: repository.id,
+            rewardId: newReward.id,
+            prNumber: prNumber,
+            metadata: {
+              error: error instanceof Error ? error.message : String(error),
+              errorType: error instanceof Error ? error.name : 'UnknownError',
+            },
+          }).catch(logErr => {
+            console.error('[Worker] Failed to log comment failure activity:', logErr);
+          });
+
+          console.log(
+            '[Worker] Job will continue despite comment posting failure - reward is still valid and claimable'
           );
         }
 
