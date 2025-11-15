@@ -391,7 +391,7 @@ setTimeout(() => {
       process.exit(1);
     });
 
-}, 30 * 1000);
+}, 10 * 1000);
 
 console.log("THIS WILL OVERWRITE data in your Neon database with data from your local database.");
-console.log('⏳ Waiting 30 seconds before starting migration to ensure you\'re ready...');
+console.log('⏳ Waiting 10 seconds before starting migration to ensure you\'re ready...');

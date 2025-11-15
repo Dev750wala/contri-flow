@@ -264,14 +264,14 @@ export const ownerEmailWorker = new Worker<OwnerEmailJobData, boolean, string>(
       {
         connection: bullMQRedisClient,
         autorun: true,
-        concurrency: 3, // Process 3 emails in parallel
-        lockDuration: 120000, // 2 minutes - email sending and DB operations
+        concurrency: 2, // Process 2 emails in parallel
+        lockDuration: 180000, // 3 minutes - email sending and DB operations
         lockRenewTime: 60000, // Renew lock every 1 minute
-      limiter: {
-        max: 10,
-        duration: 60000,
-      },
-    }
+        limiter: {
+          max: 10,
+          duration: 60000,
+        },
+      }
   );
 
 // Worker event listeners

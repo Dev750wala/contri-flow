@@ -538,9 +538,9 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
   {
     connection: bullMQRedisClient,
     autorun: true,
-    concurrency: 4,
-    lockDuration: 300000,
-    lockRenewTime: 150000,
+    concurrency: 2,
+    lockDuration: 600000, // 10 minutes for blockchain + AI operations
+    lockRenewTime: 120000, // Renew every 2 minutes
   }
 );
 
