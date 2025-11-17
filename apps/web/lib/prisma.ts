@@ -1,8 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 
-// Configure Prisma with proper connection pool settings for production
-// Using Neon's pooler with optimized settings to prevent connection exhaustion
-
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 const prisma = globalForPrisma.prisma || new PrismaClient({

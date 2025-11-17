@@ -58,7 +58,6 @@ export async function POST(request: Request) {
         break;
 
       default:
-        // Return success for unhandled event types to prevent GitHub from retrying
         response = {
           statusCode: 200,
           success: true,
@@ -68,7 +67,6 @@ export async function POST(request: Request) {
         break;
     }
 
-    // Ensure response is always defined and has a valid statusCode
     if (!response || !response.statusCode) {
       response = {
         statusCode: 200,
@@ -80,7 +78,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ...response }, { status: response.statusCode });
   } catch (error) {
-    // Handle JSON parsing errors and other exceptions
     console.error('[Webhook] Error processing webhook:', error);
     return NextResponse.json(
       {
