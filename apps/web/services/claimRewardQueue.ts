@@ -158,9 +158,11 @@ export const getClaimRewardWorker = () => {
           console.log(
             `[ClaimWorker] Transaction confirmed: ${receipt.transactionHash}`
           );
+          console.log(`[ClaimWorker] Transaction receipt: ${receipt}`);
 
           if (receipt.status === 'success') {
             // Update reward as claimed and create payout record
+            console.log(`[ClaimWorker] Reward ${rewardId} claimed successfully and now updating the STATUS IN DB`);
             await prisma.reward.update({
               where: { id: rewardId },
               data: {
@@ -178,8 +180,10 @@ export const getClaimRewardWorker = () => {
                 },
               },
             });
+            console.log(`[ClaimWorker] Reward ${rewardId} claimed successfully and updated the STATUS IN DB`);
 
             // Log activity for reward claimed
+            console.log(`[ClaimWorker] Reward ${rewardId} claimed successfully and now logging activity`);
             await logActivity({
               organizationId: reward.repository.organization.id,
               activityType: 'REWARD_CLAIMED',
