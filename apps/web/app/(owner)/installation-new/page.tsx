@@ -42,10 +42,26 @@ const InstallationNewPage = () => {
   // Show loading state while checking authentication
   if (status === 'loading') {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading...</p>
+      <div className="relative min-h-screen w-full overflow-hidden">
+        {/* Video Background */}
+        <div className="fixed inset-0 w-screen h-screen z-0">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+          >
+            <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        </div>
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
+            <p className="text-white">Loading...</p>
+          </div>
         </div>
       </div>
     );
@@ -101,10 +117,29 @@ const InstallationNewPage = () => {
   ];
 
   return (
-    <div className="w-full min-h-screen">
+    <div className="relative min-h-screen w-full overflow-hidden">
+      {/* Video Background */}
+      <div className="fixed inset-0 w-screen h-screen z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+        >
+          <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+      </div>
+
+      {/* Ambient Background Effects */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[120px] pointer-events-none" />
+
       <Navbar />
       
-      <div className="container mx-auto px-4 py-8 md:py-16 min-h-[calc(100vh-80px)] flex flex-col">
+      <div className="relative z-10 container mx-auto px-4 py-8 md:py-16 pt-32 min-h-[calc(100vh-80px)] flex flex-col">
         {/* Top Section - Heading and Installation Steps */}
         <div className="grid lg:grid-cols-2 gap-12 items-start mb-16 flex-1 min-h-screen py-30">
           {/* Left Column - Heading and Badge */}
@@ -114,13 +149,13 @@ const InstallationNewPage = () => {
             transition={{ duration: 0.6 }}
             className="flex flex-col justify-center"
           >
-            <Badge variant="secondary" className="mb-4 px-4 py-2">
+            <Badge variant="secondary" className="mb-4 px-4 py-2 bg-sky-500/20 text-sky-300 border-sky-500/30">
               Organization Setup
             </Badge>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               Install GitHub App
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-slate-300">
               Install our GitHub app to your organization and start rewarding your contributors 
               for their valuable contributions.
             </p>
@@ -132,13 +167,13 @@ const InstallationNewPage = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <Card>
+            <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
               <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <Github className="h-5 w-5 text-primary" />
+                <CardTitle className="text-xl flex items-center gap-2 text-white">
+                  <Github className="h-5 w-5 text-sky-400" />
                   Installation Steps
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-slate-300">
                   Follow these simple steps to get your organization set up
                 </CardDescription>
               </CardHeader>
@@ -161,11 +196,11 @@ const InstallationNewPage = () => {
                     <div className="flex-1">
                       <h3 className={`
                         font-semibold mb-1
-                        ${step.status === 'current' ? 'text-primary' : ''}
+                        ${step.status === 'current' ? 'text-sky-400' : 'text-white'}
                       `}>
                         {step.title}
                       </h3>
-                      <p className="text-muted-foreground text-sm">{step.description}</p>
+                      <p className="text-slate-300 text-sm">{step.description}</p>
                     </div>
                   </div>
                 ))}
@@ -196,7 +231,7 @@ const InstallationNewPage = () => {
               </Button>
             </motion.div>
 
-            <p className="text-center text-muted-foreground text-sm mt-4">
+            <p className="text-center text-slate-300 text-sm mt-4">
               You'll be redirected to GitHub to complete the installation
             </p>
           </motion.div>
@@ -210,8 +245,8 @@ const InstallationNewPage = () => {
           className="mb-16"
         >
           <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Why ContriFlow?</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">Why ContriFlow?</h2>
+            <p className="text-slate-300 max-w-2xl mx-auto">
               Discover the benefits of automated contributor rewards
             </p>
           </div>
@@ -224,15 +259,15 @@ const InstallationNewPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 * index }}
               >
-                <Card className="h-full">
+                <Card className="h-full bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="flex-shrink-0">
                         {feature.icon}
                       </div>
-                      <h3 className="font-semibold">{feature.title}</h3>
+                      <h3 className="font-semibold text-white">{feature.title}</h3>
                     </div>
-                    <p className="text-muted-foreground text-sm">{feature.description}</p>
+                    <p className="text-slate-300 text-sm">{feature.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -248,13 +283,13 @@ const InstallationNewPage = () => {
           className="mb-16"
         >
           <div className="max-w-4xl mx-auto">
-            <Card>
+            <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
               <CardHeader className="text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                  <Settings className="h-6 w-6 text-primary" />
+                <div className="w-12 h-12 bg-sky-500/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                  <Settings className="h-6 w-6 text-sky-400" />
                 </div>
-                <CardTitle className="text-2xl">What happens next?</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-2xl text-white">What happens next?</CardTitle>
+                <CardDescription className="text-slate-300">
                   Here's what you can expect during the setup process
                 </CardDescription>
               </CardHeader>
@@ -262,19 +297,19 @@ const InstallationNewPage = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
                       <div>
-                        <h4 className="font-semibold">GitHub Authorization</h4>
-                        <p className="text-sm text-muted-foreground">
+                        <h4 className="font-semibold text-white">GitHub Authorization</h4>
+                        <p className="text-sm text-slate-300">
                           GitHub will ask you to authorize our app for your organization
                         </p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
                       <div>
-                        <h4 className="font-semibold">Repository Selection</h4>
-                        <p className="text-sm text-muted-foreground">
+                        <h4 className="font-semibold text-white">Repository Selection</h4>
+                        <p className="text-sm text-slate-300">
                           Choose which repositories you want to include in the reward system
                         </p>
                       </div>
@@ -313,10 +348,10 @@ const InstallationNewPage = () => {
           transition={{ duration: 0.6, delay: 0.6 }}
           className="mt-16 text-center"
         >
-          <Separator className="mb-8" />
-          <p className="text-muted-foreground">
+          <Separator className="mb-8 bg-slate-700" />
+          <p className="text-slate-300">
             Need help with installation? Check out our{' '}
-            <a href="#" className="text-primary hover:underline transition-colors">
+            <a href="#" className="text-sky-400 hover:text-sky-300 hover:underline transition-colors">
               documentation
             </a>{' '}
             or{' '}

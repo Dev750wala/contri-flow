@@ -22,14 +22,27 @@ const DashboardPage = () => {
 
   if (dashboardLoading) {
     return (
-      <div className="min-h-screen bg-background relative">
-        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
+      <div className="relative min-h-screen w-full overflow-hidden">
+        {/* Video Background */}
+        <div className="fixed inset-0 w-screen h-screen z-0">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+          >
+            <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        </div>
         <Navbar />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28 relative z-10">
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28">
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading dashboard...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+              <p className="text-white">Loading dashboard...</p>
             </div>
           </div>
         </div>
@@ -38,21 +51,37 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Gradient background for navbar visibility */}
-      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
+    <div className="relative min-h-screen w-full overflow-hidden">
+      {/* Video Background */}
+      <div className="fixed inset-0 w-screen h-screen z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+        >
+          <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+      </div>
+
+      {/* Ambient Background Effects */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[120px] pointer-events-none" />
       
       {/* Navbar */}
       <Navbar />
 
       {/* Header Section */}
-      <div className="border-b bg-gradient-to-r from-background via-muted/20 to-background relative z-10 pt-20">
+      <div className="border-b border-slate-700/50 bg-slate-900/30 backdrop-blur-sm relative z-10 pt-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col gap-2">
-            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold tracking-tight text-white">
               Owner Dashboard
             </h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-slate-300 text-lg">
               Manage your organizations, repositories, and distribute rewards
             </p>
           </div>

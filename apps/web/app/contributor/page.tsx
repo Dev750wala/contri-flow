@@ -155,12 +155,27 @@ export default function ContributorDashboard() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background relative">
-        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
+      <div className="relative min-h-screen w-full overflow-hidden">
+        {/* Video Background */}
+        <div className="fixed inset-0 w-screen h-screen z-0">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+          >
+            <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        </div>
         <Navbar />
-        <div className="text-center relative z-10">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white">Loading dashboard...</p>
+          </div>
         </div>
       </div>
     );
@@ -169,25 +184,43 @@ export default function ContributorDashboard() {
   // Show onboarding message if user is not a contributor yet
   if (isNotContributor) {
     return (
-      <div className="min-h-screen bg-background relative">
-        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
+      <div className="relative min-h-screen w-full overflow-hidden">
+        {/* Video Background */}
+        <div className="fixed inset-0 w-screen h-screen z-0">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+          >
+            <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        </div>
+
+        {/* Ambient Background Effects */}
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[120px] pointer-events-none" />
+        
         <Navbar />
-        <div className="container mx-auto px-4 py-8 pt-28 relative z-10">
+        <div className="relative z-10 container mx-auto px-4 py-8 pt-28">
           <div className="max-w-3xl mx-auto">
-            <Card className="border-2 border-purple-500/20">
+            <Card className="border-2 border-purple-500/30 bg-slate-900/80 backdrop-blur-lg shadow-xl">
               <CardHeader className="text-center pb-4">
-                <div className="mx-auto w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mb-4">
-                  <Code className="h-8 w-8 text-purple-500" />
+                <div className="mx-auto w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mb-4">
+                  <Code className="h-8 w-8 text-purple-400" />
                 </div>
-                <CardTitle className="text-2xl">Welcome to ContriFlow!</CardTitle>
-                <CardDescription className="text-base mt-2">
+                <CardTitle className="text-2xl text-white">Welcome to ContriFlow!</CardTitle>
+                <CardDescription className="text-base mt-2 text-slate-300">
                   You're not a contributor yet. Start earning rewards for your open source contributions!
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="bg-muted/50 rounded-lg p-6 space-y-4">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-purple-500" />
+                <div className="bg-slate-800/60 rounded-lg p-6 space-y-4 border border-slate-700/50">
+                  <h3 className="font-semibold flex items-center gap-2 text-white">
+                    <CheckCircle className="h-5 w-5 text-purple-400" />
                     How to Get Started
                   </h3>
                   <div className="space-y-3 ml-7">
@@ -196,8 +229,8 @@ export default function ContributorDashboard() {
                         <span className="text-xs text-white font-bold">1</span>
                       </div>
                       <div>
-                        <p className="font-medium">Find Reward-Enabled Repositories</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-medium text-white">Find Reward-Enabled Repositories</p>
+                        <p className="text-sm text-slate-300">
                           Browse repositories that have ContriFlow rewards enabled
                         </p>
                       </div>
@@ -207,8 +240,8 @@ export default function ContributorDashboard() {
                         <span className="text-xs text-white font-bold">2</span>
                       </div>
                       <div>
-                        <p className="font-medium">Make Contributions</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-medium text-white">Make Contributions</p>
+                        <p className="text-sm text-slate-300">
                           Submit pull requests and help improve the projects
                         </p>
                       </div>
@@ -218,8 +251,8 @@ export default function ContributorDashboard() {
                         <span className="text-xs text-white font-bold">3</span>
                       </div>
                       <div>
-                        <p className="font-medium">Get Rewarded</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-medium text-white">Get Rewarded</p>
+                        <p className="text-sm text-slate-300">
                           Once your PR is merged, you'll receive token rewards that you can claim
                         </p>
                       </div>
@@ -228,24 +261,24 @@ export default function ContributorDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <Coins className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-                    <p className="text-sm font-medium">Earn Tokens</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                  <div className="text-center p-4 bg-slate-800/60 rounded-lg border border-slate-700/50">
+                    <Coins className="h-8 w-8 mx-auto mb-2 text-purple-400" />
+                    <p className="text-sm font-medium text-white">Earn Tokens</p>
+                    <p className="text-xs text-slate-300 mt-1">
                       Get rewarded for quality contributions
                     </p>
                   </div>
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <GitPullRequest className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                    <p className="text-sm font-medium">Track PRs</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                  <div className="text-center p-4 bg-slate-800/60 rounded-lg border border-slate-700/50">
+                    <GitPullRequest className="h-8 w-8 mx-auto mb-2 text-green-400" />
+                    <p className="text-sm font-medium text-white">Track PRs</p>
+                    <p className="text-xs text-slate-300 mt-1">
                       Monitor your contribution history
                     </p>
                   </div>
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <Wallet className="h-8 w-8 mx-auto mb-2 text-cyan-500" />
-                    <p className="text-sm font-medium">Claim Rewards</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                  <div className="text-center p-4 bg-slate-800/60 rounded-lg border border-slate-700/50">
+                    <Wallet className="h-8 w-8 mx-auto mb-2 text-cyan-400" />
+                    <p className="text-sm font-medium text-white">Claim Rewards</p>
+                    <p className="text-xs text-slate-300 mt-1">
                       Withdraw your earnings anytime
                     </p>
                   </div>
@@ -262,9 +295,9 @@ export default function ContributorDashboard() {
                   </Button>
                 </div>
 
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-sm">
+                <Alert className="bg-slate-800/60 border-slate-700/50">
+                  <AlertCircle className="h-4 w-4 text-sky-400" />
+                  <AlertDescription className="text-sm text-slate-300">
                     Your contributor profile will be created automatically when you receive your first reward from a merged pull request.
                   </AlertDescription>
                 </Alert>
@@ -278,10 +311,23 @@ export default function ContributorDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background relative">
-        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
+      <div className="relative min-h-screen w-full overflow-hidden">
+        {/* Video Background */}
+        <div className="fixed inset-0 w-screen h-screen z-0">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+          >
+            <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        </div>
         <Navbar />
-        <div className="container mx-auto px-4 py-8 pt-28 relative z-10">
+        <div className="relative z-10 container mx-auto px-4 py-8 pt-28">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -294,21 +340,38 @@ export default function ContributorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Gradient background for navbar visibility */}
-      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
+    <div className="relative min-h-screen w-full overflow-hidden">
+      {/* Video Background */}
+      <div className="fixed inset-0 w-screen h-screen z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+        >
+          <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+      </div>
+
+      {/* Ambient Background Effects */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[120px] pointer-events-none" />
+      
       <Navbar />
-      <div className="container mx-auto px-4 py-8 pt-28 relative z-10">
+      <div className="relative z-10 container mx-auto px-4 py-8 pt-28">
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Contributor Dashboard</h1>
-              <p className="text-muted-foreground mt-1">
+              <h1 className="text-3xl font-bold text-white">Contributor Dashboard</h1>
+              <p className="text-slate-300 mt-1">
                 Track your contributions and rewards
               </p>
             </div>
-            <Button variant="outline" onClick={() => router.push('/get-started')}>
+            <Button variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800" onClick={() => router.push('/get-started')}>
               <Package className="h-4 w-4 mr-2" />
               Switch to Owner
             </Button>
@@ -316,71 +379,71 @@ export default function ContributorDashboard() {
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="hover:shadow-lg transition-all border-l-4 border-l-purple-500">
+            <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50 hover:shadow-lg transition-all border-l-4 border-l-purple-500">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-slate-300">
                     Total Earnings
                   </CardTitle>
-                  <Coins className="h-4 w-4 text-purple-500" />
+                  <Coins className="h-4 w-4 text-purple-400" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-2xl font-bold text-white">
                   {stats.totalEarnings.toFixed(2)} MPT
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-300 mt-1">
                   {stats.totalClaimed.toFixed(2)} MPT claimed
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-all border-l-4 border-l-green-500">
+            <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50 hover:shadow-lg transition-all border-l-4 border-l-green-500">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-slate-300">
                     Merged PRs
                   </CardTitle>
-                  <GitPullRequest className="h-4 w-4 text-green-500" />
+                  <GitPullRequest className="h-4 w-4 text-green-400" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.mergedPRs}</div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <div className="text-2xl font-bold text-white">{stats.mergedPRs}</div>
+                <p className="text-xs text-slate-300 mt-1">
                   Rewarded contributions
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-all border-l-4 border-l-orange-500">
+            <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50 hover:shadow-lg transition-all border-l-4 border-l-orange-500">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-slate-300">
                     Pending Claims
                   </CardTitle>
-                  <Clock className="h-4 w-4 text-orange-500" />
+                  <Clock className="h-4 w-4 text-orange-400" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingClaims}</div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <div className="text-2xl font-bold text-white">{stats.pendingClaims}</div>
+                <p className="text-xs text-slate-300 mt-1">
                   {stats.pendingAmount.toFixed(2)} MPT ready
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-all border-l-4 border-l-blue-500">
+            <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50 hover:shadow-lg transition-all border-l-4 border-l-blue-500">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-slate-300">
                     Repositories
                   </CardTitle>
-                  <Github className="h-4 w-4 text-blue-500" />
+                  <Github className="h-4 w-4 text-blue-400" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.repositories}</div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <div className="text-2xl font-bold text-white">{stats.repositories}</div>
+                <p className="text-xs text-slate-300 mt-1">
                   Contributing to
                 </p>
               </CardContent>
@@ -392,29 +455,29 @@ export default function ContributorDashboard() {
             {/* Left Column - Recent Activity & Rewards */}
             <div className="lg:col-span-2 space-y-6">
               {/* Pending Claims */}
-              <Card>
+              <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-orange-500" />
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Clock className="h-5 w-5 text-orange-400" />
                         Pending Claims
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-slate-300">
                         Rewards ready to be claimed
                       </CardDescription>
                     </div>
                     {pendingClaims.length > 0 && (
-                      <Badge variant="secondary">{pendingClaims.length}</Badge>
+                      <Badge variant="secondary" className="bg-slate-800 text-slate-200">{pendingClaims.length}</Badge>
                     )}
                   </div>
                 </CardHeader>
                 <CardContent>
                   {pendingClaims.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Coins className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <div className="text-center py-12 text-slate-300">
+                      <Coins className="h-12 w-12 mx-auto mb-4 opacity-50 text-slate-400" />
                       <p className="text-sm">No pending claims</p>
-                      <p className="text-xs mt-2">
+                      <p className="text-xs mt-2 text-slate-400">
                         Your rewards will appear here once PRs are merged
                       </p>
                     </div>
@@ -423,23 +486,23 @@ export default function ContributorDashboard() {
                       {(showAllClaims ? pendingClaims : pendingClaims.slice(0, 5)).map((claim: any) => (
                         <div
                           key={claim.id}
-                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                          className="flex items-center justify-between p-3 border border-slate-700/50 bg-slate-800/40 rounded-lg hover:bg-slate-800/60 transition-colors"
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <Github className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium text-sm">
+                              <Github className="h-4 w-4 text-sky-400" />
+                              <span className="font-medium text-sm text-white">
                                 {claim.repository?.organization?.name}/
                                 {claim.repository?.name}
                               </span>
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-xs border-slate-600 text-slate-300">
                                 PR #{claim.pr_number}
                               </Badge>
                             </div>
-                            <p className="text-xs text-muted-foreground line-clamp-1">
+                            <p className="text-xs text-slate-300 line-clamp-1">
                               {claim.comment}
                             </p>
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-slate-400 mt-1">
                               {formatDistanceToNow(new Date(claim.created_at), {
                                 addSuffix: true,
                               })}
@@ -447,7 +510,7 @@ export default function ContributorDashboard() {
                           </div>
                           <div className="flex items-center gap-3 ml-4">
                             <div className="text-right">
-                              <p className="font-bold text-primary">
+                              <p className="font-bold text-cyan-400">
                                 {fromWei(claim.token_amount).toFixed(2)} MPT
                               </p>
                             </div>
@@ -466,7 +529,7 @@ export default function ContributorDashboard() {
                       {pendingClaims.length > 5 && (
                         <Button 
                           variant="outline" 
-                          className="w-full" 
+                          className="w-full border-slate-600 text-slate-200 hover:bg-slate-800" 
                           size="sm"
                           onClick={() => setShowAllClaims(!showAllClaims)}
                         >
@@ -479,22 +542,22 @@ export default function ContributorDashboard() {
               </Card>
 
               {/* Recent Contributions */}
-              <Card>
+              <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <GitPullRequest className="h-5 w-5 text-green-500" />
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <GitPullRequest className="h-5 w-5 text-green-400" />
                     Recent Contributions
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-slate-300">
                     Your latest rewarded pull requests
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {recentContributions.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Code className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <div className="text-center py-12 text-slate-300">
+                      <Code className="h-12 w-12 mx-auto mb-4 opacity-50 text-slate-400" />
                       <p className="text-sm">No contributions yet</p>
-                      <p className="text-xs mt-2">
+                      <p className="text-xs mt-2 text-slate-400">
                         Start contributing to repositories with rewards enabled
                       </p>
                       <Button className="mt-4" variant="outline">
@@ -507,12 +570,12 @@ export default function ContributorDashboard() {
                       {recentContributions.map((contribution: any) => (
                         <div
                           key={contribution.id}
-                          className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                          className="flex items-start justify-between p-3 border border-slate-700/50 bg-slate-800/40 rounded-lg hover:bg-slate-800/60 transition-colors"
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <Github className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium text-sm">
+                              <Github className="h-4 w-4 text-sky-400" />
+                              <span className="font-medium text-sm text-white">
                                 {contribution.repository?.organization?.name}/
                                 {contribution.repository?.name}
                               </span>
@@ -526,34 +589,34 @@ export default function ContributorDashboard() {
                                     ? 'secondary'
                                     : 'outline'
                                 }
-                                className="text-xs"
+                                className="text-xs bg-slate-800 text-slate-200"
                               >
                                 PR #{contribution.pr_number}
                               </Badge>
                               {contribution.claimed && (
-                                <Badge variant="default" className="text-xs bg-green-500">
+                                <Badge variant="default" className="text-xs bg-green-500/20 text-green-300 border-green-500/30">
                                   <CheckCircle className="h-3 w-3 mr-1" />
                                   Claimed
                                 </Badge>
                               )}
                               {contribution.confirmed && !contribution.claimed && (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="text-xs bg-orange-500/20 text-orange-300 border-orange-500/30">
                                   <Clock className="h-3 w-3 mr-1" />
                                   Ready to Claim
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">
+                            <p className="text-xs text-slate-300 line-clamp-2">
                               {contribution.comment}
                             </p>
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-slate-400 mt-1">
                               {formatDistanceToNow(new Date(contribution.created_at), {
                                 addSuffix: true,
                               })}
                             </p>
                           </div>
                           <div className="text-right ml-4">
-                            <p className="font-bold text-primary text-sm">
+                            <p className="font-bold text-cyan-400 text-sm">
                               {fromWei(contribution.token_amount).toFixed(2)} MPT
                             </p>
                             {contribution.payout && (
@@ -579,20 +642,20 @@ export default function ContributorDashboard() {
             {/* Right Column - Quick Stats & Actions */}
             <div className="space-y-6">
               {/* Claim History */}
-              <Card>
+              <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  <CardTitle className="text-base flex items-center gap-2 text-white">
+                    <CheckCircle className="h-4 w-4 text-green-400" />
                     Claim History
                   </CardTitle>
-                  <CardDescription className="text-xs">
+                  <CardDescription className="text-xs text-slate-300">
                     Your past claimed rewards
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {recentContributions.filter((c: any) => c.claimed).length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Coins className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <div className="text-center py-8 text-slate-300">
+                      <Coins className="h-8 w-8 mx-auto mb-2 opacity-50 text-slate-400" />
                       <p className="text-xs">No claims yet</p>
                     </div>
                   ) : (
@@ -603,23 +666,23 @@ export default function ContributorDashboard() {
                         .map((claim: any) => (
                           <div
                             key={claim.id}
-                            className="p-2 border rounded-lg hover:bg-muted/50 transition-colors"
+                            className="p-2 border border-slate-700/50 bg-slate-800/40 rounded-lg hover:bg-slate-800/60 transition-colors"
                           >
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-medium truncate flex-1">
+                              <span className="text-xs font-medium truncate flex-1 text-white">
                                 {claim.repository?.name}
                               </span>
-                              <Badge variant="outline" className="text-xs ml-2">
+                              <Badge variant="outline" className="text-xs ml-2 border-slate-600 text-slate-300">
                                 PR #{claim.pr_number}
                               </Badge>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs text-slate-400">
                                 {formatDistanceToNow(new Date(claim.created_at), {
                                   addSuffix: true,
                                 })}
                               </span>
-                              <span className="text-xs font-bold text-primary">
+                              <span className="text-xs font-bold text-cyan-400">
                                 {fromWei(claim.token_amount).toFixed(2)} MPT
                               </span>
                             </div>
@@ -642,34 +705,34 @@ export default function ContributorDashboard() {
               </Card>
 
               {/* Quick Actions */}
-              <Card>
+              <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-purple-500" />
+                  <CardTitle className="text-base flex items-center gap-2 text-white">
+                    <TrendingUp className="h-4 w-4 text-purple-400" />
                     Quick Actions
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <Github className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className="w-full justify-start border-slate-600 text-slate-200 hover:bg-slate-800">
+                    <Github className="h-4 w-4 mr-2 text-sky-400" />
                     Browse Projects
                   </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <GitPullRequest className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className="w-full justify-start border-slate-600 text-slate-200 hover:bg-slate-800">
+                    <GitPullRequest className="h-4 w-4 mr-2 text-green-400" />
                     View My PRs
                   </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <Coins className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className="w-full justify-start border-slate-600 text-slate-200 hover:bg-slate-800">
+                    <Coins className="h-4 w-4 mr-2 text-purple-400" />
                     Claim History
                   </Button>
                 </CardContent>
               </Card>
 
               {/* Getting Started Guide */}
-              <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
+              <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30 backdrop-blur-lg">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-purple-500" />
+                  <CardTitle className="text-base flex items-center gap-2 text-white">
+                    <CheckCircle className="h-4 w-4 text-purple-400" />
                     Getting Started
                   </CardTitle>
                 </CardHeader>
@@ -679,7 +742,7 @@ export default function ContributorDashboard() {
                       <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-xs text-white font-bold">1</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-slate-300">
                         Connect your wallet
                       </p>
                     </div>
@@ -687,7 +750,7 @@ export default function ContributorDashboard() {
                       <div className="w-5 h-5 rounded-full bg-purple-500/50 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-xs text-white font-bold">2</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-slate-300">
                         Browse reward-enabled repositories
                       </p>
                     </div>
@@ -695,7 +758,7 @@ export default function ContributorDashboard() {
                       <div className="w-5 h-5 rounded-full bg-purple-500/50 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-xs text-white font-bold">3</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-slate-300">
                         Submit PRs and get rewarded!
                       </p>
                     </div>

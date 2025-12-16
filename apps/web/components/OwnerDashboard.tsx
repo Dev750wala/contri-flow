@@ -303,66 +303,66 @@ export function OwnerDashboard({
     <div className="space-y-6">
       {/* Stats Overview - Compact Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:shadow-lg transition-all border-l-4 border-l-cyan-500">
+        <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50 hover:shadow-lg transition-all border-l-4 border-l-cyan-500">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-slate-300">
                 Total Balance
               </CardTitle>
-              <Wallet className="h-4 w-4 text-cyan-500" />
+              <Wallet className="h-4 w-4 text-cyan-400" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalOrgBalance.toFixed(2)} MPT</div>
+            <div className="text-2xl font-bold text-white">{totalOrgBalance.toFixed(2)} MPT</div>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all border-l-4 border-l-blue-500">
+        <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50 hover:shadow-lg transition-all border-l-4 border-l-blue-500">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-slate-300">
                 Contributors
               </CardTitle>
-              <Users className="h-4 w-4 text-blue-500" />
+              <Users className="h-4 w-4 text-blue-400" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{uniqueContributors}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <div className="text-2xl font-bold text-white">{uniqueContributors}</div>
+            <p className="text-xs text-slate-300 mt-1">
               {activeRepositories.length} active repos
             </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all border-l-4 border-l-green-500">
+        <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50 hover:shadow-lg transition-all border-l-4 border-l-green-500">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-slate-300">
                 Distributed
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-green-500" />
+              <DollarSign className="h-4 w-4 text-green-400" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white">
               {totalRewardsDistributed.toFixed(1)} MPT
             </div>
-            <p className="text-xs text-muted-foreground mt-1">All time</p>
+            <p className="text-xs text-slate-300 mt-1">All time</p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all border-l-4 border-l-orange-500">
+        <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50 hover:shadow-lg transition-all border-l-4 border-l-orange-500">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-slate-300">
                 Pending
               </CardTitle>
-              <GitPullRequest className="h-4 w-4 text-orange-500" />
+              <GitPullRequest className="h-4 w-4 text-orange-400" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingRewards.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <div className="text-2xl font-bold text-white">{pendingRewards.length}</div>
+            <p className="text-xs text-slate-300 mt-1">
               {totalPendingAmount.toFixed(2)} MPT
             </p>
           </CardContent>
@@ -374,22 +374,22 @@ export function OwnerDashboard({
         {/* Left Column - Organizations & Repositories (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
           {organizations.map((org) => (
-            <Card key={org.id} className="overflow-hidden !border-0 shadow-lg">
+            <Card key={org.id} className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50 overflow-hidden shadow-lg">
               <CardHeader className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-cyan-500/20 rounded-lg">
-                      <Building2 className="h-5 w-5 text-cyan-500" />
+                      <Building2 className="h-5 w-5 text-cyan-400" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl">{org.name}</CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-1">
+                      <CardTitle className="text-xl text-white">{org.name}</CardTitle>
+                      <CardDescription className="flex items-center gap-2 mt-1 text-slate-300">
                         <Package className="h-3 w-3" />
                         {org.repositories.length} repositories
                         {org.appInstalled && (
                           <>
-                            <span className="text-muted-foreground">•</span>
-                            <CheckCircle className="h-3 w-3 text-green-500" />
+                            <span className="text-slate-400">•</span>
+                            <CheckCircle className="h-3 w-3 text-green-400" />
                             <span>App Installed</span>
                           </>
                         )}
@@ -398,7 +398,7 @@ export function OwnerDashboard({
                   </div>
                   <Badge
                     variant={org.suspended ? 'destructive' : 'default'}
-                    className="bg-green-500/20 text-green-700 hover:bg-green-500/30"
+                    className="bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30"
                   >
                     {org.suspended ? 'Suspended' : 'Active'}
                   </Badge>
@@ -407,25 +407,25 @@ export function OwnerDashboard({
 
               <CardContent className="p-6">
                 {/* Organization Balance & Deposit */}
-                <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                <div className="mb-6 p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-sm text-muted-foreground">
+                      <Label className="text-sm text-slate-300">
                         Organization Balance
                       </Label>
-                      <div className="text-2xl font-bold text-cyan-500 mt-1">
+                      <div className="text-2xl font-bold text-cyan-400 mt-1">
                         {isLoadingOrg ? (
-                          <span className="text-sm">Loading...</span>
+                          <span className="text-sm text-slate-300">Loading...</span>
                         ) : (
                           `${orgBalance.toFixed(2)} MPT`
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-slate-400">
                         Shared across {org.repositories.filter((r) => r.enabled_rewards).length} enabled repositories
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Wallet className="h-8 w-8 text-cyan-500/50" />
+                      <Wallet className="h-8 w-8 text-cyan-400/50" />
                       <Dialog open={isDepositModalOpen} onOpenChange={setIsDepositModalOpen}>
                         <DialogTrigger asChild>
                           <Button
@@ -733,11 +733,11 @@ export function OwnerDashboard({
                 {/* Repositories Grid */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Github className="h-4 w-4" />
+                    <h3 className="font-semibold flex items-center gap-2 text-white">
+                      <Github className="h-4 w-4 text-sky-400" />
                       Repositories
                     </h3>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800">
                       <Plus className="h-3 w-3 mr-1" />
                       Add New
                     </Button>
@@ -767,9 +767,9 @@ export function OwnerDashboard({
                         return (
                           <Card
                             key={repo.id}
-                            className={`hover:shadow-md transition-all cursor-pointer ${
+                            className={`bg-slate-800/40 border-slate-700/50 hover:shadow-md transition-all cursor-pointer ${
                               selectedRepo === repo.id
-                                ? 'ring-2 ring-cyan-500 bg-cyan-500/5'
+                                ? 'ring-2 ring-cyan-500 bg-cyan-500/10'
                                 : ''
                             }`}
                             onClick={() => setSelectedRepo(repo.id)}
@@ -777,29 +777,29 @@ export function OwnerDashboard({
                             <CardContent className="p-4">
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-start gap-3 flex-1">
-                                  <div className="p-2 bg-muted rounded">
-                                    <Github className="h-4 w-4" />
+                                  <div className="p-2 bg-slate-700/50 rounded">
+                                    <Github className="h-4 w-4 text-sky-400" />
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <h4 className="font-semibold truncate">
+                                      <h4 className="font-semibold truncate text-white">
                                         {repo.name}
                                       </h4>
                                       {repo.enabled_rewards ? (
                                         <Badge
                                           variant="default"
-                                          className="bg-green-500/20 text-green-700 text-xs"
+                                          className="bg-green-500/20 text-green-300 border-green-500/30 text-xs"
                                         >
                                           <Zap className="h-2 w-2 mr-1" />
                                           Rewards On
                                         </Badge>
                                       ) : (
-                                        <Badge variant="secondary" className="text-xs">
+                                        <Badge variant="secondary" className="bg-slate-700 text-slate-300 text-xs">
                                           Rewards Off
                                         </Badge>
                                       )}
                                     </div>
-                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-3 text-xs text-slate-400">
                                       <span className="flex items-center gap-1">
                                         <Users className="h-3 w-3" />
                                         {uniqueRepoContributors}
@@ -811,7 +811,7 @@ export function OwnerDashboard({
                                       {pendingCount > 0 && (
                                         <Badge
                                           variant="outline"
-                                          className="text-xs px-1.5 py-0"
+                                          className="text-xs px-1.5 py-0 border-slate-600 text-slate-300"
                                         >
                                           {pendingCount} pending
                                         </Badge>
@@ -822,30 +822,30 @@ export function OwnerDashboard({
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="flex-shrink-0"
+                                  className="flex-shrink-0 hover:bg-slate-700"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     // Open GitHub
                                   }}
                                 >
-                                  <ArrowUpRight className="h-4 w-4" />
+                                  <ArrowUpRight className="h-4 w-4 text-slate-300" />
                                 </Button>
                               </div>
                               
                               {/* Distribution Info */}
-                              <div className="mt-3 pt-3 border-t">
+                              <div className="mt-3 pt-3 border-t border-slate-700/50">
                                 {totalDistributed > 0 ? (
                                   <div className="flex items-center justify-between">
-                                    <span className="text-sm text-muted-foreground">
+                                    <span className="text-sm text-slate-300">
                                       Distributed
                                     </span>
-                                    <span className="text-sm font-semibold text-cyan-500">
+                                    <span className="text-sm font-semibold text-cyan-400">
                                       {totalDistributed.toFixed(2)} MPT
                                     </span>
                                   </div>
                                 ) : (
                                   <div className="text-center py-2">
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs text-slate-400">
                                       No rewards distributed yet
                                     </p>
                                   </div>
@@ -865,17 +865,17 @@ export function OwnerDashboard({
         {/* Right Column - Activity & Quick Actions (1/3 width) */}
         <div className="space-y-6">
           {/* Pending Rewards Card */}
-          <Card>
+          <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Clock className="h-4 w-4 text-orange-500" />
+              <CardTitle className="text-base flex items-center gap-2 text-white">
+                <Clock className="h-4 w-4 text-orange-400" />
                 Pending Rewards
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {pendingRewards.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground text-sm">
-                  <CheckCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <div className="text-center py-6 text-slate-300 text-sm">
+                  <CheckCircle className="h-8 w-8 mx-auto mb-2 opacity-50 text-slate-400" />
                   <p>All caught up!</p>
                 </div>
               ) : (
@@ -886,25 +886,25 @@ export function OwnerDashboard({
                   return (
                     <div
                       key={reward.id}
-                      className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                      className="p-3 border border-slate-700/50 bg-slate-800/40 rounded-lg hover:bg-slate-800/60 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <Badge variant="outline" className="text-xs mb-1">
+                          <Badge variant="outline" className="text-xs mb-1 border-slate-600 text-slate-300">
                             #{reward.pr_number}
                           </Badge>
-                          <p className="text-sm font-medium truncate">
+                          <p className="text-sm font-medium truncate text-white">
                             {reward.comment}
                           </p>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-xs text-slate-400 truncate">
                             {repo?.name || 'Repository'}
                           </p>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <p className="text-sm font-bold text-cyan-500">
+                          <p className="text-sm font-bold text-cyan-400">
                             {fromWei(reward.token_amount).toFixed(2)}
                           </p>
-                          <p className="text-xs text-muted-foreground">MPT</p>
+                          <p className="text-xs text-slate-300">MPT</p>
                         </div>
                       </div>
                     </div>
@@ -912,7 +912,7 @@ export function OwnerDashboard({
                 })
               )}
               {pendingRewards.length > 3 && (
-                <Button variant="ghost" size="sm" className="w-full text-xs">
+                <Button variant="ghost" size="sm" className="w-full text-xs text-slate-300 hover:bg-slate-800">
                   View all {pendingRewards.length} pending
                 </Button>
               )}
@@ -920,17 +920,17 @@ export function OwnerDashboard({
           </Card>
 
           {/* Recent Activity */}
-          <Card>
+          <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <ActivityIcon className="h-4 w-4 text-blue-500" />
+              <CardTitle className="text-base flex items-center gap-2 text-white">
+                <ActivityIcon className="h-4 w-4 text-blue-400" />
                 Recent Activity
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {recentTransactions.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground text-sm">
-                  <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <div className="text-center py-6 text-slate-300 text-sm">
+                  <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-50 text-slate-400" />
                   <p>No activity yet</p>
                 </div>
               ) : (
@@ -956,35 +956,35 @@ export function OwnerDashboard({
                   return (
                     <div
                       key={tx.id}
-                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-800/60 transition-colors"
                     >
                       <div className={`p-1.5 rounded-full flex-shrink-0 ${bgColor}`}>
                         {icon}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate">
+                        <p className="text-xs font-medium truncate text-white">
                           {tx.title}
                         </p>
                         {tx.description && (
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-xs text-slate-400 truncate">
                             {tx.description}
                           </p>
                         )}
                         {tx.pr_number && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-slate-400">
                             PR #{tx.pr_number} • {tx.repo_name}
                           </p>
                         )}
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-slate-400">
                           {formatTimeAgo(tx.timestamp)}
                         </p>
                       </div>
                       {tx.amount > 0 && (
                         <div className="text-right flex-shrink-0">
-                          <p className="text-xs font-bold">
+                          <p className="text-xs font-bold text-white">
                             {tx.amount.toFixed(2)}
                           </p>
-                          <p className="text-xs text-muted-foreground">MPT</p>
+                          <p className="text-xs text-slate-300">MPT</p>
                         </div>
                       )}
                     </div>
@@ -995,68 +995,68 @@ export function OwnerDashboard({
           </Card>
 
           {/* Quick Stats */}
-          <Card>
+          <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-purple-500" />
+              <CardTitle className="text-base flex items-center gap-2 text-white">
+                <TrendingUp className="h-4 w-4 text-purple-400" />
                 Quick Stats
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-slate-800/40 border border-slate-700/50 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <Package className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Organizations</span>
+                  <Package className="h-4 w-4 text-cyan-400" />
+                  <span className="text-sm text-slate-300">Organizations</span>
                 </div>
-                <span className="font-bold">{organizations.length}</span>
+                <span className="font-bold text-white">{organizations.length}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-slate-800/40 border border-slate-700/50 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <Github className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Repositories</span>
+                  <Github className="h-4 w-4 text-sky-400" />
+                  <span className="text-sm text-slate-300">Repositories</span>
                 </div>
-                <span className="font-bold">{allRepositories.length}</span>
+                <span className="font-bold text-white">{allRepositories.length}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-slate-800/40 border border-slate-700/50 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Rewards Enabled</span>
+                  <Zap className="h-4 w-4 text-yellow-400" />
+                  <span className="text-sm text-slate-300">Rewards Enabled</span>
                 </div>
-                <span className="font-bold">{activeRepositories.length}</span>
+                <span className="font-bold text-white">{activeRepositories.length}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-slate-800/40 border border-slate-700/50 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <ActivityIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Total PRs</span>
+                  <ActivityIcon className="h-4 w-4 text-green-400" />
+                  <span className="text-sm text-slate-300">Total PRs</span>
                 </div>
-                <span className="font-bold">{allRewards.length}</span>
+                <span className="font-bold text-white">{allRewards.length}</span>
               </div>
             </CardContent>
           </Card>
 
           {/* Quick Actions */}
-          <Card>
+          <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Settings className="h-4 w-4 text-gray-500" />
+              <CardTitle className="text-base flex items-center gap-2 text-white">
+                <Settings className="h-4 w-4 text-slate-400" />
                 Quick Actions
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-start">
-                <Plus className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="w-full justify-start border-slate-600 text-slate-200 hover:bg-slate-800">
+                <Plus className="h-4 w-4 mr-2 text-green-400" />
                 Add Repository
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start">
-                <Wallet className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="w-full justify-start border-slate-600 text-slate-200 hover:bg-slate-800">
+                <Wallet className="h-4 w-4 mr-2 text-cyan-400" />
                 Deposit Funds
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start">
-                <Settings className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="w-full justify-start border-slate-600 text-slate-200 hover:bg-slate-800">
+                <Settings className="h-4 w-4 mr-2 text-purple-400" />
                 Settings
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start">
-                <Github className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="w-full justify-start border-slate-600 text-slate-200 hover:bg-slate-800">
+                <Github className="h-4 w-4 mr-2 text-sky-400" />
                 Manage Installations
               </Button>
             </CardContent>

@@ -144,63 +144,63 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
     <div className="space-y-8">
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-white">
               Available Rewards
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-sky-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white">
               {totalAvailable.toFixed(2)} ETH
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-300">
               ≈ ${(totalAvailable * 2500).toFixed(0)} USD
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">Total Earned</CardTitle>
+            <Wallet className="h-4 w-4 text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white">
               {totalClaimed.toFixed(2)} ETH
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-300">
               From {claimedRewards.length} contributions
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Contributions</CardTitle>
-            <GitPullRequest className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">Contributions</CardTitle>
+            <GitPullRequest className="h-4 w-4 text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalContributions}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-white">{totalContributions}</div>
+            <p className="text-xs text-slate-300">
               Across {contributions.length} repositories
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-white">
               All-Time Earnings
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-cyan-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white">
               {allTimeEarnings.toFixed(2)} ETH
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-300">
               ≈ ${(allTimeEarnings * 2500).toFixed(0)} USD
             </p>
           </CardContent>
@@ -208,25 +208,25 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
       </div>
 
       <Tabs defaultValue="available" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="available">
+        <TabsList className="bg-slate-900/80 backdrop-blur-lg border border-slate-700/50">
+          <TabsTrigger value="available" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-300">
             Available Rewards ({availableRewards.length})
           </TabsTrigger>
-          <TabsTrigger value="claimed">
+          <TabsTrigger value="claimed" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-300">
             Claimed Rewards ({claimedRewards.length})
           </TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="analytics" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-300">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="available" className="space-y-6">
           {availableRewards.length === 0 ? (
-            <Card>
+            <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
               <CardContent className="text-center py-12">
-                <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
+                <Award className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2 text-white">
                   No available rewards
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-slate-300">
                   Keep contributing to earn rewards! Your merged pull requests
                   will appear here.
                 </p>
@@ -235,36 +235,36 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
           ) : (
             <div className="space-y-4">
               {availableRewards.map((reward) => (
-                <Card key={reward.id}>
+                <Card key={reward.id} className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline">
+                          <Badge variant="outline" className="border-slate-600 text-slate-200">
                             {reward.owner}/{reward.repo}
                           </Badge>
-                          <Badge variant="secondary">{reward.pr}</Badge>
+                          <Badge variant="secondary" className="bg-slate-800 text-slate-200">{reward.pr}</Badge>
                           {reward.status === 'ready' ? (
-                            <Badge className="bg-green-100 text-green-800">
+                            <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Ready to Claim
                             </Badge>
                           ) : (
-                            <Badge variant="outline">
+                            <Badge variant="outline" className="border-orange-500/30 text-orange-300">
                               <Clock className="h-3 w-3 mr-1" />
                               Pending Approval
                             </Badge>
                           )}
                         </div>
 
-                        <h3 className="text-lg font-semibold mb-1">
+                        <h3 className="text-lg font-semibold mb-1 text-white">
                           {reward.title}
                         </h3>
-                        <p className="text-sm text-muted-foreground mb-3">
+                        <p className="text-sm text-slate-300 mb-3">
                           Merged {reward.mergedAt}
                         </p>
 
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4 text-sm text-slate-400">
                           <div className="flex items-center gap-1">
                             <Github className="h-4 w-4" />
                             <span>Pull Request {reward.pr}</span>
@@ -278,10 +278,10 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
 
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <p className="text-2xl font-bold">
+                          <p className="text-2xl font-bold text-white">
                             {reward.amount} ETH
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-slate-300">
                             ≈ ${(reward.amount * 2500).toFixed(0)} USD
                           </p>
                         </div>
@@ -317,29 +317,29 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
         <TabsContent value="claimed" className="space-y-6">
           <div className="space-y-4">
             {claimedRewards.map((reward) => (
-              <Card key={reward.id}>
+              <Card key={reward.id} className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="border-slate-600 text-slate-200">
                           {reward.owner}/{reward.repo}
                         </Badge>
-                        <Badge variant="secondary">{reward.pr}</Badge>
-                        <Badge className="bg-green-100 text-green-800">
+                        <Badge variant="secondary" className="bg-slate-800 text-slate-200">{reward.pr}</Badge>
+                        <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Claimed
                         </Badge>
                       </div>
 
-                      <h3 className="text-lg font-semibold mb-1">
+                      <h3 className="text-lg font-semibold mb-1 text-white">
                         {reward.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground mb-3">
+                      <p className="text-sm text-slate-300 mb-3">
                         Claimed {reward.claimedAt}
                       </p>
 
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-4 text-sm text-slate-400">
                         <div className="flex items-center gap-1">
                           <Github className="h-4 w-4" />
                           <span>Pull Request {reward.pr}</span>
@@ -351,8 +351,8 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
                     </div>
 
                     <div className="text-right">
-                      <p className="text-2xl font-bold">{reward.amount} ETH</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-2xl font-bold text-white">{reward.amount} ETH</p>
+                      <p className="text-sm text-slate-300">
                         ≈ ${(reward.amount * 2500).toFixed(0)} USD
                       </p>
                     </div>
@@ -365,10 +365,10 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
 
         <TabsContent value="analytics" className="space-y-6">
           {/* Contribution Summary */}
-          <Card>
+          <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
             <CardHeader>
-              <CardTitle>Contribution Summary</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Contribution Summary</CardTitle>
+              <CardDescription className="text-slate-300">
                 Your contributions across different repositories
               </CardDescription>
             </CardHeader>
@@ -377,22 +377,22 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
                 {contributions.map((contrib) => (
                   <div
                     key={contrib.repo}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex items-center justify-between p-4 border border-slate-700/50 rounded-lg bg-slate-800/40"
                   >
                     <div className="flex items-center gap-3">
-                      <Github className="h-5 w-5 text-muted-foreground" />
+                      <Github className="h-5 w-5 text-sky-400" />
                       <div>
-                        <h4 className="font-medium">{contrib.repo}</h4>
-                        <p className="text-sm text-muted-foreground">
+                        <h4 className="font-medium text-white">{contrib.repo}</h4>
+                        <p className="text-sm text-slate-300">
                           {contrib.prs} pull requests merged
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">
+                      <p className="font-semibold text-white">
                         {contrib.totalRewards.toFixed(1)} ETH
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-slate-300">
                         ≈ ${(contrib.totalRewards * 2500).toFixed(0)} USD
                       </p>
                     </div>
@@ -403,51 +403,51 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
           </Card>
 
           {/* Achievement Badges */}
-          <Card>
+          <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
             <CardHeader>
-              <CardTitle>Achievements</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Achievements</CardTitle>
+              <CardDescription className="text-slate-300">
                 Badges earned based on your contributions
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Star className="h-6 w-6 text-yellow-600" />
+                <div className="text-center p-4 border border-slate-700/50 rounded-lg bg-slate-800/40">
+                  <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Star className="h-6 w-6 text-yellow-400" />
                   </div>
-                  <h4 className="font-medium">First Reward</h4>
-                  <p className="text-xs text-muted-foreground">
+                  <h4 className="font-medium text-white">First Reward</h4>
+                  <p className="text-xs text-slate-300">
                     Claimed first ETH reward
                   </p>
                 </div>
 
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <GitPullRequest className="h-6 w-6 text-blue-600" />
+                <div className="text-center p-4 border border-slate-700/50 rounded-lg bg-slate-800/40">
+                  <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <GitPullRequest className="h-6 w-6 text-blue-400" />
                   </div>
-                  <h4 className="font-medium">10 PRs</h4>
-                  <p className="text-xs text-muted-foreground">
+                  <h4 className="font-medium text-white">10 PRs</h4>
+                  <p className="text-xs text-slate-300">
                     10 merged pull requests
                   </p>
                 </div>
 
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <DollarSign className="h-6 w-6 text-green-600" />
+                <div className="text-center p-4 border border-slate-700/50 rounded-lg bg-slate-800/40">
+                  <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <DollarSign className="h-6 w-6 text-green-400" />
                   </div>
-                  <h4 className="font-medium">5 ETH Earned</h4>
-                  <p className="text-xs text-muted-foreground">
+                  <h4 className="font-medium text-white">5 ETH Earned</h4>
+                  <p className="text-xs text-slate-300">
                     Earned 5+ ETH total
                   </p>
                 </div>
 
-                <div className="text-center p-4 border rounded-lg opacity-50">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Award className="h-6 w-6 text-gray-600" />
+                <div className="text-center p-4 border border-slate-700/50 rounded-lg bg-slate-800/40 opacity-50">
+                  <div className="w-12 h-12 bg-slate-700/40 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Award className="h-6 w-6 text-slate-400" />
                   </div>
-                  <h4 className="font-medium">Top Contributor</h4>
-                  <p className="text-xs text-muted-foreground">
+                  <h4 className="font-medium text-slate-300">Top Contributor</h4>
+                  <p className="text-xs text-slate-400">
                     Coming soon...
                   </p>
                 </div>
@@ -456,10 +456,10 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
           </Card>
 
           {/* Monthly Earnings Chart */}
-          <Card>
+          <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-700/50">
             <CardHeader>
-              <CardTitle>Monthly Earnings</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Monthly Earnings</CardTitle>
+              <CardDescription className="text-slate-300">
                 Your earnings over the past 6 months
               </CardDescription>
             </CardHeader>
@@ -474,16 +474,16 @@ export function ContributorDashboard({ user }: ContributorDashboardProps) {
                   { month: 'Aug 2024', amount: 0.7 },
                 ].map((month) => (
                   <div key={month.month} className="flex items-center gap-4">
-                    <div className="w-16 text-sm text-muted-foreground">
+                    <div className="w-16 text-sm text-slate-300">
                       {month.month}
                     </div>
                     <div className="flex-1">
                       <Progress
                         value={(month.amount / 2.5) * 100}
-                        className="h-2"
+                        className="h-2 bg-slate-800"
                       />
                     </div>
-                    <div className="w-20 text-right text-sm font-medium">
+                    <div className="w-20 text-right text-sm font-medium text-white">
                       {month.amount.toFixed(1)} ETH
                     </div>
                   </div>

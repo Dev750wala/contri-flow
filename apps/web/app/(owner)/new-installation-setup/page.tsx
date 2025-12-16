@@ -70,15 +70,29 @@ const NewInstallationPageContent = () => {
   // Show loading state while checking authentication
   if (status === 'loading') {
     return (
-      <>
+      <div className="relative min-h-screen w-full overflow-hidden">
+        {/* Video Background */}
+        <div className="fixed inset-0 w-screen h-screen z-0">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+          >
+            <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        </div>
         <Navbar />
-        <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Authenticating...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
+            <p className="text-white">Authenticating...</p>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -160,10 +174,29 @@ const NewInstallationPageContent = () => {
 
       case 'install':
         return (
-          <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-            <div className="container mx-auto py-8 px-4 max-w-7xl">
+          <div className="relative min-h-screen w-full overflow-hidden">
+            {/* Video Background */}
+            <div className="fixed inset-0 w-screen h-screen z-0">
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+              >
+                <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+              </video>
+              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+            </div>
+
+            {/* Ambient Background Effects */}
+            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[120px] pointer-events-none" />
+
+            <div className="relative z-10 container mx-auto py-8 px-4 max-w-7xl pt-28">
               {/* Success Header Section */}
-              <Card className="mb-8 border-green-200 bg-gradient-to-br from-green-50 via-white to-green-50/50 dark:border-green-900/50 dark:from-green-950/20 dark:via-background dark:to-green-950/10 shadow-lg">
+              <Card className="mb-8 border-green-500/50 bg-slate-900/80 backdrop-blur-lg shadow-lg">
                 <CardContent className="pt-8 pb-8">
                   <div className="max-w-3xl mx-auto text-center space-y-4">
                     <div className="relative inline-block">
@@ -173,16 +206,16 @@ const NewInstallationPageContent = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-green-700 to-green-900 dark:from-green-400 dark:to-green-600 bg-clip-text text-transparent">
+                      <h1 className="text-4xl font-bold tracking-tight text-white">
                         Installation Successful!
                       </h1>
-                      <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                      <p className="text-lg text-slate-300 max-w-2xl mx-auto">
                         ContriFlow has been successfully installed on your GitHub account. 
                         Now select which repositories you want to enable automated rewards for.
                       </p>
                     </div>
                     {installationId && (
-                      <Badge variant="outline" className="border-green-300 text-green-700 bg-green-50 dark:border-green-700 dark:text-green-300 dark:bg-green-950/30 text-sm py-1 px-3">
+                      <Badge variant="outline" className="border-green-500 text-green-400 bg-green-500/10 text-sm py-1 px-3">
                         <CheckCircle className="h-3 w-3 mr-2" />
                         Installation ID: {installationId}
                       </Badge>
@@ -196,17 +229,17 @@ const NewInstallationPageContent = () => {
                 {/* Section Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2">
                   <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Configure Repositories</h2>
-                    <p className="text-muted-foreground mt-1">
+                    <h2 className="text-2xl font-bold tracking-tight text-white">Configure Repositories</h2>
+                    <p className="text-slate-300 mt-1">
                       Enable reward systems for your GitHub repositories
                     </p>
                   </div>
                   {repositories.length > 0 && (
-                    <div className="flex items-center gap-3 px-4 py-2 bg-muted/50 rounded-lg border">
-                      <div className="text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center gap-3 px-4 py-2 bg-slate-800/60 rounded-lg border border-slate-700">
+                      <div className="text-sm font-medium text-slate-300">
                         Selected:
                       </div>
-                      <Badge variant="secondary" className="text-base font-semibold">
+                      <Badge variant="secondary" className="text-base font-semibold bg-sky-500/20 text-sky-300 border-sky-500/30">
                         {enabledRepoIds.size} / {repositories.length}
                       </Badge>
                     </div>
@@ -215,28 +248,28 @@ const NewInstallationPageContent = () => {
 
                 {/* Repository Grid or Loading/Error States */}
                 {checkInstallationLoading || fetchingMaintainers ? (
-                  <Card className="border-dashed">
+                  <Card className="border-dashed border-slate-700 bg-slate-900/80 backdrop-blur-lg">
                     <CardContent className="flex flex-col justify-center items-center py-16">
                       <div className="relative">
-                        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse"></div>
-                        <div className="relative animate-spin rounded-full h-16 w-16 border-4 border-muted border-t-primary"></div>
+                        <div className="absolute inset-0 bg-sky-500/20 blur-xl rounded-full animate-pulse"></div>
+                        <div className="relative animate-spin rounded-full h-16 w-16 border-4 border-slate-700 border-t-sky-500"></div>
                       </div>
-                      <p className="text-muted-foreground mt-6 text-lg font-medium">
+                      <p className="text-slate-200 mt-6 text-lg font-medium">
                         {checkInstallationLoading ? 'Loading your repositories...' : 'Fetching maintainer details...'}
                       </p>
-                      <p className="text-sm text-muted-foreground mt-2">This may take a moment</p>
+                      <p className="text-sm text-slate-400 mt-2">This may take a moment</p>
                     </CardContent>
                   </Card>
                 ) : checkInstallationError ? (
-                  <Card className="border-red-200 bg-red-50/50 dark:border-red-900/50 dark:bg-red-950/20">
+                  <Card className="border-red-500/50 bg-slate-900/80 backdrop-blur-lg">
                     <CardContent className="flex flex-col items-center py-12 text-center">
-                      <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
-                        <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                      <div className="h-12 w-12 rounded-full bg-red-500/20 flex items-center justify-center mb-4">
+                        <XCircle className="h-6 w-6 text-red-400" />
                       </div>
-                      <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
+                      <h3 className="text-lg font-semibold text-white mb-2">
                         Error Loading Repositories
                       </h3>
-                      <p className="text-red-700 dark:text-red-300 max-w-md">
+                      <p className="text-slate-300 max-w-md">
                         {checkInstallationError.message}
                       </p>
                       <Button 
@@ -262,13 +295,13 @@ const NewInstallationPageContent = () => {
                     </div>
 
                     {/* Action Footer */}
-                    <Card className="sticky bottom-4 border-2 shadow-2xl bg-background/95 backdrop-blur-sm">
+                    <Card className="sticky bottom-4 border-2 border-slate-700 shadow-2xl bg-slate-900/95 backdrop-blur-sm">
                       <CardContent className="py-6">
                         {/* Error Display */}
                         {enablingRewardsError && (
-                          <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2">
-                            <XCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
-                            <p className="text-sm text-red-700 dark:text-red-300">
+                          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-400 shrink-0" />
+                            <p className="text-sm text-red-300">
                               {enablingRewardsError.message || 'Failed to enable rewards. Please try again.'}
                             </p>
                           </div>
@@ -276,20 +309,20 @@ const NewInstallationPageContent = () => {
                         
                         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                           <div className="text-center md:text-left">
-                            <div className="text-sm font-medium text-muted-foreground">
+                            <div className="text-sm font-medium text-slate-300">
                               {enabledRepoIds.size === 0 ? (
                                 <>
-                                  <AlertTriangle className="h-4 w-4 inline mr-2 text-yellow-600" />
+                                  <AlertTriangle className="h-4 w-4 inline mr-2 text-yellow-400" />
                                   Select at least one repository to continue
                                 </>
                               ) : (
                                 <>
-                                  You've selected <span className="font-bold text-foreground">{enabledRepoIds.size}</span> {enabledRepoIds.size === 1 ? 'repository' : 'repositories'} for automated rewards
+                                  You've selected <span className="font-bold text-white">{enabledRepoIds.size}</span> {enabledRepoIds.size === 1 ? 'repository' : 'repositories'} for automated rewards
                                 </>
                               )}
                             </div>
                             {enabledRepoIds.size > 0 && (
-                              <div className="text-xs text-muted-foreground mt-1">
+                              <div className="text-xs text-slate-400 mt-1">
                                 Platform Token: {PLATFORM_TOKEN_INFO.symbol} ({PLATFORM_TOKEN_INFO.name})
                               </div>
                             )}
@@ -317,13 +350,13 @@ const NewInstallationPageContent = () => {
                     </Card>
                   </>
                 ) : (
-                  <Card className="border-dashed">
+                  <Card className="border-dashed border-slate-700 bg-slate-900/80 backdrop-blur-lg">
                     <CardContent className="flex flex-col items-center py-16 text-center">
-                      <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                        <Github className="h-8 w-8 text-muted-foreground" />
+                      <div className="h-16 w-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
+                        <Github className="h-8 w-8 text-slate-400" />
                       </div>
-                      <h3 className="text-lg font-semibold mb-2">No Repositories Found</h3>
-                      <p className="text-muted-foreground max-w-md mb-6">
+                      <h3 className="text-lg font-semibold mb-2 text-white">No Repositories Found</h3>
+                      <p className="text-slate-300 max-w-md mb-6">
                         We couldn't find any repositories for this installation. 
                         Please check your GitHub App settings.
                       </p>
