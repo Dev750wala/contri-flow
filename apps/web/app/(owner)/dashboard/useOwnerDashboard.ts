@@ -19,10 +19,6 @@ export const useOwnerDashboard = () => {
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
 
-  // ========================================
-  // FAST QUERIES - Load immediately
-  // ========================================
-
   const {
     data: dashboardData,
     loading: dashboardLoading,
@@ -60,10 +56,6 @@ export const useOwnerDashboard = () => {
     fetchPolicy: 'cache-and-network',
   });
 
-  // ========================================
-  // SLOW QUERIES - Load separately
-  // ========================================
-
   const {
     data: orgStatsData,
     loading: orgStatsLoading,
@@ -97,10 +89,6 @@ export const useOwnerDashboard = () => {
     fetchPolicy: 'cache-and-network',
   });
 
-  // ========================================
-  // Auto-select first organization
-  // ========================================
-
   useEffect(() => {
     if (
       dashboardData?.getOwnerDashboard?.organizations &&
@@ -111,10 +99,6 @@ export const useOwnerDashboard = () => {
     }
   }, [dashboardData, selectedOrgId]);
 
-  // ========================================
-  // Computed values
-  // ========================================
-
   const organizations = dashboardData?.getOwnerDashboard?.organizations || [];
   const selectedOrg = organizations.find((org) => org.id === selectedOrgId);
   const activities = activityData?.getOrganizationActivity || [];
@@ -122,10 +106,6 @@ export const useOwnerDashboard = () => {
   const orgStats = orgStatsData?.getOrganizationStats;
   const globalStats = globalStatsData?.getGlobalStats;
   const repoStats = repoStatsData?.getRepositoryStats;
-
-  // ========================================
-  // Helper functions
-  // ========================================
 
   const selectOrganization = (orgId: string) => {
     setSelectedOrgId(orgId);
@@ -142,10 +122,6 @@ export const useOwnerDashboard = () => {
       await refetchOrgStats();
     }
   };
-
-  // ========================================
-  // Calculate additional stats
-  // ========================================
 
   const allRepositories = organizations.flatMap((org) => org.repositories);
   const activeRepositories = allRepositories.filter(

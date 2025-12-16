@@ -155,8 +155,10 @@ export default function ContributorDashboard() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center bg-background relative">
+        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
+        <Navbar />
+        <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
@@ -167,9 +169,10 @@ export default function ContributorDashboard() {
   // Show onboarding message if user is not a contributor yet
   if (isNotContributor) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative">
+        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pt-28 relative z-10">
           <div className="max-w-3xl mx-auto">
             <Card className="border-2 border-purple-500/20">
               <CardHeader className="text-center pb-4">
@@ -275,9 +278,10 @@ export default function ContributorDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative">
+        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pt-28 relative z-10">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -290,9 +294,11 @@ export default function ContributorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Gradient background for navbar visibility */}
+      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-28 relative z-10">
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">

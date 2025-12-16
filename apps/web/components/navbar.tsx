@@ -96,7 +96,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="w-full absolute top-0 left-0 z-50 bg-transparent backdrop-blur-md">
+    <nav className="w-full absolute top-0 left-0 z-50 bg-transparent ">
       <div className="container mx-auto flex items-center justify-between py-4 px-4 md:py-5 md:px-10">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-3 group">
@@ -275,7 +275,7 @@ const Navbar = () => {
                     {isLoadingBalance
                       ? 'Loading...'
                       : balance
-                        ? `${Number(balance).toFixed(6)} MPT`
+                        ? `${(Number(balance) / 1e18).toFixed(2)} MPT`
                         : '0 MPT'}
                   </span>
                 </DropdownMenuItem>
@@ -297,7 +297,7 @@ const Navbar = () => {
                 }
                 className="bg-white cursor-pointer text-indigo-900 font-semibold hover:bg-white/90 transition-all duration-200 rounded-full px-6 flex items-center gap-2"
               >
-                Launch App
+                Connect Wallet
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </motion.div>
@@ -431,7 +431,7 @@ const Navbar = () => {
                             {isLoadingBalance
                               ? 'Loading...'
                               : balance
-                                ? `${Number(balance).toFixed(6)} MPT`
+                                ? `${(Number(balance) / 1e18).toFixed(2)} MPT`
                                 : '0 MPT'}
                           </span>
                         </div>

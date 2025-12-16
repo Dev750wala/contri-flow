@@ -206,7 +206,6 @@ export const RewardMutation = extendType({
           throw new Error('Reward is not confirmed on blockchain yet');
         }
 
-        // Ensure queue/worker are initialized lazily (avoids Redis usage during schema generation)
         const claimRewardQueue = getClaimRewardQueue();
         getClaimRewardWorker();
 

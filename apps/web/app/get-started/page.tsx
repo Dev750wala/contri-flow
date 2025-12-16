@@ -49,25 +49,61 @@ export default function GetStartedPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+      <div className="relative min-h-screen w-full overflow-hidden">
+        {/* Video Background */}
+        <div className="fixed inset-0 w-screen h-screen z-0">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+          >
+            <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        </div>
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white">Loading...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-16">
+    <div className="relative min-h-screen w-full overflow-hidden">
+      {/* Video Background */}
+      <div className="fixed inset-0 w-screen h-screen z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+        >
+          <source src="/HomeVideoBackground.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+      </div>
+
+      {/* Ambient Background Effects */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="relative z-10 min-h-screen">
+      <div className="container mx-auto px-4 py-16 pt-32">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
               Welcome to ContriFlow!
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
               How would you like to use ContriFlow? You can switch between roles anytime.
             </p>
           </div>
@@ -75,39 +111,39 @@ export default function GetStartedPage() {
           {/* Role Selection Cards */}
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             {/* Organization Owner Card */}
-            <Card className="hover:shadow-xl transition-all border-2 hover:border-cyan-500 cursor-pointer group">
+            <Card className="hover:shadow-2xl transition-all border-2 border-slate-700/50 hover:border-cyan-500 cursor-pointer group bg-slate-900/80 backdrop-blur-lg">
               <CardHeader className="text-center pb-6">
                 <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <Building2 className="h-10 w-10 text-cyan-500" />
+                  <Building2 className="h-10 w-10 text-cyan-400" />
                 </div>
-                <CardTitle className="text-2xl mb-2">Organization Owner</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-2xl mb-2 text-white">Organization Owner</CardTitle>
+                <CardDescription className="text-base text-slate-300">
                   Reward contributors for their work on your repositories
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3 mb-6">
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">
+                    <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-slate-300">
                       Set up reward pools for your GitHub repositories
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">
+                    <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-slate-300">
                       Automatically reward merged pull requests
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">
+                    <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-slate-300">
                       Track contributions and manage your team
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">
+                    <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-slate-300">
                       Transparent blockchain-based payment system
                     </p>
                   </div>
@@ -125,39 +161,39 @@ export default function GetStartedPage() {
             </Card>
 
             {/* Contributor Card */}
-            <Card className="hover:shadow-xl transition-all border-2 hover:border-purple-500 cursor-pointer group">
+            <Card className="hover:shadow-2xl transition-all border-2 border-slate-700/50 hover:border-purple-500 cursor-pointer group bg-slate-900/80 backdrop-blur-lg">
               <CardHeader className="text-center pb-6">
                 <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <Code className="h-10 w-10 text-purple-500" />
+                  <Code className="h-10 w-10 text-purple-400" />
                 </div>
-                <CardTitle className="text-2xl mb-2">Contributor</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-2xl mb-2 text-white">Contributor</CardTitle>
+                <CardDescription className="text-base text-slate-300">
                   Earn rewards for your open-source contributions
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3 mb-6">
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">
+                    <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-slate-300">
                       Browse available reward opportunities
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">
+                    <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-slate-300">
                       Get rewarded for merged pull requests
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">
+                    <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-slate-300">
                       Track your earnings and claim rewards
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">
+                    <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-slate-300">
                       Instant MPT token payments to your wallet
                     </p>
                   </div>
@@ -175,17 +211,18 @@ export default function GetStartedPage() {
           </div>
 
           {/* Info Note */}
-          <div className="bg-muted/50 rounded-lg p-6 text-center">
+          <div className="bg-slate-800/60 backdrop-blur-lg rounded-lg p-6 text-center border border-slate-700/50">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <Users className="h-5 w-5 text-primary" />
-              <p className="font-semibold">You can be both!</p>
+              <Users className="h-5 w-5 text-sky-400" />
+              <p className="font-semibold text-white">You can be both!</p>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-slate-300">
               Many users are both organization owners and contributors. 
               You can switch between roles anytime from your profile menu.
             </p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

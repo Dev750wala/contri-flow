@@ -22,9 +22,10 @@ const DashboardPage = () => {
 
   if (dashboardLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative">
+        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
         <Navbar />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28 relative z-10">
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
@@ -37,12 +38,15 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Gradient background for navbar visibility */}
+      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-indigo-950/90 via-indigo-900/40 to-transparent pointer-events-none z-0" />
+      
       {/* Navbar */}
       <Navbar />
 
       {/* Header Section */}
-      <div className="border-b bg-gradient-to-r from-background via-muted/20 to-background">
+      <div className="border-b bg-gradient-to-r from-background via-muted/20 to-background relative z-10 pt-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col gap-2">
             <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
@@ -56,7 +60,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <OwnerDashboard
           organizations={organizations}
           selectedOrg={selectedOrg}
