@@ -9,7 +9,6 @@ export async function handleMemberAddedEvent(
   const { member, repository } = body;
 
   try {
-    // the user who is being added as a member might not exist in the user table yet, so we will just check if they exist.
     const user = await prisma.user.findUnique({
       where: { github_id: member.id.toString() },
     });
@@ -36,7 +35,6 @@ export async function handleMemberAddedEvent(
       },
     });
 
-    // Log activity for maintainer addition
     await logActivity({
       organizationId: newMaintainer.Repository.organization.id,
       activityType: 'MAINTAINER_ADDED',

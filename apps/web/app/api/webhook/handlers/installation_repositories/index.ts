@@ -16,7 +16,6 @@ export async function handleInstallationRespositoriesEvent(
       return await handleRepositoriesRemovedEvent(body);
     
     default:
-      // Return success for unhandled actions to prevent GitHub from retrying
       return {
         statusCode: 200,
         success: true,

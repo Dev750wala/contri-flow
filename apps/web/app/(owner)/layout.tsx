@@ -14,10 +14,9 @@ export default function OwnerLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'loading') return; // Still loading
+    if (status === 'loading') return;
 
     if (!session) {
-      // User is not authenticated, redirect to sign in
       router.push('/auth/sign-in');
       return;
     }
@@ -34,7 +33,6 @@ export default function OwnerLayout({
     );
   }
 
-  // Don't render children if not authenticated (will redirect)
   if (!session) {
     return null;
   }

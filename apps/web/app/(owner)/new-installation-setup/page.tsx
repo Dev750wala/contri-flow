@@ -33,7 +33,6 @@ const NewInstallationPageContent = () => {
   const router = useRouter();
 
   const {
-    // State
     repositories,
     enabledRepoIds,
     loading,
@@ -41,33 +40,27 @@ const NewInstallationPageContent = () => {
     setupAction,
     installationId,
     
-    // Query states
     checkInstallationLoading,
     checkInstallationError,
     
-    // Mutation states
     enablingRewards,
     enablingRewardsError,
     
-    // Handlers
     handleToggleRewards,
     handleManageSettings,
     handleAddRepositories,
   } = useNewInstallationSetup();
 
-  // Redirect to sign in if not authenticated
   React.useEffect(() => {
-    if (status === 'loading') return; // Still loading
+    if (status === 'loading') return; 
 
     if (!session) {
-      // User is not authenticated, redirect to sign in with return URL
       const returnUrl = encodeURIComponent(window.location.href);
       router.push(`/auth/sign-in?callbackUrl=${returnUrl}`);
       return;
     }
   }, [session, status, router]);
 
-  // Show loading state while checking authentication
   if (status === 'loading') {
     return (
       <div className="relative min-h-screen w-full overflow-hidden">
@@ -96,12 +89,10 @@ const NewInstallationPageContent = () => {
     );
   }
 
-  // If not authenticated, return null (redirect will happen in useEffect)
   if (!session) {
     return null;
   }
 
-  // Render content based on setup_action
   const renderContent = () => {
     switch (setupAction) {
       case 'request':
@@ -514,7 +505,6 @@ const NewInstallationPageContent = () => {
         );
 
       default:
-        // No setup_action or unknown value - show general installation page
         return (
           <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 flex items-center justify-center">
             <div className="container mx-auto py-8 px-4">

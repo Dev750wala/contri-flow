@@ -45,7 +45,6 @@ export async function handleMemberRemovedEvent(
       },
     });
 
-    // Log activity for maintainer removal
     await logActivity({
       organizationId: repositoryFromDB.organization_id,
       activityType: 'MAINTAINER_REMOVED',

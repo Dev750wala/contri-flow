@@ -41,7 +41,6 @@ export const useTradeToken = () => {
     },
   })
 
-  // Check if entered amount exceeds balance for ETH (buy tab)
   const isInsufficientBalance = useMemo(() => {
     if (!ethValue || !ethBalance) return false;
     try {
@@ -52,7 +51,6 @@ export const useTradeToken = () => {
     }
   }, [ethValue, ethBalance]);
 
-  // Check if entered amount exceeds balance for MPT (sell tab)
   const isInsufficientMptBalance = useMemo(() => {
     if (!sellTokenValue || !mptBalance) return false;
     try {
@@ -77,7 +75,6 @@ export const useTradeToken = () => {
     },
   })
 
-  // Get token decimals
   const { data: tokenDecimals } = useReadContract({
     abi: TokenABI,
     address: MPT_TOKEN_ADDRESS,
@@ -102,7 +99,6 @@ export const useTradeToken = () => {
     },
   });
 
-  // For selling tokens - calculate ETH amount from MPT tokens
   const {
     data: calculatedEthAmount,
     refetch: refetchEthAmount,
@@ -131,11 +127,9 @@ export const useTradeToken = () => {
     if (!tokenValue || tokenValue === '' || isNaN(Number(tokenValue)))
       return undefined;
 
-    // Convert decimal tokenValue to BigInt by multiplying by 1e18
     const tokenValueNumber = Number(tokenValue);
     const expectedOutRaw = BigInt(Math.floor(tokenValueNumber * 1e18));
 
-    // slippageBps: e.g. 1% -> 100
     const slippageBps = BigInt(Math.round(1 * 100));
     const NUM = BigInt(10000);
     return (expectedOutRaw * (NUM - slippageBps)) / NUM;
@@ -145,29 +139,27 @@ export const useTradeToken = () => {
     if (!sellEthValue || sellEthValue === '' || isNaN(Number(sellEthValue)))
       return undefined;
 
-    // Convert decimal sellEthValue to BigInt by multiplying by 1e18
     const ethValueNumber = Number(sellEthValue);
     const expectedInRaw = BigInt(Math.floor(ethValueNumber * 1e18));
 
-    // slippageBps: e.g. 1% -> 100 (1% slippage tolerance)
     const slippageBps = BigInt(Math.round(1 * 100));
     const NUM = BigInt(10000);
     return (expectedInRaw * (NUM - slippageBps)) / NUM;
   }, [sellEthValue]);
 
-  // Auto-update token value when calculatedTokenAmount changes (for Buy tab)
   useEffect(() => {
     if (calculatedTokenAmount && Array.isArray(calculatedTokenAmount) && calculatedTokenAmount.length > 1) {
-      setTokenValue(String(Number(calculatedTokenAmount[1]) / 1e18));
+      const calculatedValue = Number(calculatedTokenAmount[1]) / 1e18;
+      setTokenValue(calculatedValue.toFixed(2));
     } else if (ethValue === '') {
       setTokenValue('');
     }
   }, [calculatedTokenAmount, ethValue]);
 
-  // Auto-update ETH value when calculatedEthAmount changes (for Sell tab)
   useEffect(() => {
     if (calculatedEthAmount && Array.isArray(calculatedEthAmount) && calculatedEthAmount.length > 1) {
-      setSellEthValue(String(Number(calculatedEthAmount[1]) / 1e18));
+      const calculatedValue = Number(calculatedEthAmount[1]) / 1e18;
+      setSellEthValue(calculatedValue.toFixed(2));
     } else if (sellTokenValue === '') {
       setSellEthValue('');
     }
@@ -187,7 +179,6 @@ export const useTradeToken = () => {
     }
 
     setEthValue(newEthValue);
-    // The useEffect will automatically update tokenValue when calculatedTokenAmount changes
   };
 
   const handleSellAmountChange = (
@@ -206,12 +197,10 @@ export const useTradeToken = () => {
     }
 
     setSellTokenValue(newTokenValue);
-    // The useEffect will automatically update sellEthValue when calculatedEthAmount changes
   };
 
   const handleConnectWallet = async () => {
     try {
-      // Use the first available connector (usually injected wallet like MetaMask)
       const connector = connectors[0];
       if (connector) {
         await connect({ connector });
@@ -222,7 +211,6 @@ export const useTradeToken = () => {
   };
 
   const handleBuyTokens = async () => {
-    // If not connected, connect wallet first
     if (!isConnected || !address) {
       await handleConnectWallet();
       return;
@@ -245,7 +233,7 @@ export const useTradeToken = () => {
       console.log("  - Path:", [WETH_ADDRESS, MPT_TOKEN_ADDRESS]);
       console.log("  - To:", address);
 
-      const deadline = Math.floor(Date.now() / 1000) + 60 * 5; // 5 minutes (as number)
+      const deadline = Math.floor(Date.now() / 1000) + 60 * 5;
       console.log("  - Deadline:", deadline);
 
       const data = await writeContractAsync({
@@ -259,16 +247,14 @@ export const useTradeToken = () => {
           deadline,
         ],
         value: parseEther(ethValue),
-        gas: BigInt(300000), // Set a reasonable gas limit (within the 16777216 cap)
+        gas: BigInt(300000),
       } as any);
 
       console.log('✅ Buy transaction successful:', data);
       setIsTransactionSuccess(true);
       
-      // Reset success state after 3 seconds
       setTimeout(() => setIsTransactionSuccess(false), 3000);
       
-      // Clear input fields after successful transaction
       setEthValue('');
       setTokenValue('');
       
@@ -276,7 +262,6 @@ export const useTradeToken = () => {
     } catch (error: any) {
       console.error('❌ Error buying tokens:', error);
       
-      // Parse common error messages
       if (error.message) {
         if (error.message.includes("INSUFFICIENT_OUTPUT_AMOUNT")) {
           console.error("  ⚠️ Slippage too low - try increasing slippage tolerance");
@@ -294,14 +279,7 @@ export const useTradeToken = () => {
     }
   };
 
-  // console.log("AmountIn: ", parseEther(sellTokenValue));
-  // console.log("AmountOutMin: ",  (estimatedWETHOut * (BPS_DEN - slippageBps)) / BPS_DEN);
-  // console.log("address: ", address);
-
-
-
   const handleSellTokens = async () => {
-    // connect if needed
     if (!isConnected || !address) {
       await handleConnectWallet();
       return;
@@ -313,16 +291,14 @@ export const useTradeToken = () => {
     }
 
     try {
-      // Step 1: Get token decimals (default to 18 if not available)
       const decimals = tokenDecimals ? Number(tokenDecimals) : 18;
-      const amountInRaw = parseEther(sellTokenValue); // Assuming 18 decimals
+      const amountInRaw = parseEther(sellTokenValue); 
 
       console.log("🔍 Step 1: Parsing amount");
       console.log("  - Sell Token Value:", sellTokenValue);
       console.log("  - Amount In Raw:", amountInRaw.toString());
       console.log("  - Token Decimals:", decimals);
 
-      // Step 2: Fetch fresh getAmountsOut to get the latest exchange rate
       console.log("\n🔍 Step 2: Fetching fresh exchange rate");
       const refreshed = await refetchEthAmount();
       const amounts = refreshed?.data;
@@ -336,8 +312,7 @@ export const useTradeToken = () => {
       console.log("  - Estimated WETH Out (raw):", estimatedWETHOut.toString());
       console.log("  - Estimated ETH Out (formatted):", (Number(estimatedWETHOut) / 1e18).toFixed(6));
 
-      // Step 3: Compute amountOutMin with slippage tolerance (1%)
-      const slippageBps = BigInt(100); // 1% slippage
+      const slippageBps = BigInt(100);
       const BPS_DEN = BigInt(10000);
       const amountOutMin = (estimatedWETHOut * (BPS_DEN - slippageBps)) / BPS_DEN;
       
@@ -346,7 +321,6 @@ export const useTradeToken = () => {
       console.log("  - Amount Out Min (raw):", amountOutMin.toString());
       console.log("  - Amount Out Min (formatted):", (Number(amountOutMin) / 1e18).toFixed(6));
 
-      // Step 4: Check and handle approval
       console.log("\n🔍 Step 4: Checking allowance");
       const allowanceResult = await refetchAllowance();
       const currentAllowance = BigInt(allowanceResult?.data?.toString() ?? "0");
@@ -362,40 +336,25 @@ export const useTradeToken = () => {
           address: MPT_TOKEN_ADDRESS,
           functionName: "approve",
           args: [UNISWAP_V2_ROUTER02_ADDRESS, amountInRaw],
-          gas: BigInt(100000), // Set a reasonable gas limit for approval
+          gas: BigInt(100000),
         } as any);
         
-        console.log("  ✅ Approval transaction sent:", approveTx);
-        console.log("  ⏳ Waiting for approval confirmation...");
-        
-        // Wait a bit for the approval to be mined (optional, but recommended)
         await new Promise(resolve => setTimeout(resolve, 2000));
       } else {
         console.log("  ✅ Sufficient allowance already exists");
       }
 
-      // Step 5: Prepare swap parameters
-      const deadline = Math.floor(Date.now() / 1000) + 60 * 5; // 5 minutes (as number, not bigint)
+      const deadline = Math.floor(Date.now() / 1000) + 60 * 5;
       const path = [MPT_TOKEN_ADDRESS, WETH_ADDRESS];
 
-      console.log("\n🔍 Step 5: Preparing swap parameters");
-      console.log("  - Amount In:", amountInRaw.toString());
-      console.log("  - Amount Out Min:", amountOutMin.toString());
-      console.log("  - Path:", path);
-      console.log("  - To:", address);
-      console.log("  - Deadline:", deadline);
-
-      // Step 6: Execute the swap
       console.log("\n🔍 Step 6: Executing swap transaction");
       
-      // Prepare gas settings (within chain cap of 16777216)
       const gasSettings = {
-        gas: BigInt(400000), // Conservative gas limit
+        gas: BigInt(400000), 
       };
       
       let swapTx;
       try {
-        // Try regular swap first
         console.log("  - Attempting regular swap (swapExactTokensForETH)...");
         swapTx = await writeContractAsync({
           abi: UniswapRouterABI,
@@ -411,7 +370,6 @@ export const useTradeToken = () => {
           ...gasSettings,
         } as any);
       } catch (swapError: any) {
-        // If regular swap fails, try fee-supporting version
         console.log("  - Regular swap failed, trying fee-supporting version...");
         console.log("  - Error:", swapError.message);
         
@@ -436,7 +394,6 @@ export const useTradeToken = () => {
       setIsTransactionSuccess(true);
       setTimeout(() => setIsTransactionSuccess(false), 3000);
       
-      // Clear input fields after successful transaction
       setSellTokenValue('');
       setSellEthValue('');
       
@@ -445,7 +402,6 @@ export const useTradeToken = () => {
       console.error("\n❌ Error selling tokens:");
       console.error("  - Error:", error);
       
-      // Parse common error messages
       if (error.message) {
         if (error.message.includes("INSUFFICIENT_OUTPUT_AMOUNT")) {
           console.error("  ⚠️ Slippage too low - try increasing slippage tolerance");
@@ -478,8 +434,6 @@ export const useTradeToken = () => {
     tokenValue,
     sellEthValue,
     sellTokenValue,
-    // calculatedTokenAmount,
-    // calculatedEthAmount,
     isLoadingTokenAmount,
     isLoadingEthAmount,
     isConnecting,

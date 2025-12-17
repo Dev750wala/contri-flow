@@ -11,7 +11,6 @@ export async function handleIssueCommentCreated(
   const {
     issue: {
       number: pr_number,
-      // state,
       user: { id: contributor_github_id },
       pull_request: { merged_at },
     },
@@ -20,7 +19,7 @@ export async function handleIssueCommentCreated(
       user: { id: commentor_github_id },
     },
     repository: { id: repository_github_id },
-    sender: { id: sender_github_id }, // The person who comments for issuing reward.
+    sender: { id: sender_github_id },
     installation: { id: installation_id },
   } = body;
 
@@ -85,12 +84,10 @@ export async function handleIssueCommentCreated(
     return null;
   });
 
-  // If transaction returned an error response, return it
   if (transactionResult) {
     return transactionResult;
   }
 
-  // Validate that we have the required data
   if (!repository || !issuar) {
     return {
       message: 'Failed to retrieve repository or maintainer information',
@@ -103,10 +100,8 @@ export async function handleIssueCommentCreated(
   console.log('[Controller] Adding job to commentParseQueue');
 
   try {
-    // Use lazy getter to avoid blocking on Redis connection
     const queue = getCommentParseQueue();
 
-    // Ensure worker is initialized
     const { getCommentParseWorker } = await import(
       '@/services/commentParserQueue'
     );
@@ -152,8 +147,6 @@ export async function handleIssueCommentCreated(
   } catch (error) {
     console.error('[Controller] Failed to add job to queue:', error);
 
-    // Return success to GitHub even if queue fails
-    // This prevents webhook retries and allows manual processing later
     return {
       message: 'Webhook received, job queuing failed but will be retried',
       statusCode: 200,

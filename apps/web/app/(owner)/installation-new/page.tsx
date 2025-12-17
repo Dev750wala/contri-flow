@@ -30,16 +30,14 @@ const InstallationNewPage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'loading') return; // Still loading
+    if (status === 'loading') return; 
 
     if (!session) {
-      // User is not authenticated, redirect to sign in
       router.push('/auth/sign-in');
       return;
     }
   }, [session, status, router]);
 
-  // Show loading state while checking authentication
   if (status === 'loading') {
     return (
       <div className="relative min-h-screen w-full overflow-hidden">
@@ -67,7 +65,6 @@ const InstallationNewPage = () => {
     );
   }
 
-  // If not authenticated, return null (redirect will happen in useEffect)
   if (!session) {
     return null;
   }

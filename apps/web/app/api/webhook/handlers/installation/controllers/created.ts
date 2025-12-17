@@ -9,7 +9,6 @@ export async function handleInstallationCreatedEvent(
   try {
     const { installation, repositories, sender, requester } = body;
 
-    // Ensure only organization installs are processed
     if (installation.account.type !== 'Organization') {
       return {
         statusCode: 400,
@@ -64,7 +63,6 @@ export async function handleInstallationCreatedEvent(
         },
       });
     }
-    // Ensure the sender exists in User table
     const user = await prisma.user.upsert({
       where: { github_id: sender.id.toString() },
       update: {
@@ -76,23 +74,6 @@ export async function handleInstallationCreatedEvent(
       },
     });
 
-    // Add sender as admin member of the org
-    // await prisma.organizationMember.upsert({
-    //   where: {
-    //     user_id_organization_id: {
-    //       user_id: user.id,
-    //       organization_id: organization.id,
-    //     },
-    //   },
-    //   update: { role: 'OWNER' },
-    //   create: {
-    //     user_id: user.id,
-    //     organization_id: organization.id,
-    //     role: 'OWNER',
-    //   },
-    // });
-
-    // Add repositories
     const createdRepositories = await Promise.all(
       repositories.map(async (repo) => {
         return await prisma.repository.upsert({
@@ -112,7 +93,6 @@ export async function handleInstallationCreatedEvent(
       })
     );
 
-    // Assign the sender as maintainer to all installed repositories
     await Promise.all(
       createdRepositories.map(async (repo) => {
         const existingMaintainer = await prisma.repositoryMaintainer.findFirst({
@@ -140,7 +120,6 @@ export async function handleInstallationCreatedEvent(
       })
     );
 
-    // Log activity for app installation
     await logActivity({
       organizationId: organization.id,
       activityType: 'APP_INSTALLED',
@@ -154,7 +133,6 @@ export async function handleInstallationCreatedEvent(
       },
     });
 
-    // Log activities for repositories added
     const repoActivities = createdRepositories.map((repo) => ({
       organizationId: organization.id,
       activityType: 'REPO_ADDED' as const,
@@ -169,7 +147,6 @@ export async function handleInstallationCreatedEvent(
       },
     }));
 
-    // Log activities for maintainers added
     const maintainerActivities = createdRepositories.map((repo) => ({
       organizationId: organization.id,
       activityType: 'MAINTAINER_ADDED' as const,
@@ -185,7 +162,6 @@ export async function handleInstallationCreatedEvent(
       },
     }));
 
-    // Log all activities together
     await logActivities([...repoActivities, ...maintainerActivities]);
 
     return {

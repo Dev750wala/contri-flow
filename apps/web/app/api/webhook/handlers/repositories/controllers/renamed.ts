@@ -33,7 +33,6 @@ export async function handleRepositoriesRenamedEvent(
       },
     });
 
-    // Log activity for repository rename
     await logActivity({
       organizationId: repositoryInDb.organization_id,
       activityType: 'REPO_ADDED', // Using REPO_ADDED as there's no REPO_RENAMED type

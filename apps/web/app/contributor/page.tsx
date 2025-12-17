@@ -28,7 +28,6 @@ import { useLazyQuery, useMutation } from '@apollo/client';
 import { GET_CLAIM_MESSAGE, CLAIM_REWARD } from '@/app/operations/contributor.operations';
 import { toast } from 'sonner';
 
-// Helper function to convert wei (18 decimals) to token units
 const fromWei = (amount: string): number => {
   return parseFloat(amount) / Math.pow(10, 18);
 };
@@ -42,7 +41,6 @@ export default function ContributorDashboard() {
 
   const githubId = session?.user?.github_id;
 
-  // Lazy query for fetching claim message
   const [getClaimMessage] = useLazyQuery(GET_CLAIM_MESSAGE);
   
   const [claimRewardMutation] = useMutation(CLAIM_REWARD);
@@ -59,7 +57,6 @@ export default function ContributorDashboard() {
     refetchRewards,
   } = useContributorDashboard(githubId);
 
-  // Handle claim button click
   const handleClaim = async (rewardId: string) => {
     if (!isConnected || !address) {
       toast.error('Please connect your wallet to claim rewards.');
@@ -69,7 +66,6 @@ export default function ContributorDashboard() {
     setClaimingRewardId(rewardId);
 
     try {
-      // Fetch claim message from backend
       const { data, error } = await getClaimMessage({
         variables: {
           rewardId,
@@ -85,10 +81,8 @@ export default function ContributorDashboard() {
         throw new Error('Failed to get claim message');
       }
 
-      // Parse the JSON response to get the message object
       const messageData = JSON.parse(data.getClaimMessage);
 
-      // Request user to sign the message using EIP-712
       // @ts-ignore - ethereum is injected by wallet
       if (!window.ethereum) {
         throw new Error('No wallet provider found');
@@ -104,7 +98,6 @@ export default function ContributorDashboard() {
       console.log('Signature:', signature);
       console.log('Message Data:', messageData);
 
-      // Send signature to backend for claim processing
       const { data: claimData, errors: claimErrors } = await claimRewardMutation({
         variables: {
           rewardId,
@@ -119,13 +112,11 @@ export default function ContributorDashboard() {
 
       toast.success('Claim request submitted! Processing on blockchain...');
       
-      // Refetch rewards to update UI
       await refetchRewards();
 
     } catch (error: any) {
       console.error('Claim error:', error);
       
-      // Extract specific error messages
       let errorMessage = 'Failed to process claim. Please try again.';
       
       if (error.message?.includes('InvalidVoucher') || error.message?.includes('invalid voucher')) {
@@ -146,7 +137,6 @@ export default function ContributorDashboard() {
     }
   };
 
-  // Redirect if not authenticated
   React.useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/sign-in');
@@ -181,7 +171,6 @@ export default function ContributorDashboard() {
     );
   }
 
-  // Show onboarding message if user is not a contributor yet
   if (isNotContributor) {
     return (
       <div className="relative min-h-screen w-full overflow-hidden">

@@ -47,7 +47,6 @@ export async function handleRepositoriesAddedEvent(
       return Promise.all(updatePromises);
     });
 
-    // Log activities for repositories added
     const activities = repositories.map((repo) => ({
       organizationId: organization.id,
       activityType: 'REPO_ADDED' as const,

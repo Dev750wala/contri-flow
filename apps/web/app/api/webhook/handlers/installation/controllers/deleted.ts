@@ -34,7 +34,6 @@ export async function handleInstallationDeletedEvent(
       },
     });
 
-    // Log activity for app uninstallation
     await logActivity({
       organizationId: organization.id,
       activityType: 'APP_UNINSTALLED',

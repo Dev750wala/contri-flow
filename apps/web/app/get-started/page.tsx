@@ -14,7 +14,6 @@ export default function GetStartedPage() {
   const { fetchOrganizations } = useFetchOrganizationsForOwner();
   const [isCheckingOrgs, setIsCheckingOrgs] = useState(false);
 
-  // Redirect to sign-in if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/sign-in');
@@ -27,15 +26,12 @@ export default function GetStartedPage() {
       const result = await fetchOrganizations();
       
       if (result.data?.listOrganizationsForOwner && result.data.listOrganizationsForOwner.length > 0) {
-        // User has organizations, redirect to dashboard
         router.push('/dashboard');
       } else {
-        // User has no organizations, redirect to installation setup
         router.push('/installation-new');
       }
     } catch (err) {
       console.error('Error fetching organizations:', err);
-      // On error, redirect to installation setup as fallback
       router.push('/installation-new');
     } finally {
       setIsCheckingOrgs(false);
@@ -43,7 +39,6 @@ export default function GetStartedPage() {
   };
 
   const handleContributorPath = () => {
-    // Redirect to contributor dashboard
     router.push('/contributor');
   };
 

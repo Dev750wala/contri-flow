@@ -32,7 +32,6 @@ export interface ClaimRewardJobData {
   signature: string;
 }
 
-// Lazy initialization to avoid errors during build time
 let account: ReturnType<typeof privateKeyToAccount> | undefined;
 let publicClient: PublicClientLike | undefined;
 let walletClient: WalletClientLike | undefined;
@@ -95,10 +94,8 @@ export const getClaimRewardWorker = () => {
         const { rewardId, walletAddress, signature } = job.data;
 
         try {
-          // Initialize clients (will throw if PRIVATE_KEY is not set)
           const { publicClient, walletClient } = getClients();
 
-          // Fetch reward with all necessary relations
           const reward = await prisma.reward.findUnique({
             where: { id: rewardId },
             include: {
@@ -126,7 +123,6 @@ export const getClaimRewardWorker = () => {
 
           console.log(`[ClaimWorker] Processing claim for reward ${rewardId}`);
 
-          // Prepare ClaimRequest struct for the smart contract
           const claimRequest = {
             secret: reward.secret,
             orgGithubId: BigInt(reward.repository.organization.github_org_id),
@@ -139,7 +135,6 @@ export const getClaimRewardWorker = () => {
 
           console.log('[ClaimWorker] Claim request:', claimRequest);
 
-          // Call requestClaim on the smart contract
           const hash = await walletClient.writeContract({
             address: CONTRIFLOW_ADDRESS as `0x${string}`,
             abi: CONTRIFLOW_ABI,
@@ -149,7 +144,6 @@ export const getClaimRewardWorker = () => {
 
           console.log(`[ClaimWorker] Transaction sent: ${hash}`);
 
-          // Wait for transaction confirmation
           const receipt = await publicClient.waitForTransactionReceipt({
             hash,
             confirmations: 1,
@@ -161,7 +155,6 @@ export const getClaimRewardWorker = () => {
           console.log(`[ClaimWorker] Transaction receipt: ${receipt}`);
 
           if (receipt.status === 'success') {
-            // Update reward as claimed and create payout record
             console.log(`[ClaimWorker] Reward ${rewardId} claimed successfully and now updating the STATUS IN DB`);
             await prisma.reward.update({
               where: { id: rewardId },
@@ -174,7 +167,7 @@ export const getClaimRewardWorker = () => {
                     total_amount: reward.token_amount,
                     receiver_address: walletAddress,
                     claimed_at: new Date(),
-                    platform_fee: '0', // Calculate if needed
+                    platform_fee: '0', 
                     signature_hash: signature,
                   },
                 },
@@ -182,7 +175,6 @@ export const getClaimRewardWorker = () => {
             });
             console.log(`[ClaimWorker] Reward ${rewardId} claimed successfully and updated the STATUS IN DB`);
 
-            // Log activity for reward claimed
             console.log(`[ClaimWorker] Reward ${rewardId} claimed successfully and now logging activity`);
             await logActivity({
               organizationId: reward.repository.organization.id,
@@ -213,7 +205,6 @@ export const getClaimRewardWorker = () => {
         } catch (error: any) {
           console.error(`[ClaimWorker] Error processing job ${job.id}:`, error);
 
-          // Try to fetch reward info for logging even if claim failed
           try {
             const reward = await prisma.reward.findUnique({
               where: { id: rewardId },
@@ -228,7 +219,6 @@ export const getClaimRewardWorker = () => {
             });
 
             if (reward) {
-              // Determine error type and message
               let errorType = 'CLAIM_FAILED';
               let errorMessage = 'Failed to claim reward';
               let errorDetails: any = {
@@ -237,7 +227,6 @@ export const getClaimRewardWorker = () => {
                 signature: signature.substring(0, 20) + '...',
               };
 
-              // Check for specific contract errors
               if (error.message?.includes('InvalidVoucher')) {
                 errorType = 'INVALID_VOUCHER';
                 errorMessage =
@@ -260,7 +249,6 @@ export const getClaimRewardWorker = () => {
                 errorDetails.reason = 'UserRejected';
               }
 
-              // Log the failure as an activity
               await logActivity({
                 organizationId: reward.repository.organization.id,
                 activityType: 'REWARD_CLAIM_FAILED',
@@ -297,9 +285,9 @@ export const getClaimRewardWorker = () => {
       {
         connection: bullMQRedisClient,
         autorun: true,
-        concurrency: 1, // Reduced to prevent connection pool exhaustion
-        lockDuration: 300000, // 5 minutes - blockchain operations can take time
-        lockRenewTime: 120000, // Renew lock every 2 minutes
+        concurrency: 1, 
+        lockDuration: 300000, 
+        lockRenewTime: 120000,
       }
     );
   }

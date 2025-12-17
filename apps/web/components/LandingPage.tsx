@@ -80,7 +80,7 @@ export function LandingPage() {
   return (
     <div className="w-full overflow-hidden">
       {/* Hero Section with Video Background */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Video Background */}
         <div className="fixed inset-0 w-screen h-screen z-0">
           <video
@@ -95,471 +95,438 @@ export function LandingPage() {
           </video>
         </div>
 
-        <div className="container mx-auto text-center relative z-10 max-w-6xl px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-6"
-          >
-            <p className="text-white/90 text-sm md:text-base font-medium tracking-wide">
-              Decentralized • Transparent • Secure
-            </p>
-          </motion.div>
+        <div className="container mx-auto relative z-10 max-w-7xl px-6 md:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Column - Content */}
+            <div className="text-left space-y-8">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 w-fit"
+              >
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-white/90 text-sm font-medium tracking-wide">
+                  Decentralized • Transparent • Secure
+                </span>
+              </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-6xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight"
-          >
-            <span className="text-white bg-clip-text">
-              MergePay
-            </span>
-              
-          </motion.h1>
+              <motion.h1
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-5xl md:text-6xl xl:text-7xl font-bold leading-[1.1] text-white"
+              >
+                MergePay
+                <span className="block mt-2 bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-400 bg-clip-text text-transparent">
+                  Rewards That Scale
+                </span>
+              </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg md:text-xl lg:text-2xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed font-light"
-          >
-            Revolutionize open-source contributions with{' '}
-            <span className="text-cyan-300 font-medium">automated rewards</span>.
-            <br />
-            Organizations fund, contributors earn—all on the blockchain.
-          </motion.p>
+              <motion.p
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-lg text-white/70 leading-relaxed max-w-xl"
+              >
+                Automated blockchain rewards for open-source contributors. Organizations fund repositories, developers get paid instantly—no intermediaries, no delays.
+              </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex justify-center items-center mb-20"
-          >
-            <Button
-              size="lg"
-              className="relative px-12 py-8 text-lg font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-[24px] border-x border-t-2 border-white/50 shadow-lg transition-all overflow-visible"
-              onClick={handleGetStarted}
-              disabled={isButtonDisabled}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="flex flex-wrap gap-4"
+              >
+                <Button
+                  size="lg"
+                  className="px-8 py-6 text-base font-semibold bg-white text-slate-900 hover:bg-white/90 shadow-xl hover:shadow-2xl transition-all"
+                  onClick={handleGetStarted}
+                  disabled={isButtonDisabled}
+                >
+                  {getButtonText()}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="px-8 py-6 text-base font-semibold bg-transparent border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 backdrop-blur-sm"
+                  onClick={() => {
+                    const section = document.getElementById('how-it-works');
+                    section?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  How It Works
+                </Button>
+              </motion.div>
+
+              {/* Inline Stats */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="flex flex-wrap gap-8 pt-4"
+              >
+                {[
+                  { value: '10K+', label: 'Contributors' },
+                  { value: '$2M+', label: 'Distributed' },
+                  { value: '500+', label: 'Projects' },
+                ].map((stat, idx) => (
+                  <div key={idx} className="flex flex-col">
+                    <div className="text-3xl font-bold text-white">{stat.value}</div>
+                    <div className="text-sm text-white/60">{stat.label}</div>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Right Column - Visual Element */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="hidden lg:block relative"
             >
-              {/* Decorative sparkle/star icon in top right */}
-              <svg 
-                width="40" 
-                height="40" 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 34 34" 
-                className="absolute right-0 top-0 -translate-y-1/2 translate-x-1 rotate-45 pointer-events-none" 
-                fill="none"
-              >
-                <g filter="url(#filter1_f)">
-                  <circle cx="17" cy="17" r="2.8" fill="white" />
-                </g>
-                <path 
-                  d="M17 4.94L17.38 16.07L20.95 13.05L17.93 16.61L29.06 17L17.93 17.38L20.95 20.95L17.38 17.93L17 29.06L16.62 17.93L13.05 20.95L16.07 17.38L4.94 17L16.07 16.61L13.05 13.05L16.62 16.07L17 4.94Z" 
-                  fill="white" 
-                  fillOpacity="0.7"
-                />
-                <defs>
-                  <filter id="filter1_f" x="6.6" y="6.6" width="20.8" height="20.8" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                    <feFlood floodOpacity="0" result="BackgroundImageFix" />
-                    <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-                    <feGaussianBlur stdDeviation="3.8" result="effect1_foregroundBlur" />
-                  </filter>
-                </defs>
-              </svg>
-              
-              <span className="relative z-10">
-                {getButtonText()}
-              </span>
-            </Button>
-          </motion.div>
-
-          {/* Stats Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
-          >
-            {[
-              { value: '10K+', label: 'Active Contributors', icon: Users },
-              { value: '$2M+', label: 'Rewards Distributed', icon: Coins },
-              { value: '500+', label: 'Projects Funded', icon: GitBranch },
-            ].map((stat, idx) => (
-              <div
-                key={idx}
-                className="gap-5"
-              >
-                <stat.icon className="h-10 w-10 text-cyan-300 mb-4 mx-auto" />
-                <div className="text-5xl md:text-6xl font-bold text-white mb-2">
-                  {stat.value}
+              <div className="relative w-full aspect-square max-w-lg mx-auto">
+                {/* Animated background elements */}
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-purple-500/20 blur-3xl animate-pulse"></div>
+                
+                {/* Card stack effect */}
+                <div className="relative space-y-4">
+                  {[
+                    { icon: Github, label: 'PR Merged', desc: '#1234', color: 'from-cyan-500 to-blue-500' },
+                    { icon: Zap, label: 'Reward Sent', desc: '0.5 ETH', color: 'from-blue-500 to-purple-500' },
+                    { icon: Shield, label: 'On-Chain', desc: 'Verified', color: 'from-purple-500 to-pink-500' },
+                  ].map((item, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 + idx * 0.1 }}
+                      className="bg-white/10 backdrop-blur-xl border border-white/20 p-6 flex items-center gap-4 shadow-2xl"
+                    >
+                      <div className={`w-12 h-12 bg-gradient-to-br ${item.color} flex items-center justify-center`}>
+                        <item.icon className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-semibold">{item.label}</div>
+                        <div className="text-white/60 text-sm">{item.desc}</div>
+                      </div>
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    </motion.div>
+                  ))}
                 </div>
-                <div className="text-white/70 font-medium text-sm">{stat.label}</div>
               </div>
-            ))}
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Problem Statement - Modern Design */}
-      <section className="py-32 bg-gradient-to-b from-white via-cyan-50/30 to-white relative">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-20"
-          >
-            <Badge className="mb-6 px-5 py-2 bg-sky-100 text-sky-700 border-0">
-              The Challenge
-            </Badge>
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
-              <span className="bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                Open Source Deserves
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-cyan-600 to-sky-600 bg-clip-text text-transparent">
-                Better Incentives
-              </span>
-            </h2>
-            <p className="text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto leading-relaxed font-light">
-              Traditional contribution models leave developers unrewarded,
-              <br className="hidden md:block" />
-              hindering innovation and collaboration in the ecosystem.
-            </p>
-          </motion.div>
+      <section className="py-20 md:py-32 bg-slate-50 relative">
+        <div className="container mx-auto px-6 md:px-8 max-w-7xl">
+          <div className="grid lg:grid-cols-2 gap-16 items-center mb-20">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-block px-4 py-1.5 bg-rose-100 text-rose-700 text-sm font-semibold mb-6">
+                THE PROBLEM
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 leading-tight">
+                Open Source Contributors
+                <span className="block text-slate-600">Deserve Better</span>
+              </h2>
+              <p className="text-lg text-slate-600 leading-relaxed">
+                The current model leaves talented developers unrewarded, creating barriers to innovation and sustainable growth in the open-source ecosystem.
+              </p>
+            </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative"
+            >
+              <div className="aspect-video bg-gradient-to-br from-slate-900 to-slate-700 p-8 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-grid-white/5"></div>
+                <div className="relative z-10 space-y-6">
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="text-center">
+                      <div className="text-4xl font-bold text-rose-400 mb-1">Traditional</div>
+                      <div className="text-white/70 text-sm">Manual • Delayed • Opaque</div>
+                    </div>
+                    <ArrowRight className="h-8 w-8 text-cyan-400" />
+                    <div className="text-center">
+                      <div className="text-4xl font-bold text-cyan-400 mb-1">MergePay</div>
+                      <div className="text-white/70 text-sm">Automated • Instant • Transparent</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
             {[
               {
                 icon: Users,
                 title: 'Lack of Incentives',
-                description: 'Talented developers contribute for free, limiting high-quality participation and sustainable growth.',
-                gradient: 'from-rose-500 to-pink-600',
-                bgGradient: 'from-rose-50 to-pink-50',
+                description: 'Talented developers contribute for free, limiting participation and sustainable growth.',
+                accentColor: 'rose',
               },
               {
                 icon: Shield,
                 title: 'No Transparency',
-                description: 'Existing reward systems lack verifiable tracking and transparent distribution mechanisms.',
-                gradient: 'from-amber-500 to-orange-600',
-                bgGradient: 'from-amber-50 to-orange-50',
+                description: 'Existing reward systems lack verifiable tracking and transparent distribution.',
+                accentColor: 'amber',
               },
               {
                 icon: Zap,
                 title: 'Manual Overhead',
-                description: 'No automated way to identify valuable contributions and distribute rewards efficiently.',
-                gradient: 'from-violet-500 to-purple-600',
-                bgGradient: 'from-violet-50 to-purple-50',
+                description: 'No automated way to identify valuable contributions and distribute rewards.',
+                accentColor: 'violet',
               },
             ].map((item, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className="group"
               >
-                <Card className="group relative overflow-hidden border-0 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-sky-200/60 transition-all duration-500 hover:-translate-y-3 bg-white rounded-3xl">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
-                  <CardHeader className="relative z-10 pb-4">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${item.gradient} rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
-                      <item.icon className="h-8 w-8 text-white" />
-                    </div>
-                    <CardTitle className="text-2xl font-bold text-slate-800 mb-3">
-                      {item.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="relative z-10">
-                    <p className="text-slate-600 leading-relaxed text-lg">
-                      {item.description}
-                    </p>
-                  </CardContent>
-                </Card>
+                <div className="bg-white p-8 h-full border-l-4 border-transparent hover:border-cyan-500 transition-all shadow-sm hover:shadow-md">
+                  <div className={`w-12 h-12 bg-${item.accentColor}-100 flex items-center justify-center mb-4`}>
+                    <item.icon className={`h-6 w-6 text-${item.accentColor}-600`} />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">
+                    {item.title}
+                  </h3>
+                  <p className="text-slate-600 leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works - Premium Design */}
-      <section className="py-32 bg-gradient-to-br from-slate-900 via-cyan-950 to-slate-900 text-white relative overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(6,182,212,0.15),transparent_60%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(2,132,199,0.12),transparent_60%)]"></div>
+      {/* How It Works - Clean Process */}
+      <section id="how-it-works" className="py-20 md:py-32 bg-slate-900 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20"></div>
         
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-20"
-          >
-            <Badge className="mb-6 px-5 py-2 bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
-              How It Works
-            </Badge>
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
-              <span className="bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
-                Automated. Secure.
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-cyan-400 to-sky-400 bg-clip-text text-transparent">
-                Decentralized.
-              </span>
-            </h2>
-            <p className="text-xl md:text-2xl text-sky-100/80 max-w-3xl mx-auto leading-relaxed font-light">
-              From contribution detection to reward distribution,
-              <br className="hidden md:block" />
-              everything happens automatically on-chain.
-            </p>
-          </motion.div>
-
-          {/* Process Steps */}
-          <div className="max-w-5xl mx-auto mb-20">
-            <div className="grid md:grid-cols-4 gap-6">
-              {[
-                { step: '01', title: 'GitHub Login', icon: Github, desc: 'Connect your account' },
-                { step: '02', title: 'Link Wallet', icon: Lock, desc: 'Secure Web3 connection' },
-                { step: '03', title: 'Add Repos', icon: GitBranch, desc: 'Select projects' },
-                { step: '04', title: 'Fund & Earn', icon: TrendingUp, desc: 'Automatic rewards' },
-              ].map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  className="relative"
-                >
-                  {idx < 3 && (
-                    <div className="hidden md:block absolute top-12 left-[60%] w-full h-0.5 bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
-                  )}
-                  <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-cyan-400/20 hover:border-cyan-400/40 hover:bg-white/10 transition-all duration-500 hover:-translate-y-2 relative z-10">
-                    <div className="text-5xl font-bold bg-gradient-to-br from-cyan-400 to-sky-500 bg-clip-text text-transparent mb-4">
-                      {item.step}
-                    </div>
-                    <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-cyan-500/30">
-                      <item.icon className="h-7 w-7 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
-                    <p className="text-cyan-200/70">{item.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
+        <div className="container mx-auto px-6 md:px-8 max-w-7xl relative z-10">
+          <div className="max-w-3xl mb-16">
+            <div className="inline-block px-4 py-1.5 bg-cyan-500/20 text-cyan-300 text-sm font-semibold mb-6 border border-cyan-500/30">
+              PLATFORM
             </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+              How MergePay Works
+            </h2>
+            <p className="text-xl text-slate-400 leading-relaxed">
+              Four simple steps from contribution to reward. Fully automated, completely transparent.
+            </p>
           </div>
 
-          {/* Features Grid - New Modern Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          {/* Process Steps */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+            {[
+              { step: '01', title: 'Connect GitHub', icon: Github, desc: 'Link your account securely' },
+              { step: '02', title: 'Link Wallet', icon: Lock, desc: 'Web3 wallet integration' },
+              { step: '03', title: 'Add Repositories', icon: GitBranch, desc: 'Select projects to fund' },
+              { step: '04', title: 'Earn Rewards', icon: Coins, desc: 'Automatic ETH payouts' },
+            ].map((item, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className="relative group"
+              >
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 hover:border-cyan-500/50 p-8 transition-all h-full">
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="text-5xl font-bold text-slate-700 group-hover:text-cyan-500/30 transition-colors">
+                      {item.step}
+                    </div>
+                    <div className="w-12 h-12 bg-cyan-500/10 flex items-center justify-center mt-2">
+                      <item.icon className="h-6 w-6 text-cyan-400" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                  <p className="text-slate-400">{item.desc}</p>
+                </div>
+                
+                {idx < 3 && (
+                  <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-[2px] bg-gradient-to-r from-slate-700 to-transparent"></div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Key Features */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 icon: Github,
                 title: 'GitHub Integration',
-                description: 'Seamless sync with your repositories and PRs',
-                gradient: 'from-slate-700 to-slate-800',
+                description: 'Seamless sync with repositories',
               },
               {
                 icon: Zap,
                 title: 'AI Detection',
-                description: 'Smart bot identifies valuable contributions',
-                gradient: 'from-cyan-600 to-cyan-700',
+                description: 'Smart contribution analysis',
               },
               {
                 icon: Shield,
                 title: 'Blockchain Security',
-                description: 'Transparent, verifiable smart contracts',
-                gradient: 'from-cyan-600 to-sky-600',
+                description: 'Transparent smart contracts',
               },
               {
                 icon: Coins,
-                title: 'Instant Rewards',
-                description: 'Real-time ETH distribution to contributors',
-                gradient: 'from-sky-600 to-blue-600',
+                title: 'Instant Payouts',
+                description: 'Real-time ETH distribution',
               },
             ].map((feature, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className="bg-slate-800/30 border border-slate-700/50 p-6 hover:bg-slate-800/50 transition-all"
               >
-                <Card className="group bg-white/5 backdrop-blur-sm border-white/10 hover:border-cyan-400/50 hover:bg-white/10 transition-all duration-500 rounded-3xl overflow-hidden h-full">
-                  <CardHeader className="text-center pb-4">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-xl group-hover:scale-110 transition-transform duration-500`}>
-                      <feature.icon className="h-8 w-8 text-white" />
-                    </div>
-                    <CardTitle className="text-xl font-bold text-white mb-2">
-                      {feature.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-cyan-200/70 leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
+                <feature.icon className="h-8 w-8 text-cyan-400 mb-4" />
+                <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  {feature.description}
+                </p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Tech Stack - Premium Showcase */}
-      <section className="py-32 bg-white relative">
-        <div className="container mx-auto px-4">
+      {/* Tech Stack - Minimal Showcase */}
+      <section className="py-20 md:py-32 bg-white relative">
+        <div className="container mx-auto px-6 md:px-8 max-w-7xl">
+          <div className="max-w-3xl mb-16">
+            <div className="inline-block px-4 py-1.5 bg-cyan-100 text-cyan-700 text-sm font-semibold mb-6">
+              TECHNOLOGY
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 leading-tight">
+              Built With Industry-Leading Tech
+            </h2>
+            <p className="text-xl text-slate-600 leading-relaxed">
+              Leveraging cutting-edge blockchain and web technologies for security, scalability, and performance.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              { name: 'Next.js', color: 'slate' },
+              { name: 'TypeScript', color: 'blue' },
+              { name: 'Solidity', color: 'purple' },
+              { name: 'Ethereum', color: 'indigo' },
+              { name: 'Chainlink', color: 'cyan' },
+              { name: 'PostgreSQL', color: 'sky' },
+            ].map((tech, idx) => (
+              <motion.div
+                key={tech.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.05 }}
+                className="group"
+              >
+                <div className="bg-white border-2 border-slate-200 hover:border-cyan-500 p-8 transition-all text-center h-full flex flex-col items-center justify-center">
+                  <div className="text-lg font-bold text-slate-900 group-hover:text-cyan-600 transition-colors">
+                    {tech.name}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section - Clean & Direct */}
+      <section className="relative min-h-[600px] md:min-h-[700px] overflow-hidden flex items-center">
+        {/* Video Background */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover"
+          >
+            <source src="/EcosystemBackground.mp4" type="video/mp4" />
+          </video>
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]"></div>
+        </div>
+        
+        <div className="container mx-auto px-6 md:px-8 max-w-5xl relative z-10 py-24 md:py-32">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-20"
+            className="text-center"
           >
-            <Badge className="mb-6 px-5 py-2 bg-cyan-100 text-cyan-700 border-0">
-              Technology Stack
-            </Badge>
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
-              <span className="bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                Powered by
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-cyan-600 to-sky-600 bg-clip-text text-transparent">
-                Cutting-Edge Tech
-              </span>
-            </h2>
-            <p className="text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto leading-relaxed font-light">
-              Built with the most advanced blockchain and
-              <br className="hidden md:block" />
-              web technologies for maximum security and performance.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-6xl mx-auto">
-            {[
-              { name: 'Next.js', gradient: 'from-black to-slate-700', icon: '⚡' },
-              { name: 'TypeScript', gradient: 'from-blue-600 to-blue-700', icon: 'TS' },
-              { name: 'Solidity', gradient: 'from-purple-600 to-purple-700', icon: '◆' },
-              { name: 'Ethereum', gradient: 'from-violet-600 to-indigo-600', icon: 'Ξ' },
-              { name: 'Chainlink', gradient: 'from-cyan-600 to-blue-600', icon: '🔗' },
-              { name: 'PostgreSQL', gradient: 'from-sky-600 to-cyan-600', icon: '🐘' },
-            ].map((tech, idx) => (
-              <motion.div
-                key={tech.name}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-              >
-                <Card className="group text-center border-0 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-cyan-200/60 hover:-translate-y-3 transition-all duration-500 bg-white rounded-3xl overflow-hidden">
-                  <CardContent className="py-10 px-4">
-                    <div className={`w-16 h-16 mx-auto mb-4 bg-gradient-to-br ${tech.gradient} rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}>
-                      {tech.icon}
-                    </div>
-                    <div className="text-lg font-bold text-slate-800 group-hover:text-cyan-600 transition-colors">
-                      {tech.name}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section - Epic Finale */}
-      <section className="relative py-40 overflow-hidden">
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-600 via-sky-500 to-blue-600"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.15),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(255,255,255,0.1),transparent_50%)]"></div>
-        
-        {/* Floating elements */}
-        <div className="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-40 h-40 bg-sky-300/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
-            <Badge className="mb-8 px-6 py-3 bg-white/20 backdrop-blur-sm text-white border border-white/30 text-sm font-medium">
-              <Sparkles className="h-4 w-4 mr-2 inline-block" />
-              Join the Revolution
-            </Badge>
-            
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-8 text-white leading-tight">
-              Ready to Transform
-              <br />
-              <span className="bg-gradient-to-r from-white to-cyan-100 bg-clip-text text-transparent">
-                Open Source Forever?
-              </span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white leading-tight">
+              Start Rewarding Contributors Today
             </h2>
             
-            <p className="text-xl md:text-2xl mb-16 text-white/90 max-w-3xl mx-auto leading-relaxed font-light">
-              Be part of the future where every contribution counts
-              <br className="hidden md:block" />
-              and every contributor gets rewarded fairly.
+            <p className="text-xl text-white/80 mb-12 max-w-2xl mx-auto leading-relaxed">
+              Join thousands of developers building the future of open source with fair, automated rewards.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Button
                 size="lg"
-                className="group relative overflow-hidden px-12 py-8 text-xl font-bold bg-white text-cyan-600 hover:bg-cyan-50 shadow-2xl hover:shadow-white/30 transition-all duration-500 rounded-2xl"
+                className="px-10 py-6 text-lg font-semibold bg-white text-slate-900 hover:bg-slate-50 shadow-2xl transition-all"
                 onClick={handleGetStarted}
                 disabled={isButtonDisabled}
               >
-                <span className="relative z-10 flex items-center gap-3">
-                  Launch App
-                  <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform duration-300" />
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-50 to-sky-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                Get Started
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
 
               <Button
                 size="lg"
                 variant="outline"
-                className="px-12 py-8 text-xl font-bold bg-transparent border-2 border-white text-white hover:bg-white hover:text-cyan-600 shadow-xl hover:shadow-2xl transition-all duration-500 rounded-2xl"
+                className="px-10 py-6 text-lg font-semibold bg-transparent border-2 border-white text-white hover:bg-white/10"
                 onClick={() => router.push('/auth/sign-in')}
               >
-                Learn More
+                View Documentation
               </Button>
             </div>
 
-            {/* Social Proof */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="mt-20 flex flex-col sm:flex-row items-center justify-center gap-8 text-white/80"
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-sky-500 border-2 border-white"
-                    ></div>
-                  ))}
-                </div>
-                <span className="font-medium">10,000+ developers</span>
+            {/* Stats Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-white/90 border-t border-white/20 pt-12">
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5" />
+                <span className="font-medium">10,000+ Developers</span>
               </div>
               <div className="hidden sm:block w-px h-6 bg-white/30"></div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                <span className="font-medium">$2M+ distributed</span>
+              <div className="flex items-center gap-3">
+                <Coins className="h-5 w-5" />
+                <span className="font-medium">$2M+ Distributed</span>
               </div>
               <div className="hidden sm:block w-px h-6 bg-white/30"></div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5" />
-                <span className="font-medium">100% on-chain</span>
+                <span className="font-medium">100% On-Chain</span>
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         </div>
       </section>

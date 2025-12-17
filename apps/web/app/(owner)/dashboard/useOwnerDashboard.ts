@@ -109,7 +109,7 @@ export const useOwnerDashboard = () => {
 
   const selectOrganization = (orgId: string) => {
     setSelectedOrgId(orgId);
-    setSelectedRepoId(null); // Reset selected repo when changing org
+    setSelectedRepoId(null);
   };
 
   const selectRepository = (repoId: string) => {
@@ -129,7 +129,7 @@ export const useOwnerDashboard = () => {
   );
 
   return {
-    // Data
+    
     organizations,
     selectedOrg,
     selectedOrgId,
@@ -142,7 +142,6 @@ export const useOwnerDashboard = () => {
     allRepositories,
     activeRepositories,
 
-    // Loading states
     dashboardLoading,
     activityLoading,
     pendingRewardsLoading,
@@ -150,7 +149,6 @@ export const useOwnerDashboard = () => {
     globalStatsLoading,
     repoStatsLoading,
 
-    // Errors
     dashboardError,
     activityError,
     pendingRewardsError,
@@ -158,7 +156,6 @@ export const useOwnerDashboard = () => {
     globalStatsError,
     repoStatsError,
 
-    // Actions
     selectOrganization,
     selectRepository,
     refreshData,

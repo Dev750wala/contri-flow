@@ -29,7 +29,6 @@ export async function handleInstallationSuspendedEvent(
       data: { suspended: true },
     });
 
-    // Log activity for organization suspension
     await logActivity({
       organizationId: organization.id,
       activityType: 'ORG_SUSPENDED',

@@ -36,7 +36,6 @@ interface CommentParseJobData {
   installationId: number;
 }
 
-// Viem clients for on-chain operations
 let publicClient: any;
 let walletClient: any;
 
@@ -62,7 +61,6 @@ function getClients() {
   return { publicClient, walletClient };
 }
 
-// Create queue - simple and direct
 export const commentParseQueue = new Queue<CommentParseJobData, boolean, string>(
   'COMMENT-PARSE-QUEUE',
   {
@@ -71,7 +69,6 @@ export const commentParseQueue = new Queue<CommentParseJobData, boolean, string>
   }
 );
 
-// Create worker - simple and direct
 export const commentParseWorker = new Worker<CommentParseJobData, boolean, string>(
   'COMMENT-PARSE-QUEUE',
   async (job: Job<CommentParseJobData, boolean, string>) => {
@@ -91,7 +88,6 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
           installationId,
         } = job.data;
 
-        // Validate required fields
         if (
           !commentBody ||
           !prNumber ||
@@ -128,7 +124,6 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
           aiRaw = await parseComment(prompt);
           console.log('[Worker] AI response received:', JSON.stringify(aiRaw));
         } catch (err) {
-          // ADD LOGGING OR STORE THIS ERROR IN DATABASE, AS THIS IS IMPORTANT PHASE OF THE FLOW
           console.error('[Worker] AI returned invalid JSON or error:', err);
           throw new Error('AI_PARSE_ERROR');
         }
@@ -169,7 +164,6 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
         
         const contributorFromGithub = (await contributorResponse.json()) as unknown;
 
-        // Fetch repository with organization info early to check funds and use throughout
         let repository;
         try {
           repository = await prisma.repository.findUnique({
@@ -177,7 +171,6 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
             include: { organization: true },
           });
         } catch (error) {
-          // Handle connection pool timeout errors
           if (
             error instanceof PrismaClientKnownRequestError &&
             error.code === 'P2024'
@@ -190,7 +183,6 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
                 error: error.message,
               }
             );
-            // Re-throw to let BullMQ retry the job
             throw new Error(
               'DATABASE_CONNECTION_POOL_TIMEOUT: Please retry the job'
             );
@@ -205,12 +197,10 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
           throw new Error('REPOSITORY_OR_ORGANIZATION_NOT_FOUND');
         }
 
-        // Convert organization GitHub ID to BigInt for contract calls
         const organizationGithubIdBigInt = BigInt(
           repository.organization.github_org_id
         );
 
-        // Fetch organization balance from smart contract using centralized function
         const organizationFunds = await getOrganizationBalance(
           repository.organization.github_org_id
         );
@@ -221,7 +211,6 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
           availableFundsFormatted: `${organizationFunds.toString()} wei`,
         });
 
-        // Check if organization has sufficient funds for the reward
         const requiredAmount = parseEther(aiRaw.reward.toString());
         if (organizationFunds < requiredAmount) {
           console.error('[Worker] Insufficient funds for organization:', {
@@ -230,7 +219,6 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
             required: requiredAmount.toString(),
           });
 
-          // Send email notification to organization owner about insufficient funds
           await addOwnerEmailJob(
             {
               organizationId: repository.organization.id,
@@ -248,7 +236,7 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
                 timestamp: new Date().toISOString(),
               },
             },
-            1 // High priority for insufficient funds
+            1
           );
 
           console.log('[Worker] Owner notification email job added to queue');
@@ -279,7 +267,6 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
           '[Worker] Secret generated, creating reward in database...'
         );
 
-        // Convert reward amount to wei (18 decimals) for ERC20 standard precision
         const tokenAmountInWei = parseEther(aiRaw.reward.toString());
         console.log('[Worker] Token amount converted to wei:', {
           original: aiRaw.reward.toString(),
@@ -380,7 +367,6 @@ export const commentParseWorker = new Worker<CommentParseJobData, boolean, strin
                 error: error.message,
               }
             );
-            // Re-throw to let BullMQ retry the job
             throw new Error(
               'DATABASE_CONNECTION_POOL_TIMEOUT: Transaction failed, job will be retried'
             );

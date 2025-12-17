@@ -44,7 +44,6 @@ export async function handleRepositoriesRemovedEvent(
       return Promise.all(updatePromises);
     });
 
-    // Log activities for repositories removed
     const activities = removedRepositories
       .filter((repo) => repo !== null)
       .map((repo) => ({

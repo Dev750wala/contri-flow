@@ -11,7 +11,6 @@ export async function handleIssueCommentEvent(
       return await handleIssueCommentCreated(body);
 
     default:
-      // Return success for unhandled actions to prevent GitHub from retrying
       return {
         statusCode: 200,
         success: true,

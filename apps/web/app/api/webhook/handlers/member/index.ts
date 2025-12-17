@@ -16,7 +16,6 @@ export async function handleMemberEvent(
       return await handleMemberRemovedEvent(body);
     
     default:
-      // Return success for unhandled actions to prevent GitHub from retrying
       return {
         statusCode: 200,
         success: true,
@@ -28,5 +27,5 @@ export async function handleMemberEvent(
 
 
 
-
+  
 // MISTAKE. MAYBE FORGOT THAT SENDER AND REQUESTER ARE DIFFERNET. SEE CREATED , EDITED ADN DELETED HANDKERS AGAIN.

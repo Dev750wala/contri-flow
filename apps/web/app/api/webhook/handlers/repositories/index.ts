@@ -10,7 +10,6 @@ export async function handleRepositoriesEvent(
       return await handleRepositoriesRenamedEvent(body);
     
     default:
-      // Return success for unhandled actions to prevent GitHub from retrying
       return {
         statusCode: 200,
         success: true,

@@ -18,7 +18,6 @@ export const useNewInstallationSetup = () => {
 
   const router = useRouter();
 
-  // Get query parameters from GitHub App installation
   const setupAction = searchParams.get('setup_action');
   const installationId = searchParams.get('installation_id');
 
@@ -84,7 +83,6 @@ export const useNewInstallationSetup = () => {
 
           setRepositories(transformedRepos);
 
-          // Pre-select already enabled repositories
           const enabledIds = new Set(
             transformedRepos
               .filter(repo => repo.rewardsEnabled)
@@ -102,7 +100,6 @@ export const useNewInstallationSetup = () => {
     }
   }, [checkInstallationData]);
 
-  // Toggle rewards for a repository
   const handleToggleRewards = (repoId: string, enabled: boolean) => {
     setEnabledRepoIds(prev => {
       const newSet = new Set(prev);
@@ -114,7 +111,6 @@ export const useNewInstallationSetup = () => {
       return newSet;
     });
     
-    // Update the repository's rewardsEnabled state directly
     setRepositories(prev =>
       prev.map(repo =>
         repo.id === repoId
@@ -124,13 +120,11 @@ export const useNewInstallationSetup = () => {
     );
   };
 
-  // Manage settings (enable/disable repository)
   const handleManageSettings = (repoId: string) => {
     const currentlyEnabled = enabledRepoIds.has(repoId);
     handleToggleRewards(repoId, !currentlyEnabled);
   };
 
-  // Enable rewards on selected repositories
   const handleAddRepositories = async () => {
     if (enabledRepoIds.size === 0) {
       return;

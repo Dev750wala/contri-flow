@@ -29,7 +29,6 @@ export async function handleInstallationUnsuspendedEvent(
       data: { suspended: false },
     });
 
-    // Log activity for organization reactivation
     await logActivity({
       organizationId: organization.id,
       activityType: 'ORG_REACTIVATED',

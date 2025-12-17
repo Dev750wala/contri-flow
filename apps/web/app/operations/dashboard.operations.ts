@@ -1,13 +1,5 @@
 import { gql } from '@apollo/client';
 
-// ========================================
-// FAST QUERIES - Load immediately
-// ========================================
-
-/**
- * Get all organizations for the owner with basic details
- * FAST query - use on initial page load
- */
 export const GET_OWNER_DASHBOARD = gql`
   query GetOwnerDashboard {
     getOwnerDashboard {
@@ -39,10 +31,6 @@ export const GET_OWNER_DASHBOARD = gql`
   }
 `;
 
-/**
- * Get specific organization details
- * FAST query
- */
 export const GET_ORGANIZATION_DETAILS = gql`
   query GetOrganizationDetails($organizationId: String!) {
     getOrganizationDetails(organizationId: $organizationId) {
@@ -72,10 +60,6 @@ export const GET_ORGANIZATION_DETAILS = gql`
   }
 `;
 
-/**
- * Get recent activity for an organization
- * FAST query - indexed by organization_id
- */
 export const GET_ORGANIZATION_ACTIVITY = gql`
   query GetOrganizationActivity(
     $organizationId: String!
@@ -103,10 +87,6 @@ export const GET_ORGANIZATION_ACTIVITY = gql`
   }
 `;
 
-/**
- * Get pending rewards for an organization
- * FAST query
- */
 export const GET_PENDING_REWARDS = gql`
   query GetPendingRewards($organizationId: String!, $limit: Int, $offset: Int) {
     getPendingRewards(
@@ -138,10 +118,6 @@ export const GET_PENDING_REWARDS = gql`
   }
 `;
 
-/**
- * Get rewards for a specific repository
- * FAST query - indexed
- */
 export const GET_REPOSITORY_REWARDS = gql`
   query GetRepositoryRewards(
     $repositoryId: String!
@@ -167,14 +143,6 @@ export const GET_REPOSITORY_REWARDS = gql`
   }
 `;
 
-// ========================================
-// SLOW QUERIES - Load separately with loading states
-// ========================================
-
-/**
- * Get organization statistics with aggregations
- * SLOW query - call separately after page load
- */
 export const GET_ORGANIZATION_STATS = gql`
   query GetOrganizationStats($organizationId: String!) {
     getOrganizationStats(organizationId: $organizationId) {
@@ -190,10 +158,6 @@ export const GET_ORGANIZATION_STATS = gql`
   }
 `;
 
-/**
- * Get repository statistics
- * SLOW query - call separately
- */
 export const GET_REPOSITORY_STATS = gql`
   query GetRepositoryStats($repositoryId: String!) {
     getRepositoryStats(repositoryId: $repositoryId) {
@@ -207,10 +171,6 @@ export const GET_REPOSITORY_STATS = gql`
   }
 `;
 
-/**
- * Get global statistics across all organizations
- * VERY SLOW query - call separately
- */
 export const GET_GLOBAL_STATS = gql`
   query GetGlobalStats {
     getGlobalStats {
@@ -225,10 +185,6 @@ export const GET_GLOBAL_STATS = gql`
   }
 `;
 
-/**
- * Get stats for multiple repositories at once
- * SLOW query - batch operation
- */
 export const GET_REPOSITORY_STATS_BATCH = gql`
   query GetRepositoryStatsBatch($repositoryIds: [String!]!) {
     getRepositoryStatsBatch(repositoryIds: $repositoryIds) {
@@ -241,10 +197,6 @@ export const GET_REPOSITORY_STATS_BATCH = gql`
     }
   }
 `;
-
-// ========================================
-// EXISTING QUERIES (keep for compatibility)
-// ========================================
 
 export const LIST_ORGANIZATIONS_FOR_OWNER = gql`
   query ListOrganizationsForOwner {

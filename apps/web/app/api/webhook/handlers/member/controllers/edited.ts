@@ -39,16 +39,6 @@ export async function handleMemberEditedEvent(
       };
     }
 
-    // let deletedMaintainer;
-    // // delete the existing maintainer if the maintainer role is being removed, might change later.
-    // if ((roleChange as MemberEditedChanges).permission.to === "maintain") {
-    //     deletedMaintainer = await prisma.repositoryMaintainer.delete({
-    //         where: {
-    //             id: existingMaintainer.id
-    //         }
-    //     })
-    // }
-
     let updatedMaintainer;
     updatedMaintainer = await prisma.repositoryMaintainer.update({
       where: {

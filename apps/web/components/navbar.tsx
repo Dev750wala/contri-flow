@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Connector,
   useConnect,
@@ -46,6 +47,8 @@ const Navbar = () => {
   const { connectors, connect } = useConnect();
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
+  const pathname = usePathname();
+  const router = useRouter();
 
   const { balance, isLoadingBalance } = useTokenBalance();
 
@@ -99,26 +102,62 @@ const Navbar = () => {
     <nav className="w-full absolute top-0 left-0 z-50 bg-transparent ">
       <div className="container mx-auto flex items-center justify-between py-4 px-4 md:py-5 md:px-10">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-3 group">
-          <div className="bg-white p-1.5 rounded-lg transition-all duration-300">
-            <Wallet className="h-6 w-6 text-indigo-600" />
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="relative">
+            {/* Gradient background glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 blur-lg opacity-50 group-hover:opacity-70 transition-opacity"></div>
+            
+            {/* Main logo container */}
+            <div className="relative bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 p-[2px] rounded-xl">
+              <div className="bg-slate-900 rounded-xl p-2 flex items-center justify-center">
+                {/* MP monogram */}
+                <div className="relative w-7 h-7">
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-md flex items-center justify-center">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 3L6 10L3 17M9 3L12 10L9 17M13 10L17 3M17 17L13 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <span className="text-xl font-bold text-white">
-            MergePay
-          </span>
+          
+          <div className="flex flex-col">
+            <span className="text-xl font-bold text-white tracking-tight group-hover:text-cyan-300 transition-colors">
+              MergePay
+            </span>
+            <span className="text-[10px] text-cyan-400 font-medium tracking-wider uppercase">
+              On-Chain Rewards
+            </span>
+          </div>
         </Link>
 
         {/* Navigation Links - Desktop */}
         <div className="hidden md:flex items-center space-x-10">
-          {navigationLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-white/90 hover:text-white transition-colors duration-200 font-medium text-[15px]"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navigationLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="relative text-white/90 hover:text-white transition-colors duration-200 font-medium text-[15px] py-2"
+              >
+                {link.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="navbar-indicator"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"
+                    initial={false}
+                    transition={{
+                      type: "spring",
+                      stiffness: 380,
+                      damping: 30
+                    }}
+                  />
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Authentication & Wallet Section - Desktop */}
@@ -220,7 +259,7 @@ const Navbar = () => {
           ) : (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
-                onClick={() => signIn()}
+                onClick={() => router.push('/auth/sign-in')}
                 variant="outline"
                 className="border-white/20 cursor-pointer bg-white/10 hover:bg-white/20 text-white transition-all duration-200"
               >
@@ -329,16 +368,24 @@ const Navbar = () => {
             >
               <div className="flex flex-col items-center py-4 space-y-3">
                 {/* Mobile Navigation Links */}
-                {navigationLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-white hover:text-purple-300 transition-colors duration-200 font-medium py-2"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                {navigationLinks.map((link) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`relative text-white hover:text-purple-300 transition-colors duration-200 font-medium py-2 ${
+                        isActive ? 'text-white' : ''
+                      }`}
+                    >
+                      {link.label}
+                      {isActive && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
+                      )}
+                    </Link>
+                  );
+                })}
 
                 {/* Mobile Authentication */}
                 <div className="border-t border-purple-800/50 pt-3 w-full flex flex-col items-center space-y-2">
@@ -405,7 +452,7 @@ const Navbar = () => {
                     <Button
                       onClick={() => {
                         setMobileMenuOpen(false);
-                        signIn();
+                        router.push('/auth/sign-in');
                       }}
                       variant="outline"
                       className="w-full cursor-pointer border-white/20 bg-white/10 hover:bg-white/20 text-white transition-all duration-200"

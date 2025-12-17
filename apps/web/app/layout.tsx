@@ -5,15 +5,6 @@ import { Providers } from './provider';
 import { Toaster } from '@/components/ui/sonner';
 import Navbar from '@/components/navbar';
 
-// const geistSans = localFont({
-//   src: "./fonts/GeistVF.woff",
-//   variable: "--font-geist-sans",
-// });
-// const geistMono = localFont({
-//   src: "./fonts/GeistMonoVF.woff",
-//   variable: "--font-geist-mono",
-// });
-
 export const metadata: Metadata = {
   title: 'MergePay',
   description: 'Created by MergePay Team',
