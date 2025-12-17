@@ -6,7 +6,7 @@ import { LandingPage } from '@/components/LandingPage';
 export default function Home() {
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden pt-20">
+    <div className="relative min-h-screen w-full overflow-hidden pt-8">
       {/* Video Background */}
       <div className="fixed inset-0 w-screen h-screen z-0">
         <video
