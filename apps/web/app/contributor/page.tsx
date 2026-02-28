@@ -27,6 +27,7 @@ import { useAccount } from 'wagmi';
 import { useLazyQuery, useMutation } from '@apollo/client';
 import { GET_CLAIM_MESSAGE, CLAIM_REWARD } from '@/app/operations/contributor.operations';
 import { toast } from 'sonner';
+import { handleExtensionContextError } from '@/lib/walletErrors';
 
 const fromWei = (amount: string): number => {
   return parseFloat(amount) / Math.pow(10, 18);
@@ -116,6 +117,8 @@ export default function ContributorDashboard() {
 
     } catch (error: any) {
       console.error('Claim error:', error);
+
+      if (handleExtensionContextError(error)) return;
       
       let errorMessage = 'Failed to process claim. Please try again.';
       
