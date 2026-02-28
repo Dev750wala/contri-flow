@@ -332,9 +332,9 @@ const Navbar = () => {
           ) : (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
-                onClick={() => {
+                onClick={async () => {
                   try {
-                    connect({ connector: connectors[0] as Connector });
+                    await connect({ connector: connectors[0] as Connector });
                   } catch (err) {
                     if (!handleExtensionContextError(err)) {
                       console.error('Wallet connect error:', err);
@@ -504,10 +504,10 @@ const Navbar = () => {
                     </>
                   ) : (
                     <Button
-                      onClick={() => {
+                      onClick={async () => {
                         setMobileMenuOpen(false);
                         try {
-                          connect({ connector: connectors[0] as Connector });
+                          await connect({ connector: connectors[0] as Connector });
                         } catch (err) {
                           if (!handleExtensionContextError(err)) {
                             console.error('Wallet connect error:', err);
