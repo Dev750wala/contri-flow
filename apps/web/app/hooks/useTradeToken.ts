@@ -14,6 +14,7 @@ import {
   MPT_TOKEN_ADDRESS,
   WETH_ADDRESS,
 } from '@/web3/constants';
+import { handleExtensionContextError } from '@/lib/walletErrors';
 
 export const useTradeToken = () => {
   const [ethValue, setEthValue] = useState('');
@@ -206,7 +207,9 @@ export const useTradeToken = () => {
         await connect({ connector });
       }
     } catch (error) {
-      console.error('Error connecting wallet:', error);
+      if (!handleExtensionContextError(error)) {
+        console.error('Error connecting wallet:', error);
+      }
     }
   };
 
@@ -262,6 +265,8 @@ export const useTradeToken = () => {
     } catch (error: any) {
       console.error('❌ Error buying tokens:', error);
       
+      if (handleExtensionContextError(error)) return;
+
       if (error.message) {
         if (error.message.includes("INSUFFICIENT_OUTPUT_AMOUNT")) {
           console.error("  ⚠️ Slippage too low - try increasing slippage tolerance");
@@ -402,6 +407,8 @@ export const useTradeToken = () => {
       console.error("\n❌ Error selling tokens:");
       console.error("  - Error:", error);
       
+      if (handleExtensionContextError(error)) return;
+
       if (error.message) {
         if (error.message.includes("INSUFFICIENT_OUTPUT_AMOUNT")) {
           console.error("  ⚠️ Slippage too low - try increasing slippage tolerance");

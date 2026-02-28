@@ -3,6 +3,7 @@ import { formatUnits, parseUnits } from 'viem';
 import { CONTRIFLOW_ADDRESS, MPT_TOKEN_ADDRESS } from '@/web3/constants';
 import ContriFlowABI from '@/web3/ContriFlowABI.json';
 import { useEffect, useState } from 'react';
+import { handleExtensionContextError } from '@/lib/walletErrors';
 
 const ERC20_ABI = [
   {
@@ -143,7 +144,9 @@ export function useContriFlowContract(orgGithubId?: string) {
       } as any);
       return hash;
     } catch (error) {
-      console.error('Error approving tokens:', error);
+      if (!handleExtensionContextError(error)) {
+        console.error('Error approving tokens:', error);
+      }
       throw error;
     }
   };
@@ -167,7 +170,9 @@ export function useContriFlowContract(orgGithubId?: string) {
       } as any);
       return hash;
     } catch (error) {
-      console.error('Error adding funds:', error);
+      if (!handleExtensionContextError(error)) {
+        console.error('Error adding funds:', error);
+      }
       throw error;
     }
   };

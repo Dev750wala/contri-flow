@@ -26,6 +26,7 @@ import {
   useDisconnect,
   useBalance,
 } from 'wagmi';
+import { handleExtensionContextError } from '@/lib/walletErrors';
 import { useTokenBalance } from '@/app/hooks/useGetTokenBalance';
 import {
   DropdownMenu,
@@ -331,9 +332,15 @@ const Navbar = () => {
           ) : (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
-                onClick={() =>
-                  connect({ connector: connectors[0] as Connector })
-                }
+                onClick={async () => {
+                  try {
+                    await connect({ connector: connectors[0] as Connector });
+                  } catch (err) {
+                    if (!handleExtensionContextError(err)) {
+                      console.error('Wallet connect error:', err);
+                    }
+                  }
+                }}
                 className="bg-white cursor-pointer text-indigo-900 font-semibold hover:bg-white/90 transition-all duration-200 rounded-full px-6 flex items-center gap-2"
               >
                 Connect Wallet
@@ -497,9 +504,15 @@ const Navbar = () => {
                     </>
                   ) : (
                     <Button
-                      onClick={() => {
+                      onClick={async () => {
                         setMobileMenuOpen(false);
-                        connect({ connector: connectors[0] as Connector });
+                        try {
+                          await connect({ connector: connectors[0] as Connector });
+                        } catch (err) {
+                          if (!handleExtensionContextError(err)) {
+                            console.error('Wallet connect error:', err);
+                          }
+                        }
                       }}
                       className="w-full cursor-pointer bg-white text-indigo-900 font-semibold hover:bg-white/90 transition-all duration-200 rounded-full"
                     >
